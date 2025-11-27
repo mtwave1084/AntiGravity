@@ -1,0 +1,20 @@
+import { AppSidebar } from '@/components/app-sidebar';
+import { SiteHeader } from '@/components/site-header';
+
+export default function MainLayout({
+    children,
+}: {
+    children: React.ReactNode;
+}) {
+    return (
+        <div className="flex h-screen overflow-hidden bg-background">
+            <AppSidebar />
+            <div className="flex flex-1 flex-col overflow-hidden">
+                <SiteHeader />
+                <main className="flex-1 overflow-y-auto p-6">
+                    {children}
+                </main>
+            </div>
+        </div>
+    );
+}
