@@ -1,15 +1,15 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { generateImage } from '@/app/actions';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { generateImage, getGeneratedImages } from '@/app/actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
-import { Loader2, Upload, X } from 'lucide-react';
+import { Loader2, Upload, X, Plus } from 'lucide-react';
 
 interface Preset {
     id: string;
@@ -28,8 +28,21 @@ interface GeneratorFormProps {
     presets: Preset[];
 }
 
+interface ReferenceImage {
+    id: string;
+    file: File;
+    dataUrl: string;
+}
+
+interface GeneratedImage {
+    id: string;
+    mimeType: string;
+    dataBase64: string;
+}
+
 export function GeneratorForm({ presets }: GeneratorFormProps) {
     const searchParams = useSearchParams();
+    const router = useRouter();
     const presetId = searchParams.get('preset');
 
     const [provider, setProvider] = useState('nanobanana');
@@ -42,9 +55,10 @@ export function GeneratorForm({ presets }: GeneratorFormProps) {
     const [seed, setSeed] = useState<number | undefined>(undefined);
     const [inputImage, setInputImage] = useState<string | null>(null); // Base64 image
     const [inputImageFile, setInputImageFile] = useState<File | null>(null);
+    const [referenceImages, setReferenceImages] = useState<ReferenceImage[]>([]); // Multiple reference images
 
     const [isGenerating, setIsGenerating] = useState(false);
-    const [generatedImages, setGeneratedImages] = useState<any[]>([]);
+    const [generatedImages, setGeneratedImages] = useState<GeneratedImage[]>([]);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
@@ -63,13 +77,46 @@ export function GeneratorForm({ presets }: GeneratorFormProps) {
         }
     }, [presetId, presets]);
 
-    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Compress image to reduce size for upload
+    const compressImage = (dataUrl: string, maxSize: number = 1024, quality: number = 0.7): Promise<string> => {
+        return new Promise((resolve) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+
+                // Resize if larger than maxSize
+                if (width > maxSize || height > maxSize) {
+                    if (width > height) {
+                        height = (height / width) * maxSize;
+                        width = maxSize;
+                    } else {
+                        width = (width / height) * maxSize;
+                        height = maxSize;
+                    }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx?.drawImage(img, 0, 0, width, height);
+
+                // Convert to JPEG with compression
+                resolve(canvas.toDataURL('image/jpeg', quality));
+            };
+            img.src = dataUrl;
+        });
+    };
+
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
             setInputImageFile(file);
             const reader = new FileReader();
-            reader.onloadend = () => {
-                setInputImage(reader.result as string);
+            reader.onloadend = async () => {
+                const compressed = await compressImage(reader.result as string);
+                setInputImage(compressed);
             };
             reader.readAsDataURL(file);
             // Switch to image-to-image mode
@@ -80,7 +127,38 @@ export function GeneratorForm({ presets }: GeneratorFormProps) {
     const clearInputImage = () => {
         setInputImage(null);
         setInputImageFile(null);
-        setTaskType('text-to-image');
+        if (referenceImages.length === 0) {
+            setTaskType('text-to-image');
+        }
+    };
+
+    const handleReferenceImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = e.target.files;
+        if (files) {
+            Array.from(files).forEach(file => {
+                const reader = new FileReader();
+                reader.onloadend = async () => {
+                    const compressed = await compressImage(reader.result as string);
+                    const newRef: ReferenceImage = {
+                        id: 'ref_' + Math.random().toString(36).substr(2, 9),
+                        file,
+                        dataUrl: compressed,
+                    };
+                    setReferenceImages(prev => [...prev, newRef]);
+                };
+                reader.readAsDataURL(file);
+            });
+            // Enable img2img mode if not already
+            if (taskType === 'text-to-image') {
+                setTaskType('image-to-image');
+            }
+        }
+        // Clear the input so the same file can be selected again
+        e.target.value = '';
+    };
+
+    const removeReferenceImage = (id: string) => {
+        setReferenceImages(prev => prev.filter(img => img.id !== id));
     };
 
     const handleGenerate = async () => {
@@ -90,15 +168,28 @@ export function GeneratorForm({ presets }: GeneratorFormProps) {
 
         try {
             // Prepare input images if provided
-            let inputImages = undefined;
+            const inputImagesArray: { mimeType: string; dataBase64: string; role: 'base' | 'reference' }[] = [];
+
+            // Add base image
             if (inputImage && taskType === 'image-to-image') {
-                const base64Data = inputImage.split(',')[1]; // Remove data:image/...;base64, prefix
+                const base64Data = inputImage.split(',')[1];
                 const mimeType = inputImage.match(/data:([^;]+);/)?.[1] || 'image/png';
-                inputImages = [{
+                inputImagesArray.push({
                     mimeType,
                     dataBase64: base64Data,
                     role: 'base' as const,
-                }];
+                });
+            }
+
+            // Add reference images
+            for (const ref of referenceImages) {
+                const base64Data = ref.dataUrl.split(',')[1];
+                const mimeType = ref.dataUrl.match(/data:([^;]+);/)?.[1] || 'image/png';
+                inputImagesArray.push({
+                    mimeType,
+                    dataBase64: base64Data,
+                    role: 'reference' as const,
+                });
             }
 
             const result = await generateImage({
@@ -110,21 +201,13 @@ export function GeneratorForm({ presets }: GeneratorFormProps) {
                 outputResolution,
                 numOutputs,
                 seed,
-                inputImages,
+                inputImages: inputImagesArray.length > 0 ? inputImagesArray : undefined,
             });
 
-            if (result.success) {
-                // In a real app, we might want to fetch the images or just reload the page/gallery.
-                // For now, let's just show a success message or redirect to gallery?
-                // Or better, fetch the job result. But generateImage returns success/jobId.
-                // We can't easily get the images back immediately without another fetch if we want to show them here.
-                // I'll update generateImage to return images if possible, or fetch them here.
-                // For simplicity, I'll redirect to gallery or just show a "Success" message.
-                // Actually, users want to see the image immediately.
-                // I'll assume generateImage revalidates paths, so maybe I can just fetch the latest job's images?
-                // Or I can update generateImage to return the images data.
-                // Let's assume for now I'll just show a link to gallery.
-                window.location.href = '/gallery';
+            if (result.success && result.imageIds) {
+                // Fetch images separately to avoid response size limits
+                const images = await getGeneratedImages(result.imageIds);
+                setGeneratedImages(images as GeneratedImage[]);
             } else {
                 setError(result.error || 'Generation failed');
             }
@@ -258,9 +341,9 @@ export function GeneratorForm({ presets }: GeneratorFormProps) {
 
                         {/* Image Upload Section */}
                         <div className="grid gap-2 border-t pt-4">
-                            <Label>Input Image (Optional - for img2img)</Label>
+                            <Label className="text-lg font-semibold text-primary">Base Image (Optional - for img2img)</Label>
                             {!inputImage ? (
-                                <div className="border-2 border-dashed rounded-lg p-8 text-center hover:border-primary transition-colors">
+                                <div className="border-2 border-dashed border-primary/30 rounded-2xl p-8 text-center hover:border-primary hover:bg-primary/5 transition-all cursor-pointer group">
                                     <input
                                         type="file"
                                         accept="image/*"
@@ -268,18 +351,20 @@ export function GeneratorForm({ presets }: GeneratorFormProps) {
                                         className="hidden"
                                         id="image-upload"
                                     />
-                                    <label htmlFor="image-upload" className="cursor-pointer flex flex-col items-center gap-2">
-                                        <Upload className="h-8 w-8 text-muted-foreground" />
-                                        <span className="text-sm text-muted-foreground">Click to upload image</span>
+                                    <label htmlFor="image-upload" className="cursor-pointer flex flex-col items-center gap-3">
+                                        <div className="bg-primary/10 p-4 rounded-full group-hover:scale-110 transition-transform">
+                                            <Upload className="h-8 w-8 text-primary" />
+                                        </div>
+                                        <span className="text-sm font-medium text-muted-foreground group-hover:text-primary transition-colors">Click to upload base image</span>
                                     </label>
                                 </div>
                             ) : (
-                                <div className="relative">
-                                    <img src={inputImage} alt="Input" className="w-full rounded-lg" />
+                                <div className="relative group">
+                                    <img src={inputImage} alt="Input" className="w-full rounded-2xl shadow-md" />
                                     <Button
                                         size="icon"
                                         variant="destructive"
-                                        className="absolute top-2 right-2"
+                                        className="absolute top-2 right-2 rounded-full shadow-lg hover:scale-110 transition-transform"
                                         onClick={clearInputImage}
                                     >
                                         <X className="h-4 w-4" />
@@ -288,14 +373,60 @@ export function GeneratorForm({ presets }: GeneratorFormProps) {
                             )}
                         </div>
 
-                        <Button className="w-full" onClick={handleGenerate} disabled={isGenerating || !prompt}>
+                        {/* Reference Images Section */}
+                        <div className="grid gap-2 border-t pt-4">
+                            <Label className="text-lg font-semibold text-secondary">Reference Images (Optional)</Label>
+                            <p className="text-xs text-muted-foreground mb-2">Add multiple reference images for style or content guidance</p>
+
+                            <div className="grid grid-cols-3 gap-2">
+                                {referenceImages.map(ref => (
+                                    <div key={ref.id} className="relative group aspect-square">
+                                        <img
+                                            src={ref.dataUrl}
+                                            alt="Reference"
+                                            className="w-full h-full object-cover rounded-xl shadow-sm"
+                                        />
+                                        <Button
+                                            size="icon"
+                                            variant="destructive"
+                                            className="absolute top-1 right-1 h-6 w-6 rounded-full shadow-lg hover:scale-110 transition-transform opacity-0 group-hover:opacity-100"
+                                            onClick={() => removeReferenceImage(ref.id)}
+                                        >
+                                            <X className="h-3 w-3" />
+                                        </Button>
+                                    </div>
+                                ))}
+
+                                {/* Add Reference Button */}
+                                <div className="aspect-square border-2 border-dashed border-secondary/30 rounded-xl flex items-center justify-center hover:border-secondary hover:bg-secondary/5 transition-all cursor-pointer group">
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        multiple
+                                        onChange={handleReferenceImageUpload}
+                                        className="hidden"
+                                        id="reference-upload"
+                                    />
+                                    <label htmlFor="reference-upload" className="cursor-pointer flex flex-col items-center gap-1 p-2">
+                                        <Plus className="h-6 w-6 text-secondary/50 group-hover:text-secondary transition-colors" />
+                                        <span className="text-xs text-muted-foreground group-hover:text-secondary transition-colors">Add</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <Button
+                            className="w-full text-lg font-bold py-6 rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 active:scale-95 bg-gradient-to-r from-primary to-orange-400 hover:from-orange-400 hover:to-primary"
+                            onClick={handleGenerate}
+                            disabled={isGenerating || !prompt}
+                        >
                             {isGenerating ? (
                                 <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    Generating...
+                                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                                    Dreaming...
                                 </>
                             ) : (
-                                'Generate'
+                                '✨ Generate Magic ✨'
                             )}
                         </Button>
                         {error && <p className="text-sm text-red-500">{error}</p>}
@@ -304,10 +435,49 @@ export function GeneratorForm({ presets }: GeneratorFormProps) {
             </div>
 
             <div className="space-y-6">
-                {/* Placeholder for results or preview */}
-                <div className="h-full min-h-[400px] flex items-center justify-center border-2 border-dashed rounded-lg text-muted-foreground">
-                    {isGenerating ? 'Dreaming...' : 'Generated images will appear here (Redirecting to gallery for now)'}
-                </div>
+                {/* Preview area for generated images */}
+                {generatedImages.length > 0 ? (
+                    <Card className="border-2 border-primary/20">
+                        <CardContent className="p-4">
+                            <Label className="text-lg font-semibold text-primary mb-4 block">Generated Images ✨</Label>
+                            <p className="text-xs text-muted-foreground mb-3">Click an image to view in gallery</p>
+                            <div className="grid grid-cols-2 gap-3">
+                                {generatedImages.map((img) => (
+                                    <div
+                                        key={img.id}
+                                        className="relative aspect-square rounded-xl overflow-hidden border-2 border-transparent hover:border-primary cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02] group"
+                                        onClick={() => router.push('/gallery')}
+                                    >
+                                        <img
+                                            src={`data:${img.mimeType};base64,${img.dataBase64}`}
+                                            alt="Generated"
+                                            className="w-full h-full object-cover"
+                                        />
+                                        <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/10 transition-colors flex items-center justify-center">
+                                            <span className="text-white text-sm font-medium opacity-0 group-hover:opacity-100 drop-shadow-lg transition-opacity">
+                                                View in Gallery →
+                                            </span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </CardContent>
+                    </Card>
+                ) : (
+                    <div className="h-full min-h-[400px] flex items-center justify-center border-2 border-dashed rounded-xl text-muted-foreground bg-muted/20">
+                        <div className="text-center p-8">
+                            <div className="text-5xl mb-4">🎨</div>
+                            {isGenerating ? (
+                                <div className="flex flex-col items-center gap-3">
+                                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                                    <span className="text-lg font-medium">Dreaming up your images...</span>
+                                </div>
+                            ) : (
+                                <span className="text-lg">Generated images will appear here</span>
+                            )}
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

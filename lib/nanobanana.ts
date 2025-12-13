@@ -74,14 +74,13 @@ export async function runNanoImageJob(
 
     const model = genAI.getGenerativeModel({ model: modelName });
 
-    // Construct prompt with parameters
+    // Construct prompt (without aspect ratio and resolution - now in imageConfig)
     let fullPrompt = request.prompt;
-    if (request.aspectRatio) fullPrompt += ` --ar ${request.aspectRatio}`;
-    if (request.outputResolution) fullPrompt += ` --resolution ${request.outputResolution}`;
     if (request.negativePrompt) fullPrompt += ` --no ${request.negativePrompt}`;
     if (request.seed) fullPrompt += ` --seed ${request.seed}`;
 
     console.log(`[Nanobanana] Full prompt: ${fullPrompt}`);
+    console.log(`[Nanobanana] Image config - Resolution: ${request.outputResolution}, Aspect Ratio: ${request.aspectRatio}`);
 
     const parts: any[] = [{ text: fullPrompt }];
 
@@ -103,12 +102,26 @@ export async function runNanoImageJob(
         const images: NanoGeneratedImage[] = [];
 
         for (let i = 0; i < numImages; i++) {
+            // Build config object with imageConfig
+            const config: any = {
+                // @ts-ignore - responseModalities might not be in type definition
+                responseModalities: ["IMAGE"],
+            };
+
+            // Add imageConfig if resolution or aspectRatio is specified
+            if (request.outputResolution || request.aspectRatio) {
+                config.imageConfig = {};
+                if (request.aspectRatio) {
+                    config.imageConfig.aspectRatio = request.aspectRatio;
+                }
+                if (request.outputResolution) {
+                    config.imageConfig.imageSize = request.outputResolution.toUpperCase();
+                }
+            }
+
             const result = await model.generateContent({
                 contents: [{ role: "user", parts }],
-                generationConfig: {
-                    // @ts-ignore - responseModalities might not be in the type definition yet
-                    responseModalities: ["IMAGE"],
-                },
+                generationConfig: config,
             });
 
             const response = await result.response;

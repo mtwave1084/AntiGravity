@@ -175,9 +175,11 @@ export async function generateImage(data: any) {
       VALUES (?, ?, ?, ?, ?)
     `);
 
+        const imageIds: string[] = [];
         for (const img of result.images) {
             const imgId = 'img_' + Math.random().toString(36).substr(2, 9);
             insertImage.run(imgId, jobId, img.index, img.mimeType, img.dataBase64);
+            imageIds.push(imgId);
         }
 
         // Update Job Status
@@ -185,13 +187,28 @@ export async function generateImage(data: any) {
 
         revalidatePath('/');
         revalidatePath('/gallery');
-        return { success: true, jobId };
+        // Return only IDs to avoid response size limits - images will be fetched separately
+        return { success: true, jobId, imageIds };
 
     } catch (error: any) {
         console.error('Generation failed:', error);
         db.prepare('UPDATE GenerationJob SET status = ?, errorMessage = ? WHERE id = ?').run('error', error.message, jobId);
         return { success: false, error: error.message };
     }
+}
+
+export async function getGeneratedImages(imageIds: string[]) {
+    const session = await auth();
+    if (!session?.user?.email) throw new Error('Unauthorized');
+
+    if (!imageIds || imageIds.length === 0) return [];
+
+    const placeholders = imageIds.map(() => '?').join(',');
+    const images = db.prepare(`
+        SELECT id, mimeType, dataBase64 FROM Image WHERE id IN (${placeholders})
+    `).all(...imageIds);
+
+    return images;
 }
 
 export async function getHistory() {
