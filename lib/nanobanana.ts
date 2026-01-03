@@ -108,8 +108,9 @@ export async function runNanoImageJob(
                 responseModalities: ["IMAGE"],
             };
 
-            // Add imageConfig if resolution or aspectRatio is specified
-            if (request.outputResolution || request.aspectRatio) {
+            // Add imageConfig ONLY for nanobanana-pro (gemini-3-pro-image-preview)
+            // gemini-2.5-flash-image does NOT support imageConfig parameters
+            if (request.model === "nanobanana-pro" && (request.outputResolution || request.aspectRatio)) {
                 config.imageConfig = {};
                 if (request.aspectRatio) {
                     config.imageConfig.aspectRatio = request.aspectRatio;
@@ -118,6 +119,8 @@ export async function runNanoImageJob(
                     config.imageConfig.imageSize = request.outputResolution.toUpperCase();
                 }
             }
+
+            console.log(`[Nanobanana] Request #${i + 1} config:`, JSON.stringify(config, null, 2));
 
             const result = await model.generateContent({
                 contents: [{ role: "user", parts }],

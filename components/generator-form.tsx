@@ -306,12 +306,21 @@ export function GeneratorForm({ presets }: GeneratorFormProps) {
                             </div>
                             <div className="grid gap-2">
                                 <Label>Resolution</Label>
-                                <Select value={outputResolution} onValueChange={setOutputResolution}>
+                                <Select 
+                                    value={outputResolution} 
+                                    onValueChange={(val) => {
+                                        setOutputResolution(val);
+                                        // 2k/4k requires Pro model
+                                        if (val === '2k' || val === '4k') {
+                                            setProvider('nanobanana-pro');
+                                        }
+                                    }}
+                                >
                                     <SelectTrigger><SelectValue /></SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="1k">1k</SelectItem>
-                                        <SelectItem value="2k">2k</SelectItem>
-                                        <SelectItem value="4k">4k</SelectItem>
+                                        <SelectItem value="2k">2k (Pro)</SelectItem>
+                                        <SelectItem value="4k">4k (Pro)</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
