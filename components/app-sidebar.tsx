@@ -1,27 +1,45 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { LayoutDashboard, List, Wand2, Images, Settings, LogOut } from 'lucide-react';
+import { LayoutDashboard, List, Wand2, Images, Settings, LogOut, LayoutGrid, FileImage } from 'lucide-react';
 import { signOut } from 'next-auth/react';
+import Image from 'next/image';
 
 const sidebarItems = [
     { name: 'Dashboard', href: '/', icon: LayoutDashboard },
     { name: 'Presets', href: '/presets', icon: List },
-    { name: 'Generate', href: '/generate', icon: Wand2 },
+    { name: '自由生成', href: '/generate?mode=free', icon: Wand2 },
+    { name: '図解生成', href: '/generate?mode=diagram', icon: LayoutGrid },
     { name: 'Gallery', href: '/gallery', icon: Images },
+    { name: '図解ギャラリー', href: '/diagram-gallery', icon: FileImage },
     { name: 'Settings', href: '/settings', icon: Settings },
 ];
 
-import Image from 'next/image';
+// Helper to check if current path matches item href (handles query params)
+function isActiveItem(pathname: string, searchParams: URLSearchParams, href: string): boolean {
+    const [itemPath, itemQuery] = href.split('?');
 
-// ... imports
+    // Check pathname match first
+    if (pathname !== itemPath) return false;
+
+    // If no query in href, match by pathname only
+    if (!itemQuery) return true;
+
+    // Check query params match
+    const itemParams = new URLSearchParams(itemQuery);
+    for (const [key, value] of itemParams.entries()) {
+        if (searchParams.get(key) !== value) return false;
+    }
+    return true;
+}
 
 export function AppSidebar() {
     const pathname = usePathname();
+    const searchParams = useSearchParams();
 
     return (
         <div className="flex h-full w-64 flex-col border-r bg-sidebar text-sidebar-foreground">
@@ -41,23 +59,26 @@ export function AppSidebar() {
             </div>
             <ScrollArea className="flex-1 py-4">
                 <nav className="grid gap-1 px-2">
-                    {sidebarItems.map((item, index) => (
-                        <Link
-                            key={index}
-                            href={item.href}
-                        >
-                            <Button
-                                variant={pathname === item.href ? 'secondary' : 'ghost'}
-                                className={cn(
-                                    'w-full justify-start gap-2',
-                                    pathname === item.href && 'bg-secondary'
-                                )}
+                    {sidebarItems.map((item, index) => {
+                        const isActive = isActiveItem(pathname, searchParams, item.href);
+                        return (
+                            <Link
+                                key={index}
+                                href={item.href}
                             >
-                                <item.icon className="h-4 w-4" />
-                                {item.name}
-                            </Button>
-                        </Link>
-                    ))}
+                                <Button
+                                    variant={isActive ? 'secondary' : 'ghost'}
+                                    className={cn(
+                                        'w-full justify-start gap-2',
+                                        isActive && 'bg-secondary'
+                                    )}
+                                >
+                                    <item.icon className="h-4 w-4" />
+                                    {item.name}
+                                </Button>
+                            </Link>
+                        );
+                    })}
                 </nav>
             </ScrollArea>
             <div className="border-t p-4">
