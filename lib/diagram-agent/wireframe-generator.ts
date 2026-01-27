@@ -3,7 +3,7 @@
  * ワイヤーフレーム生成モジュール
  */
 
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
 import { DiagramConfig } from './types';
 import { buildWireframePrompt } from './prompt-builder';
 
@@ -22,19 +22,18 @@ export async function generateWireframe(
     config: DiagramConfig
 ): Promise<WireframeResult> {
     try {
-        const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: "gemini-3-pro-image-preview" });
+        const ai = new GoogleGenAI({ apiKey });
 
         const prompt = buildWireframePrompt(config);
         console.log('[DiagramAgent] Generating wireframe with prompt:', prompt.substring(0, 200) + '...');
 
-        // Build parts array
-        const parts: any[] = [{ text: prompt }];
+        // Build contents array
+        const contents: any[] = [{ text: prompt }];
 
         // Add reference images if provided
         if (config.referenceImages && config.referenceImages.length > 0) {
             for (const img of config.referenceImages) {
-                parts.push({
+                contents.push({
                     inlineData: {
                         mimeType: img.mimeType,
                         data: img.dataBase64,
@@ -44,23 +43,21 @@ export async function generateWireframe(
         }
 
         // Generate with lower resolution for wireframe (quick preview)
-        const result = await model.generateContent({
-            contents: [{ role: "user", parts }],
-            generationConfig: {
-                // @ts-ignore
+        const response = await ai.models.generateContent({
+            model: "gemini-3-pro-image-preview",
+            contents: contents,
+            config: {
                 responseModalities: ["IMAGE"],
             },
         });
 
-        const response = await result.response;
-
         if (response.candidates && response.candidates[0]) {
-            const part = response.candidates[0].content.parts[0];
-            if (part.inlineData) {
+            const parts = response.candidates[0].content?.parts;
+            if (parts && parts[0] && parts[0].inlineData) {
                 return {
                     success: true,
-                    mimeType: part.inlineData.mimeType,
-                    dataBase64: part.inlineData.data,
+                    mimeType: parts[0].inlineData.mimeType,
+                    dataBase64: parts[0].inlineData.data,
                 };
             }
         }

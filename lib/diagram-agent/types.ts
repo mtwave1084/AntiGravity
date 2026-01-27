@@ -189,6 +189,11 @@ export interface DiagramConfig {
         mimeType: string;
         dataBase64: string;
     }>;
+    wireframeImage?: {
+        mimeType: string;
+        dataBase64: string;
+    };
+    revisionInstruction?: string;
 }
 
 // ============================================

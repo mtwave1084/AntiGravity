@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
 
 export type NanoModel = "nanobanana" | "nanobanana-pro";
 
@@ -64,7 +64,8 @@ export async function runNanoImageJob(
         };
     }
 
-    const genAI = new GoogleGenerativeAI(request.apiKey);
+    // Initialize new @google/genai SDK
+    const ai = new GoogleGenAI({ apiKey: request.apiKey });
 
     const modelName = request.model === "nanobanana-pro"
         ? "gemini-3-pro-image-preview"
@@ -72,9 +73,7 @@ export async function runNanoImageJob(
 
     console.log(`[Nanobanana] Using model: ${modelName} (requested: ${request.model})`);
 
-    const model = genAI.getGenerativeModel({ model: modelName });
-
-    // Construct prompt (without aspect ratio and resolution - now in imageConfig)
+    // Construct prompt (without aspect ratio and resolution - now in config)
     let fullPrompt = request.prompt;
     if (request.negativePrompt) fullPrompt += ` --no ${request.negativePrompt}`;
     if (request.seed) fullPrompt += ` --seed ${request.seed}`;
@@ -82,11 +81,12 @@ export async function runNanoImageJob(
     console.log(`[Nanobanana] Full prompt: ${fullPrompt}`);
     console.log(`[Nanobanana] Image config - Resolution: ${request.outputResolution}, Aspect Ratio: ${request.aspectRatio}`);
 
-    const parts: any[] = [{ text: fullPrompt }];
+    // Build contents array with text and optional images
+    const contents: any[] = [{ text: fullPrompt }];
 
     if (request.inputImages) {
         for (const img of request.inputImages) {
-            parts.push({
+            contents.push({
                 inlineData: {
                     mimeType: img.mimeType,
                     data: img.dataBase64
@@ -102,9 +102,8 @@ export async function runNanoImageJob(
         const images: NanoGeneratedImage[] = [];
 
         for (let i = 0; i < numImages; i++) {
-            // Build config object with imageConfig
+            // Build config object
             const config: any = {
-                // @ts-ignore - responseModalities might not be in type definition
                 responseModalities: ["IMAGE"],
             };
 
@@ -122,21 +121,21 @@ export async function runNanoImageJob(
 
             console.log(`[Nanobanana] Request #${i + 1} config:`, JSON.stringify(config, null, 2));
 
-            const result = await model.generateContent({
-                contents: [{ role: "user", parts }],
-                generationConfig: config,
+            // Use new SDK's generateContent method
+            const response = await ai.models.generateContent({
+                model: modelName,
+                contents: contents,
+                config: config,
             });
 
-            const response = await result.response;
-
-            // Extract image from response
+            // Extract image from response using new SDK structure
             if (response.candidates && response.candidates[0]) {
-                const part = response.candidates[0].content.parts[0];
-                if (part.inlineData) {
+                const parts = response.candidates[0].content?.parts;
+                if (parts && parts[0] && parts[0].inlineData) {
                     images.push({
                         index: i,
-                        mimeType: part.inlineData.mimeType,
-                        dataBase64: part.inlineData.data,
+                        mimeType: parts[0].inlineData.mimeType || "image/png",
+                        dataBase64: parts[0].inlineData.data || "",
                     });
                 }
             }

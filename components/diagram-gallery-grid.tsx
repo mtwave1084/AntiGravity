@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Download, Eye, Sparkles } from 'lucide-react';
+import { Download, Eye, Sparkles, Maximize2 } from 'lucide-react';
 import { DIAGRAM_STRUCTURES, DIAGRAM_STYLES, DiagramStructure, DiagramStyle } from '@/lib/diagram-agent';
+import { Lightbox } from '@/components/ui/lightbox';
 
 interface DiagramGalleryItem {
     id: string;
@@ -26,15 +27,32 @@ interface DiagramGalleryGridProps {
 export function DiagramGalleryGrid({ items }: DiagramGalleryGridProps) {
     const [selectedItem, setSelectedItem] = useState<DiagramGalleryItem | null>(null);
     const [viewMode, setViewMode] = useState<'final' | 'wireframe'>('final');
+    const [lightboxImage, setLightboxImage] = useState<{ mimeType: string; dataBase64: string } | null>(null);
 
-    const handleDownload = (item: DiagramGalleryItem) => {
+    // Reset lightbox state when dialog closes
+    useEffect(() => {
+        if (!selectedItem) {
+            setLightboxImage(null);
+        }
+    }, [selectedItem]);
+
+    const handleDownload = (e: React.MouseEvent, item: DiagramGalleryItem) => {
+        e.stopPropagation();
+        e.preventDefault();
         const img = viewMode === 'final' && item.finalImage ? item.finalImage : item.wireframeImage;
         if (!img) return;
 
         const link = document.createElement('a');
         link.href = `data:${img.mimeType};base64,${img.dataBase64}`;
         link.download = `diagram_${item.id}_${viewMode}.png`;
+        link.style.display = 'none';
+        document.body.appendChild(link);
         link.click();
+
+        // Cleanup after a short delay
+        setTimeout(() => {
+            document.body.removeChild(link);
+        }, 100);
     };
 
     const getStructureLabel = (type: string): string => {
@@ -138,8 +156,8 @@ export function DiagramGalleryGrid({ items }: DiagramGalleryGridProps) {
                                 </div>
                             )}
 
-                            {/* Image Display */}
-                            <div className="border rounded-lg overflow-hidden">
+                            {/* Image Display - hover to show expand button */}
+                            <div className="border rounded-lg overflow-hidden relative group">
                                 {viewMode === 'final' && selectedItem.finalImage ? (
                                     <img
                                         src={`data:${selectedItem.finalImage.mimeType};base64,${selectedItem.finalImage.dataBase64}`}
@@ -157,6 +175,23 @@ export function DiagramGalleryGrid({ items }: DiagramGalleryGridProps) {
                                         画像がありません
                                     </div>
                                 )}
+                                {/* Fullscreen button overlay */}
+                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all flex items-center justify-center">
+                                    <Button
+                                        size="lg"
+                                        className="opacity-0 group-hover:opacity-100 transition-opacity bg-black/60 hover:bg-black/80 text-white border-white"
+                                        onClick={() => {
+                                            if (viewMode === 'final' && selectedItem.finalImage) {
+                                                setLightboxImage(selectedItem.finalImage);
+                                            } else if (selectedItem.wireframeImage) {
+                                                setLightboxImage(selectedItem.wireframeImage);
+                                            }
+                                        }}
+                                    >
+                                        <Maximize2 className="h-5 w-5 mr-2" />
+                                        拡大表示
+                                    </Button>
+                                </div>
                             </div>
 
                             {/* Info & Actions */}
@@ -169,7 +204,7 @@ export function DiagramGalleryGrid({ items }: DiagramGalleryGridProps) {
                                         {getStyleLabel(selectedItem.styleType)}
                                     </Badge>
                                 </div>
-                                <Button onClick={() => handleDownload(selectedItem)}>
+                                <Button onClick={(e) => handleDownload(e, selectedItem)}>
                                     <Download className="h-4 w-4 mr-2" />
                                     ダウンロード
                                 </Button>
@@ -178,6 +213,13 @@ export function DiagramGalleryGrid({ items }: DiagramGalleryGridProps) {
                     )}
                 </DialogContent>
             </Dialog>
+
+            {/* Fullscreen Lightbox */}
+            <Lightbox
+                image={lightboxImage}
+                onClose={() => setLightboxImage(null)}
+                title={selectedItem?.title || '図解プレビュー'}
+            />
         </>
     );
 }

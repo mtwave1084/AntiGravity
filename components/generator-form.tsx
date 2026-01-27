@@ -2,14 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { generateImage, getGeneratedImages } from '@/app/actions';
+import { generateImage, getGeneratedImages, confirmImages, reviseImage } from '@/app/actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
-import { Loader2, Upload, X, Plus } from 'lucide-react';
+import { Loader2, Upload, X, Plus, RefreshCw, Check, ExternalLink } from 'lucide-react';
+import { Lightbox } from '@/components/ui/lightbox';
 
 interface Preset {
     id: string;
@@ -59,7 +60,14 @@ export function GeneratorForm({ presets }: GeneratorFormProps) {
 
     const [isGenerating, setIsGenerating] = useState(false);
     const [generatedImages, setGeneratedImages] = useState<GeneratedImage[]>([]);
+    const [generatedImageIds, setGeneratedImageIds] = useState<string[]>([]);
     const [error, setError] = useState<string | null>(null);
+
+    // Lightbox and revision state
+    const [previewImage, setPreviewImage] = useState<{ mimeType: string; dataBase64: string } | null>(null);
+    const [revisionText, setRevisionText] = useState('');
+    const [isConfirmed, setIsConfirmed] = useState(false);
+    const [isRevising, setIsRevising] = useState(false);
 
     useEffect(() => {
         if (presetId) {
@@ -165,6 +173,9 @@ export function GeneratorForm({ presets }: GeneratorFormProps) {
         setIsGenerating(true);
         setError(null);
         setGeneratedImages([]);
+        setGeneratedImageIds([]);
+        setIsConfirmed(false);
+        setRevisionText('');
 
         try {
             // Prepare input images if provided
@@ -208,6 +219,7 @@ export function GeneratorForm({ presets }: GeneratorFormProps) {
                 // Fetch images separately to avoid response size limits
                 const images = await getGeneratedImages(result.imageIds);
                 setGeneratedImages(images as GeneratedImage[]);
+                setGeneratedImageIds(result.imageIds);
             } else {
                 setError(result.error || 'Generation failed');
             }
@@ -218,276 +230,440 @@ export function GeneratorForm({ presets }: GeneratorFormProps) {
         }
     };
 
+    // Handle revision - regenerate with modification prompt
+    const handleRevise = async () => {
+        if (!revisionText.trim() || generatedImageIds.length === 0 || generatedImages.length === 0) return;
+
+        setIsRevising(true);
+        setError(null);
+
+        try {
+            // Prepare input images - base image and reference images
+            const inputImagesForRevision: Array<{
+                mimeType: string;
+                dataBase64: string;
+                role?: 'base' | 'style' | 'reference' | 'mask';
+            }> = [];
+
+            // Add base image if exists
+            if (inputImage) {
+                const parts = inputImage.split(',');
+                const mimeMatch = parts[0].match(/data:([^;]+);/);
+                if (mimeMatch) {
+                    inputImagesForRevision.push({
+                        mimeType: mimeMatch[1],
+                        dataBase64: parts[1],
+                        role: 'base'
+                    });
+                }
+            }
+
+            // Add reference images
+            for (const ref of referenceImages) {
+                const parts = ref.dataUrl.split(',');
+                const mimeMatch = parts[0].match(/data:([^;]+);/);
+                if (mimeMatch) {
+                    inputImagesForRevision.push({
+                        mimeType: mimeMatch[1],
+                        dataBase64: parts[1],
+                        role: 'reference'
+                    });
+                }
+            }
+
+            // Use first generated image for revision
+            const generatedImageForRevision = {
+                mimeType: generatedImages[0].mimeType,
+                dataBase64: generatedImages[0].dataBase64
+            };
+
+            const result = await reviseImage({
+                originalImageIds: generatedImageIds,
+                revisionPrompt: revisionText,
+                provider,
+                aspectRatio,
+                outputResolution,
+                numOutputs,
+                originalPrompt: prompt,
+                inputImages: inputImagesForRevision.length > 0 ? inputImagesForRevision : undefined,
+                generatedImage: generatedImageForRevision,
+            });
+
+            if (result.success && result.imageIds) {
+                const images = await getGeneratedImages(result.imageIds);
+                setGeneratedImages(images as GeneratedImage[]);
+                setGeneratedImageIds(result.imageIds);
+                setRevisionText('');
+            } else {
+                setError(result.error || 'Revision failed');
+            }
+        } catch (e: any) {
+            setError(e.message);
+        } finally {
+            setIsRevising(false);
+        }
+    };
+
+    // Handle confirm - save to gallery
+    const handleConfirm = async () => {
+        if (generatedImageIds.length === 0) return;
+
+        try {
+            const result = await confirmImages(generatedImageIds);
+            if (result.success) {
+                setIsConfirmed(true);
+            } else {
+                setError(result.error || 'Confirm failed');
+            }
+        } catch (e: any) {
+            setError(e.message);
+        }
+    };
+
     return (
-        <div className="grid gap-6 lg:grid-cols-2">
-            <div className="space-y-6">
-                <Card>
-                    <CardContent className="p-6 space-y-4">
-                        <div className="grid gap-2">
-                            <Label>Preset</Label>
-                            <Select
-                                value={presetId || ''}
-                                onValueChange={(val) => {
-                                    const params = new URLSearchParams(searchParams);
-                                    if (val) params.set('preset', val);
-                                    else params.delete('preset');
-                                    window.history.replaceState(null, '', `?${params.toString()}`);
-                                }}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Load a preset..." />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="none">None</SelectItem>
-                                    {presets.map(p => (
-                                        <SelectItem key={p.id} value={p.id}>{p.title}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
+        <>
+            <div className="grid gap-6 lg:grid-cols-2">
+                <div className="space-y-6">
+                    <Card>
+                        <CardContent className="p-6 space-y-4">
                             <div className="grid gap-2">
-                                <Label>Provider</Label>
-                                <Select value={provider} onValueChange={setProvider}>
-                                    <SelectTrigger><SelectValue /></SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="nanobanana">Nanobanana</SelectItem>
-                                        <SelectItem value="nanobanana-pro">Nanobanana Pro</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div className="grid gap-2">
-                                <Label>Task Type</Label>
-                                <Select value={taskType} onValueChange={setTaskType}>
-                                    <SelectTrigger><SelectValue /></SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="text-to-image">Text to Image</SelectItem>
-                                        <SelectItem value="image-to-image">Image to Image</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
-
-                        <div className="grid gap-2">
-                            <Label>Prompt</Label>
-                            <Textarea
-                                placeholder="Describe your image..."
-                                value={prompt}
-                                onChange={e => setPrompt(e.target.value)}
-                                className="h-32"
-                            />
-                        </div>
-
-                        <div className="grid gap-2">
-                            <Label>Negative Prompt</Label>
-                            <Input
-                                placeholder="Low quality, bad anatomy..."
-                                value={negativePrompt}
-                                onChange={e => setNegativePrompt(e.target.value)}
-                            />
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="grid gap-2">
-                                <Label>Aspect Ratio</Label>
-                                <Select value={aspectRatio} onValueChange={setAspectRatio}>
-                                    <SelectTrigger><SelectValue /></SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="1:1">1:1 (Square)</SelectItem>
-                                        <SelectItem value="2:3">2:3 (Portrait)</SelectItem>
-                                        <SelectItem value="3:2">3:2 (Landscape)</SelectItem>
-                                        <SelectItem value="3:4">3:4</SelectItem>
-                                        <SelectItem value="4:3">4:3</SelectItem>
-                                        <SelectItem value="9:16">9:16 (Vertical)</SelectItem>
-                                        <SelectItem value="16:9">16:9</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <div className="grid gap-2">
-                                <Label>Resolution</Label>
-                                <Select 
-                                    value={outputResolution} 
+                                <Label>プリセット</Label>
+                                <Select
+                                    value={presetId || ''}
                                     onValueChange={(val) => {
-                                        setOutputResolution(val);
-                                        // 2k/4k requires Pro model
-                                        if (val === '2k' || val === '4k') {
-                                            setProvider('nanobanana-pro');
-                                        }
+                                        const params = new URLSearchParams(searchParams);
+                                        if (val) params.set('preset', val);
+                                        else params.delete('preset');
+                                        window.history.replaceState(null, '', `?${params.toString()}`);
                                     }}
                                 >
-                                    <SelectTrigger><SelectValue /></SelectTrigger>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="プリセットを選択..." />
+                                    </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="1k">1k</SelectItem>
-                                        <SelectItem value="2k">2k (Pro)</SelectItem>
-                                        <SelectItem value="4k">4k (Pro)</SelectItem>
+                                        <SelectItem value="none">なし</SelectItem>
+                                        {presets.map(p => (
+                                            <SelectItem key={p.id} value={p.id}>{p.title}</SelectItem>
+                                        ))}
                                     </SelectContent>
                                 </Select>
                             </div>
-                        </div>
 
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="grid gap-2">
-                                <Label>Count</Label>
-                                <Input
-                                    type="number"
-                                    min={1}
-                                    max={4}
-                                    value={numOutputs}
-                                    onChange={e => setNumOutputs(parseInt(e.target.value))}
-                                />
-                            </div>
-                            <div className="grid gap-2">
-                                <Label>Seed (Optional)</Label>
-                                <Input
-                                    type="number"
-                                    placeholder="Random"
-                                    value={seed || ''}
-                                    onChange={e => setSeed(e.target.value ? parseInt(e.target.value) : undefined)}
-                                />
-                            </div>
-                        </div>
-
-                        {/* Image Upload Section */}
-                        <div className="grid gap-2 border-t pt-4">
-                            <Label className="text-lg font-semibold text-primary">Base Image (Optional - for img2img)</Label>
-                            {!inputImage ? (
-                                <div className="border-2 border-dashed border-primary/30 rounded-2xl p-8 text-center hover:border-primary hover:bg-primary/5 transition-all cursor-pointer group">
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={handleImageUpload}
-                                        className="hidden"
-                                        id="image-upload"
-                                    />
-                                    <label htmlFor="image-upload" className="cursor-pointer flex flex-col items-center gap-3">
-                                        <div className="bg-primary/10 p-4 rounded-full group-hover:scale-110 transition-transform">
-                                            <Upload className="h-8 w-8 text-primary" />
-                                        </div>
-                                        <span className="text-sm font-medium text-muted-foreground group-hover:text-primary transition-colors">Click to upload base image</span>
-                                    </label>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="grid gap-2">
+                                    <Label>プロバイダー</Label>
+                                    <Select value={provider} onValueChange={setProvider}>
+                                        <SelectTrigger><SelectValue /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="nanobanana">Nanobanana</SelectItem>
+                                            <SelectItem value="nanobanana-pro">Nanobanana Pro</SelectItem>
+                                        </SelectContent>
+                                    </Select>
                                 </div>
-                            ) : (
-                                <div className="relative group">
-                                    <img src={inputImage} alt="Input" className="w-full rounded-2xl shadow-md" />
-                                    <Button
-                                        size="icon"
-                                        variant="destructive"
-                                        className="absolute top-2 right-2 rounded-full shadow-lg hover:scale-110 transition-transform"
-                                        onClick={clearInputImage}
+                                <div className="grid gap-2">
+                                    <Label>タスクタイプ</Label>
+                                    <Select value={taskType} onValueChange={setTaskType}>
+                                        <SelectTrigger><SelectValue /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="text-to-image">テキストから画像</SelectItem>
+                                            <SelectItem value="image-to-image">画像から画像</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </div>
+
+                            <div className="grid gap-2">
+                                <Label>プロンプト</Label>
+                                <Textarea
+                                    placeholder="生成したい画像の説明を入力..."
+                                    value={prompt}
+                                    onChange={e => setPrompt(e.target.value)}
+                                    className="h-32"
+                                />
+                            </div>
+
+                            <div className="grid gap-2">
+                                <Label>ネガティブプロンプト</Label>
+                                <Input
+                                    placeholder="低品質、解剖学的な誤り..."
+                                    value={negativePrompt}
+                                    onChange={e => setNegativePrompt(e.target.value)}
+                                />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="grid gap-2">
+                                    <Label>アスペクト比</Label>
+                                    <Select value={aspectRatio} onValueChange={setAspectRatio}>
+                                        <SelectTrigger><SelectValue /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="1:1">1:1 (正方形)</SelectItem>
+                                            <SelectItem value="2:3">2:3 (縦長)</SelectItem>
+                                            <SelectItem value="3:2">3:2 (横長)</SelectItem>
+                                            <SelectItem value="3:4">3:4</SelectItem>
+                                            <SelectItem value="4:3">4:3</SelectItem>
+                                            <SelectItem value="9:16">9:16 (縦長)</SelectItem>
+                                            <SelectItem value="16:9">16:9 (横長)</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label>解像度</Label>
+                                    <Select
+                                        value={outputResolution}
+                                        onValueChange={(val) => {
+                                            setOutputResolution(val);
+                                            // 2k/4k requires Pro model
+                                            if (val === '2k' || val === '4k') {
+                                                setProvider('nanobanana-pro');
+                                            }
+                                        }}
                                     >
-                                        <X className="h-4 w-4" />
-                                    </Button>
+                                        <SelectTrigger><SelectValue /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="1k">1k</SelectItem>
+                                            <SelectItem value="2k">2k (Pro)</SelectItem>
+                                            <SelectItem value="4k">4k (Pro)</SelectItem>
+                                        </SelectContent>
+                                    </Select>
                                 </div>
-                            )}
-                        </div>
+                            </div>
 
-                        {/* Reference Images Section */}
-                        <div className="grid gap-2 border-t pt-4">
-                            <Label className="text-lg font-semibold text-secondary">Reference Images (Optional)</Label>
-                            <p className="text-xs text-muted-foreground mb-2">Add multiple reference images for style or content guidance</p>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="grid gap-2">
+                                    <Label>生成枚数</Label>
+                                    <Input
+                                        type="number"
+                                        min={1}
+                                        max={4}
+                                        value={numOutputs}
+                                        onChange={e => setNumOutputs(parseInt(e.target.value))}
+                                    />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label>シード（任意）</Label>
+                                    <Input
+                                        type="number"
+                                        placeholder="ランダム"
+                                        value={seed || ''}
+                                        onChange={e => setSeed(e.target.value ? parseInt(e.target.value) : undefined)}
+                                    />
+                                </div>
+                            </div>
 
-                            <div className="grid grid-cols-3 gap-2">
-                                {referenceImages.map(ref => (
-                                    <div key={ref.id} className="relative group aspect-square">
-                                        <img
-                                            src={ref.dataUrl}
-                                            alt="Reference"
-                                            className="w-full h-full object-cover rounded-xl shadow-sm"
+                            {/* Image Upload Section */}
+                            <div className="grid gap-2 border-t pt-4">
+                                <Label className="text-lg font-semibold text-primary">ベース画像（任意 - img2img用）</Label>
+                                {!inputImage ? (
+                                    <div className="border-2 border-dashed border-primary/30 rounded-2xl p-8 text-center hover:border-primary hover:bg-primary/5 transition-all cursor-pointer group">
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={handleImageUpload}
+                                            className="hidden"
+                                            id="image-upload"
                                         />
+                                        <label htmlFor="image-upload" className="cursor-pointer flex flex-col items-center gap-3">
+                                            <div className="bg-primary/10 p-4 rounded-full group-hover:scale-110 transition-transform">
+                                                <Upload className="h-8 w-8 text-primary" />
+                                            </div>
+                                            <span className="text-sm font-medium text-muted-foreground group-hover:text-primary transition-colors">クリックしてベース画像をアップロード</span>
+                                        </label>
+                                    </div>
+                                ) : (
+                                    <div className="relative group">
+                                        <img src={inputImage} alt="Input" className="w-full rounded-2xl shadow-md" />
                                         <Button
                                             size="icon"
                                             variant="destructive"
-                                            className="absolute top-1 right-1 h-6 w-6 rounded-full shadow-lg hover:scale-110 transition-transform opacity-0 group-hover:opacity-100"
-                                            onClick={() => removeReferenceImage(ref.id)}
+                                            className="absolute top-2 right-2 rounded-full shadow-lg hover:scale-110 transition-transform"
+                                            onClick={clearInputImage}
                                         >
-                                            <X className="h-3 w-3" />
+                                            <X className="h-4 w-4" />
                                         </Button>
                                     </div>
-                                ))}
+                                )}
+                            </div>
 
-                                {/* Add Reference Button */}
-                                <div className="aspect-square border-2 border-dashed border-secondary/30 rounded-xl flex items-center justify-center hover:border-secondary hover:bg-secondary/5 transition-all cursor-pointer group">
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        multiple
-                                        onChange={handleReferenceImageUpload}
-                                        className="hidden"
-                                        id="reference-upload"
-                                    />
-                                    <label htmlFor="reference-upload" className="cursor-pointer flex flex-col items-center gap-1 p-2">
-                                        <Plus className="h-6 w-6 text-secondary/50 group-hover:text-secondary transition-colors" />
-                                        <span className="text-xs text-muted-foreground group-hover:text-secondary transition-colors">Add</span>
-                                    </label>
+                            {/* Reference Images Section */}
+                            <div className="grid gap-2 border-t pt-4">
+                                <Label className="text-lg font-semibold text-secondary">参照画像（任意）</Label>
+                                <p className="text-xs text-muted-foreground mb-2">スタイルやコンテンツガイドとして複数の参照画像を追加</p>
+
+                                <div className="grid grid-cols-3 gap-2">
+                                    {referenceImages.map(ref => (
+                                        <div key={ref.id} className="relative group aspect-square">
+                                            <img
+                                                src={ref.dataUrl}
+                                                alt="Reference"
+                                                className="w-full h-full object-cover rounded-xl shadow-sm"
+                                            />
+                                            <Button
+                                                size="icon"
+                                                variant="destructive"
+                                                className="absolute top-1 right-1 h-6 w-6 rounded-full shadow-lg hover:scale-110 transition-transform opacity-0 group-hover:opacity-100"
+                                                onClick={() => removeReferenceImage(ref.id)}
+                                            >
+                                                <X className="h-3 w-3" />
+                                            </Button>
+                                        </div>
+                                    ))}
+
+                                    {/* Add Reference Button */}
+                                    <div className="aspect-square border-2 border-dashed border-secondary/30 rounded-xl flex items-center justify-center hover:border-secondary hover:bg-secondary/5 transition-all cursor-pointer group">
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            multiple
+                                            onChange={handleReferenceImageUpload}
+                                            className="hidden"
+                                            id="reference-upload"
+                                        />
+                                        <label htmlFor="reference-upload" className="cursor-pointer flex flex-col items-center gap-1 p-2">
+                                            <Plus className="h-6 w-6 text-secondary/50 group-hover:text-secondary transition-colors" />
+                                            <span className="text-xs text-muted-foreground group-hover:text-secondary transition-colors">追加</span>
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
-                        <Button
-                            className="w-full text-lg font-bold py-6 rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 active:scale-95 bg-gradient-to-r from-primary to-orange-400 hover:from-orange-400 hover:to-primary"
-                            onClick={handleGenerate}
-                            disabled={isGenerating || !prompt}
-                        >
-                            {isGenerating ? (
-                                <>
-                                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                                    Dreaming...
-                                </>
-                            ) : (
-                                '✨ Generate Magic ✨'
-                            )}
-                        </Button>
-                        {error && <p className="text-sm text-red-500">{error}</p>}
-                    </CardContent>
-                </Card>
-            </div>
-
-            <div className="space-y-6">
-                {/* Preview area for generated images */}
-                {generatedImages.length > 0 ? (
-                    <Card className="border-2 border-primary/20">
-                        <CardContent className="p-4">
-                            <Label className="text-lg font-semibold text-primary mb-4 block">Generated Images ✨</Label>
-                            <p className="text-xs text-muted-foreground mb-3">Click an image to view in gallery</p>
-                            <div className="grid grid-cols-2 gap-3">
-                                {generatedImages.map((img) => (
-                                    <div
-                                        key={img.id}
-                                        className="relative aspect-square rounded-xl overflow-hidden border-2 border-transparent hover:border-primary cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02] group"
-                                        onClick={() => router.push('/gallery')}
-                                    >
-                                        <img
-                                            src={`data:${img.mimeType};base64,${img.dataBase64}`}
-                                            alt="Generated"
-                                            className="w-full h-full object-cover"
-                                        />
-                                        <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/10 transition-colors flex items-center justify-center">
-                                            <span className="text-white text-sm font-medium opacity-0 group-hover:opacity-100 drop-shadow-lg transition-opacity">
-                                                View in Gallery →
-                                            </span>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
+                            <Button
+                                className="w-full text-lg font-bold py-6 rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200 active:scale-95 bg-gradient-to-r from-primary to-orange-400 hover:from-orange-400 hover:to-primary"
+                                onClick={handleGenerate}
+                                disabled={isGenerating || !prompt}
+                            >
+                                {isGenerating ? (
+                                    <>
+                                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                                        生成中...
+                                    </>
+                                ) : (
+                                    '✨ 画像を生成 ✨'
+                                )}
+                            </Button>
+                            {error && <p className="text-sm text-red-500">{error}</p>}
                         </CardContent>
                     </Card>
-                ) : (
-                    <div className="h-full min-h-[400px] flex items-center justify-center border-2 border-dashed rounded-xl text-muted-foreground bg-muted/20">
-                        <div className="text-center p-8">
-                            <div className="text-5xl mb-4">🎨</div>
-                            {isGenerating ? (
-                                <div className="flex flex-col items-center gap-3">
-                                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                                    <span className="text-lg font-medium">Dreaming up your images...</span>
+                </div>
+
+                <div className="space-y-6">
+                    {/* Preview area for generated images */}
+                    {generatedImages.length > 0 ? (
+                        <Card className={`border-2 ${isConfirmed ? 'border-green-500/50' : 'border-primary/20'}`}>
+                            <CardContent className="p-4 space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <Label className="text-lg font-semibold text-primary">生成画像 ✨</Label>
+                                    {isConfirmed && (
+                                        <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full flex items-center gap-1">
+                                            <Check className="h-3 w-3" /> 確定済み
+                                        </span>
+                                    )}
                                 </div>
-                            ) : (
-                                <span className="text-lg">Generated images will appear here</span>
-                            )}
+                                <p className="text-xs text-muted-foreground">クリックで拡大表示</p>
+                                <div className="grid grid-cols-2 gap-3">
+                                    {generatedImages.map((img) => (
+                                        <div
+                                            key={img.id}
+                                            className="relative aspect-square rounded-xl overflow-hidden border-2 border-transparent hover:border-primary cursor-pointer hover:shadow-lg transition-all hover:scale-[1.02] group"
+                                            onClick={() => setPreviewImage({ mimeType: img.mimeType, dataBase64: img.dataBase64 })}
+                                        >
+                                            <img
+                                                src={`data:${img.mimeType};base64,${img.dataBase64}`}
+                                                alt="Generated"
+                                                className="w-full h-full object-cover"
+                                            />
+                                            <div className="absolute inset-0 bg-primary/0 group-hover:bg-primary/10 transition-colors flex items-center justify-center">
+                                                <span className="text-white text-sm font-medium opacity-0 group-hover:opacity-100 drop-shadow-lg transition-opacity">
+                                                    クリックで拡大 🔍
+                                                </span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Revision controls - only show if not confirmed */}
+                                {!isConfirmed && (
+                                    <div className="space-y-2 pt-2 border-t">
+                                        <Textarea
+                                            placeholder="修正指示を入力（例：背景をもっと明るく、キャラをもっと大きく）"
+                                            value={revisionText}
+                                            onChange={(e) => setRevisionText(e.target.value)}
+                                            className="text-sm"
+                                            rows={2}
+                                        />
+                                        <div className="flex gap-2">
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                className="flex-1 gap-1"
+                                                onClick={handleRevise}
+                                                disabled={isRevising || isGenerating || !revisionText.trim()}
+                                            >
+                                                {isRevising ? (
+                                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                                ) : (
+                                                    <RefreshCw className="h-3 w-3" />
+                                                )}
+                                                修正
+                                            </Button>
+                                            <Button
+                                                type="button"
+                                                size="sm"
+                                                className="flex-1 gap-1 bg-green-600 hover:bg-green-700"
+                                                onClick={handleConfirm}
+                                                disabled={isRevising || isGenerating}
+                                            >
+                                                <Check className="h-3 w-3" />
+                                                確定
+                                            </Button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Gallery button - only show when confirmed */}
+                                {isConfirmed && (
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        className="w-full gap-2"
+                                        onClick={() => router.push('/gallery')}
+                                    >
+                                        <ExternalLink className="h-3 w-3" />
+                                        ギャラリーを見る
+                                    </Button>
+                                )}
+
+                                <p className="text-xs text-muted-foreground text-center">
+                                    {isConfirmed ? 'ギャラリーに保存されました' : '確定するとギャラリーに保存されます'}
+                                </p>
+                            </CardContent>
+                        </Card>
+                    ) : (
+                        <div className="h-full min-h-[400px] flex items-center justify-center border-2 border-dashed rounded-xl text-muted-foreground bg-muted/20">
+                            <div className="text-center p-8">
+                                <div className="text-5xl mb-4">🎨</div>
+                                {isGenerating ? (
+                                    <div className="flex flex-col items-center gap-3">
+                                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                                        <span className="text-lg font-medium">Dreaming up your images...</span>
+                                    </div>
+                                ) : (
+                                    <span className="text-lg">生成された画像がここに表示されます</span>
+                                )}
+                            </div>
                         </div>
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
-        </div>
+
+            {/* Fullscreen Lightbox */}
+            <Lightbox
+                image={previewImage}
+                onClose={() => setPreviewImage(null)}
+                title="生成画像プレビュー"
+            />
+        </>
     );
 }

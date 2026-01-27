@@ -1,0 +1,1 @@
+export { VideoGeneratorForm } from './VideoGeneratorForm';

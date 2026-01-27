@@ -5,18 +5,20 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { LayoutDashboard, List, Wand2, Images, Settings, LogOut, LayoutGrid, FileImage } from 'lucide-react';
+import { LayoutDashboard, List, Wand2, Images, Settings, LogOut, LayoutGrid, FileImage, Film, Clapperboard } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import Image from 'next/image';
 
 const sidebarItems = [
-    { name: 'Dashboard', href: '/', icon: LayoutDashboard },
-    { name: 'Presets', href: '/presets', icon: List },
+    { name: 'ダッシュボード', href: '/', icon: LayoutDashboard },
+    { name: 'プリセット', href: '/presets', icon: List },
     { name: '自由生成', href: '/generate?mode=free', icon: Wand2 },
     { name: '図解生成', href: '/generate?mode=diagram', icon: LayoutGrid },
-    { name: 'Gallery', href: '/gallery', icon: Images },
+    { name: '動画生成', href: '/generate?mode=video', icon: Film },
+    { name: 'ギャラリー', href: '/gallery', icon: Images },
     { name: '図解ギャラリー', href: '/diagram-gallery', icon: FileImage },
-    { name: 'Settings', href: '/settings', icon: Settings },
+    { name: '動画ギャラリー', href: '/video-gallery', icon: Clapperboard },
+    { name: '設定', href: '/settings', icon: Settings },
 ];
 
 // Helper to check if current path matches item href (handles query params)
@@ -88,7 +90,7 @@ export function AppSidebar() {
                     onClick={() => signOut({ callbackUrl: '/login' })}
                 >
                     <LogOut className="h-4 w-4" />
-                    Logout
+                    ログアウト
                 </Button>
             </div>
         </div>
