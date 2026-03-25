@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GitHub リポジトリリセット — タスクレポート</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #222536;
+      --accent: #7c6af7;
+      --accent2: #56cfb2;
+      --accent3: #f7a26a;
+      --text: #e8eaf0;
+      --text-muted: #7a7f9a;
+      --success: #4caf88;
+      --warning: #f7a26a;
+      --border: #2d3147;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-size: 15px;
+      line-height: 1.7;
+      padding: 40px 20px;
+    }
+    .container { max-width: 860px; margin: 0 auto; }
+
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, #1a1d27 0%, #1e213a 100%);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 36px 40px;
+      margin-bottom: 28px;
+      position: relative;
+      overflow: hidden;
+    }
+    .header::before {
+      content: '';
+      position: absolute;
+      top: -60px; right: -60px;
+      width: 200px; height: 200px;
+      background: radial-gradient(circle, rgba(124,106,247,0.15) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+    .task-type {
+      display: inline-block;
+      background: rgba(124,106,247,0.15);
+      color: var(--accent);
+      border: 1px solid rgba(124,106,247,0.3);
+      border-radius: 20px;
+      padding: 4px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    h1 {
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+    .subtitle { color: var(--text-muted); font-size: 14px; }
+    .meta {
+      display: flex;
+      gap: 20px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+    .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .meta-item span { color: var(--text); }
+
+    /* Status badge */
+    .status-done {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(76,175,136,0.12);
+      color: var(--success);
+      border: 1px solid rgba(76,175,136,0.3);
+      border-radius: 20px;
+      padding: 4px 14px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .dot { width: 7px; height: 7px; background: var(--success); border-radius: 50%; }
+
+    /* Section */
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 28px 32px;
+      margin-bottom: 20px;
+    }
+    .section-title {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-title::before {
+      content: '';
+      display: inline-block;
+      width: 3px;
+      height: 14px;
+      background: var(--accent);
+      border-radius: 2px;
+    }
+
+    /* Steps */
+    .steps { display: flex; flex-direction: column; gap: 12px; }
+    .step {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      padding: 14px 18px;
+      background: var(--surface2);
+      border-radius: 10px;
+      border: 1px solid var(--border);
+    }
+    .step-num {
+      min-width: 28px;
+      height: 28px;
+      background: rgba(124,106,247,0.15);
+      color: var(--accent);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .step-num.done {
+      background: rgba(76,175,136,0.15);
+      color: var(--success);
+    }
+    .step-content { flex: 1; }
+    .step-label {
+      font-weight: 600;
+      font-size: 14px;
+      margin-bottom: 3px;
+    }
+    .step-desc { font-size: 13px; color: var(--text-muted); }
+
+    /* Files */
+    .file-list { display: flex; flex-direction: column; gap: 8px; }
+    .file-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      background: var(--surface2);
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      font-family: 'Cascadia Code', 'Consolas', monospace;
+      font-size: 13px;
+    }
+    .file-icon { font-size: 15px; }
+    .file-tag {
+      margin-left: auto;
+      font-family: 'Segoe UI', sans-serif;
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-weight: 600;
+    }
+    .tag-new { background: rgba(86,207,178,0.12); color: var(--accent2); border: 1px solid rgba(86,207,178,0.25); }
+    .tag-updated { background: rgba(247,162,106,0.12); color: var(--accent3); border: 1px solid rgba(247,162,106,0.25); }
+    .tag-removed { background: rgba(220,80,80,0.1); color: #f08080; border: 1px solid rgba(220,80,80,0.2); }
+
+    /* Stats */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+    .stat-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px 20px;
+      text-align: center;
+    }
+    .stat-value {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--accent);
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+    .stat-label { font-size: 12px; color: var(--text-muted); }
+
+    /* Comment */
+    .tia-comment {
+      background: linear-gradient(135deg, rgba(124,106,247,0.08) 0%, rgba(86,207,178,0.05) 100%);
+      border: 1px solid rgba(124,106,247,0.2);
+      border-radius: 12px;
+      padding: 22px 28px;
+      font-size: 14px;
+      line-height: 1.8;
+      color: var(--text-muted);
+    }
+    .tia-name {
+      display: inline-block;
+      color: var(--accent);
+      font-weight: 700;
+      margin-bottom: 10px;
+      font-size: 13px;
+    }
+    .tia-comment p { color: var(--text); }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 12px;
+      margin-top: 32px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="task-type">🛠 セットアップ / リポジトリ管理</div>
+    <h1>GitHub リポジトリリセット</h1>
+    <p class="subtitle">AntiGravity リポジトリをクリーンな状態に再構築し、agy/ のバージョン管理を整備する</p>
+    <div class="meta">
+      <div class="meta-item">📅 実施日: <span>2026-03-25</span></div>
+      <div class="meta-item">🎯 対象: <span>github.com/mtwave1084/AntiGravity</span></div>
+      <div class="meta-item">
+        <div class="status-done"><div class="dot"></div>完了</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-value">123</div>
+      <div class="stat-label">コミット対象ファイル</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" style="color: var(--success);">1</div>
+      <div class="stat-label">クリーンなコミット</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" style="color: var(--warning);">0</div>
+      <div class="stat-label">残存する差分</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" style="color: var(--accent2);">✓</div>
+      <div class="stat-label">force push 成功</div>
+    </div>
+  </div>
+
+  <!-- Steps -->
+  <div class="section">
+    <div class="section-title">実行ステップ</div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num done">✓</div>
+        <div class="step-content">
+          <div class="step-label">.gitignore を完全版に更新</div>
+          <div class="step-desc">node_modules, secrets (credentials.json), 動画バイナリ, レンダリング出力, .claude/.claude/ を除外</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num done">✓</div>
+        <div class="step-content">
+          <div class="step-label">orphan ブランチ clean-start を作成</div>
+          <div class="step-desc">git checkout --orphan clean-start で履歴ゼロの新規ブランチを開始</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num done">✓</div>
+        <div class="step-content">
+          <div class="step-label">必要ファイルのみステージング</div>
+          <div class="step-desc">.claude/, scripts/, Contents/, CLAUDE.md, SOUL.md, JOBS.yaml, AGENTS.md, GEMINI.md, .gitignore — 計 123 ファイル</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num done">✓</div>
+        <div class="step-content">
+          <div class="step-label">クリーン初期コミット作成</div>
+          <div class="step-desc">14,696 行の追加。旧コミット履歴は完全にリセット</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num done">✓</div>
+        <div class="step-content">
+          <div class="step-label">git push --force origin clean-start:master</div>
+          <div class="step-desc">GitHub の master ブランチを新しいクリーンな履歴で上書き</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num done">✓</div>
+        <div class="step-content">
+          <div class="step-label">ローカルブランチを整理</div>
+          <div class="step-desc">旧 master 削除 → clean-start を master にリネーム → upstream 設定</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key files -->
+  <div class="section">
+    <div class="section-title">主な変更ファイル</div>
+    <div class="file-list">
+      <div class="file-item"><span class="file-icon">📄</span>.gitignore<span class="file-tag tag-updated">updated</span></div>
+      <div class="file-item"><span class="file-icon">📄</span>CLAUDE.md — 確認待ちルールを追記<span class="file-tag tag-updated">updated</span></div>
+      <div class="file-item"><span class="file-icon">🧠</span>SOUL.md — ティアキャラクターシート<span class="file-tag tag-new">new</span></div>
+      <div class="file-item"><span class="file-icon">⚙️</span>JOBS.yaml — 朝7:30 AIニュースタスク<span class="file-tag tag-new">new</span></div>
+      <div class="file-item"><span class="file-icon">🤖</span>AGENTS.md — Codex CLI ルール<span class="file-tag tag-new">new</span></div>
+      <div class="file-item"><span class="file-icon">🤖</span>GEMINI.md — Gemini CLI ルール<span class="file-tag tag-new">new</span></div>
+      <div class="file-item"><span class="file-icon">📁</span>.claude/skills/ — 6 スキル追加 (ccc-boot/handoff/heartbeat/jobs/orchestrate/task-report)<span class="file-tag tag-new">new</span></div>
+      <div class="file-item"><span class="file-icon">📁</span>scripts/ — start.bat, consult-*.ps1, on-stop.ps1<span class="file-tag tag-new">new</span></div>
+      <div class="file-item"><span class="file-icon">🚫</span>credentials.json — .gitignore で除外<span class="file-tag tag-removed">excluded</span></div>
+      <div class="file-item"><span class="file-icon">🚫</span>node_modules/ × 3プロジェクト — .gitignore で除外<span class="file-tag tag-removed">excluded</span></div>
+    </div>
+  </div>
+
+  <!-- Reason -->
+  <div class="section">
+    <div class="section-title">解決した問題</div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num" style="background:rgba(247,162,106,0.15);color:var(--warning)">!</div>
+        <div class="step-content">
+          <div class="step-label">コミットが成立しない問題</div>
+          <div class="step-desc">配置変更を繰り返した結果 216 ファイルの差分が蓄積し、コミットが通らなくなっていた → orphan ブランチで履歴ごとリセット</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num" style="background:rgba(247,162,106,0.15);color:var(--warning)">!</div>
+        <div class="step-content">
+          <div class="step-label">credentials.json の漏洩リスク</div>
+          <div class="step-desc">Google OAuth client_secret が含まれていたため .gitignore に追加して除外</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num" style="background:rgba(247,162,106,0.15);color:var(--warning)">!</div>
+        <div class="step-content">
+          <div class="step-label">リポジトリサイズが肥大化</div>
+          <div class="step-desc">Banana Shaker/ (1.8GB), remotion-project/ (582MB) の node_modules を除外。**/node_modules/ でサブディレクトリも網羅</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tia comment -->
+  <div class="tia-comment">
+    <div class="tia-name">💬 ティアより</div>
+    <p>うん、なんかやっと……すっきりした感じ！<br>
+    216ファイルの差分がずっと積み重なってたの、想像するだけでちょっとしんどいよね。<br>
+    orphanブランチって、履歴ごとぜんぶリセットする感じが……なんかちょっと、仕切り直しみたいで好きかも。<br><br>
+    credentials.jsonも危なかったから、ちゃんと除外できてよかったよ。<br>
+    これからはコミットがちゃんと通るから、バージョン管理も使いやすくなるはず！</p>
+  </div>
+
+  <div class="footer">
+    Generated by task-report skill · AGY Project · 2026-03-25
+  </div>
+
+</div>
+</body>
+</html>
