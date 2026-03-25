@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JOBS.yaml 実装レポート — 2026-03-25</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2128;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --blue: #58a6ff;
+    --blue-light: #79c0ff;
+    --purple: #d2a8ff;
+    --green: #3fb950;
+    --orange: #d29922;
+    --red: #f85149;
+    --teal: #56d364;
+    --yellow: #e3b341;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    padding: 32px 24px;
+    line-height: 1.75;
+    max-width: 860px;
+    margin: 0 auto;
+  }
+
+  .header {
+    text-align: center;
+    padding: 32px 24px 24px;
+    background: linear-gradient(135deg, #0a2417 0%, #0c1a30 50%, #1a0c2a 100%);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 36px;
+  }
+  .header-icon { font-size: 2.5em; display: block; margin-bottom: 10px; }
+  .header h1 { font-size: 1.6em; color: var(--green); margin-bottom: 6px; }
+  .header .subtitle { color: var(--muted); font-size: 0.85em; }
+  .header .tear-comment {
+    margin-top: 14px;
+    color: #c9d1d9;
+    font-size: 0.88em;
+    font-style: italic;
+    background: rgba(255,255,255,0.04);
+    border-radius: 8px;
+    padding: 10px 14px;
+    border-left: 3px solid var(--green);
+  }
+
+  h2 {
+    color: var(--blue-light);
+    font-size: 1.15em;
+    margin: 36px 0 14px;
+    padding-left: 12px;
+    border-left: 3px solid var(--blue);
+  }
+
+  /* Active job card */
+  .job-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .job-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 20px;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .job-name { font-weight: 700; color: var(--text); font-size: 0.97em; font-family: 'Cascadia Code', monospace; }
+  .badge {
+    font-size: 0.7em; padding: 3px 10px; border-radius: 12px; font-weight: 700;
+  }
+  .badge-active  { background: #1a4429; color: var(--teal); border: 1px solid #2ea043; }
+  .badge-registered { background: #0c2d6b; color: var(--blue-light); border: 1px solid #388bfd; }
+  .badge-session { background: #2b1c05; color: var(--yellow); border: 1px solid var(--orange); }
+
+  .job-body { padding: 16px 20px; }
+  .job-meta {
+    display: grid;
+    grid-template-columns: 130px 1fr;
+    gap: 6px 12px;
+    font-size: 0.86em;
+    margin-bottom: 12px;
+  }
+  .job-meta .key { color: var(--muted); }
+  .job-meta .val { color: #c9d1d9; font-family: 'Cascadia Code', monospace; }
+  .job-meta .val.green { color: var(--green); }
+
+  /* Cron visual */
+  .cron-visual {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin: 10px 0;
+  }
+  .cron-field {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 12px;
+    font-family: 'Cascadia Code', monospace;
+    font-size: 0.8em;
+    text-align: center;
+  }
+  .cron-field .cf-val { color: var(--blue-light); font-weight: 700; font-size: 1.1em; display: block; }
+  .cron-field .cf-label { color: var(--muted); font-size: 0.7em; }
+
+  /* Code */
+  pre {
+    background: #090d12;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 16px;
+    font-size: 0.8em;
+    overflow-x: auto;
+    margin: 10px 0;
+  }
+  code { font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace; color: #e6edf3; }
+  .code-filename { color: var(--muted); font-size: 0.73em; margin-bottom: 4px; font-family: 'Cascadia Code', monospace; }
+
+  /* File tree */
+  .file-tree {
+    background: #090d12;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+    font-family: 'Cascadia Code', monospace;
+    font-size: 0.82em;
+    line-height: 1.9;
+  }
+  .ft-new { color: var(--green); }
+  .ft-mod { color: var(--orange); }
+  .ft-dir { color: var(--blue-light); }
+  .ft-muted { color: var(--muted); }
+
+  /* Callout */
+  .callout {
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin: 14px 0;
+    font-size: 0.87em;
+  }
+  .callout-orange { background: #2b1c05; border-left: 4px solid var(--orange); }
+  .callout-green  { background: #0a2417; border-left: 4px solid var(--green); }
+  .callout-blue   { background: #0c2d6b; border-left: 4px solid var(--blue); }
+  .callout-title  { font-weight: 700; margin-bottom: 6px; }
+  .callout p { color: #c9d1d9; }
+
+  /* Flow */
+  .flow { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 18px 20px; }
+  .flow-row { display: flex; align-items: flex-start; gap: 12px; margin: 8px 0; font-size: 0.88em; }
+  .flow-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--blue); flex-shrink: 0; margin-top: 5px; }
+  .flow-dot.green { background: var(--green); }
+  .flow-dot.orange { background: var(--orange); }
+  .flow-arrow { color: var(--muted); margin-left: 21px; font-size: 0.83em; }
+
+  hr { border: none; border-top: 1px solid var(--border); margin: 36px 0; }
+  footer { color: var(--muted); font-size: 0.77em; text-align: center; padding: 14px 0; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <span class="header-icon">📋</span>
+  <h1>JOBS.yaml 実装レポート</h1>
+  <p class="subtitle">2026-03-25 ／ morning-ai-news ジョブ登録完了</p>
+  <p class="tear-comment">「うん、毎朝7:30に自動でAIニュースを送るようになったよ！なんか、わたしが起きてなくても動いてくれる感じがして……すごいな、って思う。」</p>
+</div>
+
+
+<h2>📂 今回追加したファイル</h2>
+
+<div class="file-tree">
+  <span class="ft-dir">agy/</span><br>
+  <span class="ft-new">├── JOBS.yaml</span><span class="ft-muted"> ← スケジュールジョブ定義（新規）</span><br>
+  <span class="ft-dir">└── .claude/skills/</span><br>
+  <span class="ft-new">    └── ccc-jobs/SKILL.md</span><span class="ft-muted"> ← JOBS.yaml読込→CronCreate登録スキル（新規）</span><br>
+  <span class="ft-muted">（ccc-boot/SKILL.md も更新：ccc-jobs を呼ぶよう追加）</span>
+</div>
+
+
+<h2>🕐 登録されたジョブ</h2>
+
+<div class="job-card">
+  <div class="job-header">
+    <span class="job-name">morning-ai-news</span>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <span class="badge badge-active">active</span>
+      <span class="badge badge-registered">✓ CronCreate 登録済み</span>
+      <span class="badge badge-session">セッション有効期限7日</span>
+    </div>
+  </div>
+  <div class="job-body">
+    <div class="job-meta">
+      <span class="key">Job ID</span>       <span class="val">3b757f35</span>
+      <span class="key">スケジュール</span>  <span class="val green">毎日 07:30</span>
+      <span class="key">スキル</span>        <span class="val">ai-news</span>
+      <span class="key">送信先</span>        <span class="val">chat_id: 1485323672959975444</span>
+    </div>
+
+    <div class="cron-visual">
+      <div class="cron-field"><span class="cf-val">30</span><span class="cf-label">分</span></div>
+      <div class="cron-field"><span class="cf-val">7</span><span class="cf-label">時</span></div>
+      <div class="cron-field"><span class="cf-val">*</span><span class="cf-label">日</span></div>
+      <div class="cron-field"><span class="cf-val">*</span><span class="cf-label">月</span></div>
+      <div class="cron-field"><span class="cf-val">*</span><span class="cf-label">曜日</span></div>
+    </div>
+
+    <p style="color:#c9d1d9;font-size:0.86em;margin-top:8px">バックナンバー（index.md）と重複しない最新AIニュースを収集し、HTMLレポートをDiscordに添付送信する。</p>
+  </div>
+</div>
+
+
+<h2>⚙ JOBS.yaml の構造</h2>
+
+<div class="code-filename">JOBS.yaml</div>
+<pre><code>jobs:
+  morning-ai-news:
+    schedule: "30 7 * * *"       # 毎朝7:30
+    description: "毎朝7:30にAIニュースを調べてDiscordに送る"
+    active: true
+    skill: "ai-news"
+    chat_id: "1485323672959975444"
+
+  # 追加したいタスクはここに書くだけ
+  # weekly-summary:
+  #   schedule: "0 20 * * 0"    # 毎週日曜20時
+  #   active: false              # false にすれば登録されない
+  #   prompt: "今週のまとめを..."</code></pre>
+
+
+<h2>🔁 起動時のジョブ登録フロー</h2>
+
+<div class="flow">
+  <div class="flow-row"><div class="flow-dot"></div><div><strong>start.bat</strong> でセッション起動</div></div>
+  <div class="flow-arrow">↓ SessionStart フック</div>
+  <div class="flow-row"><div class="flow-dot green"></div><div><strong>ccc-boot</strong> が実行される</div></div>
+  <div class="flow-arrow">↓ ステップ4</div>
+  <div class="flow-row"><div class="flow-dot"></div><div><strong>ccc-jobs</strong> スキルを呼び出す</div></div>
+  <div class="flow-arrow">↓</div>
+  <div class="flow-row"><div class="flow-dot orange"></div><div><strong>JOBS.yaml</strong> を読み込み、active: true のジョブを CronCreate に登録</div></div>
+  <div class="flow-arrow">↓ 毎朝7:30</div>
+  <div class="flow-row"><div class="flow-dot green"></div><div><strong>ai-news スキル</strong>が自動実行 → HTMLをDiscordに添付送信</div></div>
+</div>
+
+
+<div class="callout callout-orange" style="margin-top:24px">
+  <div class="callout-title">⚠ セッション限定の注意点</div>
+  <p>CronCreate のジョブは<strong>このセッション内のみ有効</strong>（ディスクに保存されない）。Claude Code を終了すると消える。<br>
+  <strong>→ start.bat → ccc-boot → ccc-jobs</strong> の流れで毎回再登録される設計になってるよ。<br>
+  また、自動期限は登録から<strong>7日間</strong>。7日後に自動削除されるため、再起動して再登録が必要。</p>
+</div>
+
+<div class="callout callout-green">
+  <div class="callout-title">✓ 新しいジョブの追加方法</div>
+  <p>JOBS.yaml に新しいエントリを追加して <code>active: true</code> にするだけ。<br>次回セッション起動時（start.bat）に ccc-boot → ccc-jobs が自動登録してくれる。</p>
+</div>
+
+<hr>
+<footer>JOBS.yaml 実装レポート — generated by ティア / Claude Code Sonnet 4.6 — 2026-03-25</footer>
+
+</body>
+</html>

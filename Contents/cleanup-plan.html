@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ファイルシステム整理計画 — C:\Users\mt_wa\</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #21262d;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent: #58a6ff;
+    --green: #3fb950;
+    --yellow: #d29922;
+    --red: #f85149;
+    --purple: #bc8cff;
+    --orange: #f0883e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .page { max-width: 1100px; margin: 0 auto; padding: 40px 24px; }
+  h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+  h2 { font-size: 20px; font-weight: 600; margin: 32px 0 16px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+  h3 { font-size: 15px; font-weight: 600; margin-bottom: 10px; }
+  .subtitle { color: var(--muted); font-size: 13px; margin-bottom: 40px; }
+
+  /* Status badges */
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+  .badge-safe { background: rgba(63,185,80,0.15); color: var(--green); border: 1px solid rgba(63,185,80,0.3); }
+  .badge-caution { background: rgba(210,153,34,0.15); color: var(--yellow); border: 1px solid rgba(210,153,34,0.3); }
+  .badge-skip { background: rgba(139,148,158,0.15); color: var(--muted); border: 1px solid rgba(139,148,158,0.3); }
+  .badge-done { background: rgba(88,166,255,0.15); color: var(--accent); border: 1px solid rgba(88,166,255,0.3); }
+  .badge-delete { background: rgba(248,81,73,0.15); color: var(--red); border: 1px solid rgba(248,81,73,0.3); }
+
+  /* Problem list */
+  .problem-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  .problem-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+  }
+  .problem-card.critical { border-left: 3px solid var(--red); }
+  .problem-card.warn { border-left: 3px solid var(--yellow); }
+  .problem-card.info { border-left: 3px solid var(--accent); }
+  .problem-card h3 { margin-bottom: 8px; font-size: 13px; }
+  .problem-card p { color: var(--muted); font-size: 12px; }
+  .problem-card code {
+    font-family: 'Cascadia Code', 'Consolas', monospace;
+    font-size: 11px;
+    background: var(--surface2);
+    padding: 1px 5px;
+    border-radius: 4px;
+    color: var(--purple);
+  }
+
+  /* Directory tree */
+  .tree-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 32px;
+  }
+  .tree-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+  }
+  .tree-box h3 { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 16px; }
+  .tree {
+    font-family: 'Cascadia Code', 'Consolas', monospace;
+    font-size: 12px;
+    line-height: 1.8;
+  }
+  .tree .dir { color: var(--accent); }
+  .tree .file { color: var(--text); }
+  .tree .tool-config { color: var(--yellow); }
+  .tree .problem { color: var(--red); text-decoration: line-through; }
+  .tree .new { color: var(--green); }
+  .tree .comment { color: var(--muted); font-style: italic; }
+  .tree .moved { color: var(--orange); }
+  .indent { padding-left: 20px; }
+
+  /* Action table */
+  .action-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 32px;
+  }
+  .action-table th {
+    background: var(--surface2);
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    border-bottom: 1px solid var(--border);
+  }
+  .action-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    vertical-align: top;
+  }
+  .action-table tr:hover td { background: rgba(255,255,255,0.02); }
+  .action-table code {
+    font-family: 'Cascadia Code', 'Consolas', monospace;
+    font-size: 11px;
+    background: var(--surface2);
+    padding: 2px 6px;
+    border-radius: 4px;
+    color: var(--purple);
+    display: inline-block;
+  }
+  .from-path { color: var(--red); }
+  .to-path { color: var(--green); }
+
+  /* Phase blocks */
+  .phase {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .phase-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .phase-num {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+  .phase-title { font-weight: 600; font-size: 15px; }
+  .phase-desc { color: var(--muted); font-size: 12px; margin-top: 2px; }
+  .cmd-list { list-style: none; }
+  .cmd-list li {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 12px;
+    margin-bottom: 8px;
+    font-family: 'Cascadia Code', 'Consolas', monospace;
+    font-size: 12px;
+    color: var(--green);
+  }
+  .cmd-list li .comment {
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  .note {
+    background: rgba(88,166,255,0.08);
+    border: 1px solid rgba(88,166,255,0.2);
+    border-radius: 6px;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--accent);
+    margin-top: 12px;
+  }
+  .note strong { font-weight: 600; }
+
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    text-align: center;
+  }
+  .stat-num { font-size: 28px; font-weight: 700; line-height: 1.2; }
+  .stat-label { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .stat-num.green { color: var(--green); }
+  .stat-num.yellow { color: var(--yellow); }
+  .stat-num.red { color: var(--red); }
+  .stat-num.blue { color: var(--accent); }
+
+  footer { color: var(--muted); font-size: 12px; text-align: center; margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--border); }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <h1>🗂 ファイルシステム整理計画</h1>
+  <p class="subtitle">C:\Users\mt_wa\ — 2026-03-24 作成</p>
+
+  <!-- Summary Stats -->
+  <div class="summary-grid">
+    <div class="stat-card"><div class="stat-num green">8</div><div class="stat-label">移動アクション</div></div>
+    <div class="stat-card"><div class="stat-num red">2</div><div class="stat-label">削除候補（要確認）</div></div>
+    <div class="stat-card"><div class="stat-num yellow">3</div><div class="stat-label">触らない（ツール管理）</div></div>
+    <div class="stat-card"><div class="stat-num blue">3</div><div class="stat-label">新規フォルダ作成</div></div>
+  </div>
+
+  <!-- Problem Areas -->
+  <h2>🔍 現状の問題点</h2>
+  <div class="problem-grid">
+    <div class="problem-card critical">
+      <h3>① AIツール設定の散乱</h3>
+      <p><code>agy/</code> 直下に <code>.agent/</code>（Codex用）と <code>.claude/</code> が混在。<code>remotion-project/</code> 内にも <code>.agent/</code> <code>.agents/</code> <code>.codex/</code> <code>.cursor/</code> <code>.gemini/</code> が点在。</p>
+    </div>
+    <div class="problem-card warn">
+      <h3>② ルートに散らかったファイル</h3>
+      <p><code>agy/</code> 直下にスクリーンショット3枚、HTMLファイル、PowerShellスクリプト4本が混在。<code>Contents/AINews/</code> に同名HTMLが既にある。</p>
+    </div>
+    <div class="problem-card warn">
+      <h3>③ Obsidian vaultの重複</h3>
+      <p><code>~\Obsidian\</code>（メイン）と <code>agy\Obsidian\</code>（ローカル）と <code>agy\Contents\ObsidianVault\</code> が3箇所に存在。</p>
+    </div>
+    <div class="problem-card info">
+      <h3>④ knowledge/ フォルダの位置</h3>
+      <p><code>agy\knowledge\</code> と <code>agy\.agent\knowledge\</code> が別々に存在。統合できる可能性。</p>
+    </div>
+    <div class="problem-card info">
+      <h3>⑤ Obsidian_Export/ の位置</h3>
+      <p><code>agy\Obsidian_Export\</code> にObsidianクイックスタートや講座教材が混在。コンテンツとして <code>Contents/</code> に整理すべき。</p>
+    </div>
+    <div class="problem-card critical">
+      <h3>⑥ 重複HTMLファイル</h3>
+      <p><code>agy\ai-news-2026-03-23.html</code> が存在するが、<code>agy\Contents\AINews\ai-news-2026-03-23.html</code> に同名ファイルが既にある。ルートのものは削除可能。</p>
+    </div>
+  </div>
+
+  <!-- Before / After Tree -->
+  <h2>📁 Before / After 構造比較</h2>
+  <div class="tree-container">
+    <!-- BEFORE -->
+    <div class="tree-box">
+      <h3>⚠ Before（現状）</h3>
+      <div class="tree">
+        <span class="dir">agy/</span><br>
+        <div class="indent">
+          <span class="tool-config">.agent/</span> <span class="comment">← Codex設定（問題①）</span><br>
+          <span class="tool-config">.claude/</span><br>
+          <span class="dir">Banana Shaker/</span><br>
+          <span class="dir">Contents/</span><br>
+          <div class="indent">
+            <span class="dir">AINews/</span><br>
+            <span class="dir">Brain参考記事/</span><br>
+            <span class="dir">ObsidianVault/</span> <span class="comment">← 重複（問題③）</span><br>
+          </div>
+          <span class="dir">knowledge/</span> <span class="comment">← 問題④</span><br>
+          <span class="dir">mv-project/</span><br>
+          <span class="dir problem">Obsidian/</span> <span class="comment">← 重複vault（問題③）</span><br>
+          <span class="dir">Obsidian_Export/</span> <span class="comment">← 問題⑤</span><br>
+          <span class="dir">remotion-project/</span><br>
+          <div class="indent">
+            <span class="tool-config">.agent/</span> <span class="comment">← 問題①</span><br>
+            <span class="tool-config">.agents/</span><br>
+            <span class="tool-config">.codex/</span><br>
+            <span class="tool-config">.cursor/</span><br>
+            <span class="tool-config">.gemini/</span><br>
+          </div>
+          <span class="dir">soli-tear-mv/</span><br>
+          <span class="file problem">ai-news-2026-03-23.html</span> <span class="comment">← 重複（問題⑥）</span><br>
+          <span class="file problem">screenshot.png</span> <span class="comment">← 問題②</span><br>
+          <span class="file problem">screenshot2.png</span><br>
+          <span class="file problem">screenshot3.png</span><br>
+          <span class="file problem">wake2.ps1</span> <span class="comment">← 問題②</span><br>
+          <span class="file problem">wake_and_shot.ps1</span><br>
+          <span class="file problem">take_screenshot.ps1</span><br>
+          <span class="file problem">kill_old.ps1</span><br>
+          <span class="file">CLAUDE.md</span><br>
+          <span class="file">credentials.json</span><br>
+          <span class="file">upload_to_drive.py</span><br>
+        </div>
+      </div>
+    </div>
+    <!-- AFTER -->
+    <div class="tree-box">
+      <h3>✅ After（整理後）</h3>
+      <div class="tree">
+        <span class="dir">agy/</span><br>
+        <div class="indent">
+          <span class="tool-config">.agent/</span> <span class="comment">← そのまま（ツール管理）</span><br>
+          <span class="tool-config">.claude/</span><br>
+          <span class="dir">Banana Shaker/</span><br>
+          <span class="dir">Contents/</span><br>
+          <div class="indent">
+            <span class="dir">AINews/</span><br>
+            <span class="dir">Brain参考記事/</span><br>
+            <span class="dir new">ObsidianExport/</span> <span class="comment">← Obsidian_Exportを移動</span><br>
+          </div>
+          <span class="dir">mv-project/</span><br>
+          <span class="dir">remotion-project/</span><br>
+          <div class="indent">
+            <span class="comment">（dotfilesはそのまま）</span><br>
+          </div>
+          <span class="dir">soli-tear-mv/</span><br>
+          <span class="new dir">assets/</span> <span class="comment">← screenshots移動先</span><br>
+          <div class="indent">
+            <span class="moved file">screenshot.png</span><br>
+            <span class="moved file">screenshot2.png</span><br>
+            <span class="moved file">screenshot3.png</span><br>
+          </div>
+          <span class="new dir">scripts/</span> <span class="comment">← PS1スクリプト移動先</span><br>
+          <div class="indent">
+            <span class="moved file">wake2.ps1</span><br>
+            <span class="moved file">wake_and_shot.ps1</span><br>
+            <span class="moved file">take_screenshot.ps1</span><br>
+            <span class="moved file">kill_old.ps1</span><br>
+          </div>
+          <span class="file">CLAUDE.md</span><br>
+          <span class="file">credentials.json</span><br>
+          <span class="file">upload_to_drive.py</span><br>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Action Table -->
+  <h2>📋 アクション一覧</h2>
+  <table class="action-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>対象</th>
+        <th>アクション</th>
+        <th>From → To</th>
+        <th>ステータス</th>
+        <th>理由</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td>スクリーンショット×3</td>
+        <td>移動</td>
+        <td>
+          <code class="from-path">agy/screenshot*.png</code><br>
+          → <code class="to-path">agy/assets/</code>
+        </td>
+        <td><span class="badge badge-safe">SAFE</span></td>
+        <td>ルート汚染解消。依存なし</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>PowerShellスクリプト×4</td>
+        <td>移動</td>
+        <td>
+          <code class="from-path">agy/*.ps1</code><br>
+          → <code class="to-path">agy/scripts/</code>
+        </td>
+        <td><span class="badge badge-safe">SAFE</span></td>
+        <td>ユーティリティスクリプトをまとめる。内部パスに依存なし</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>ai-news HTML（重複）</td>
+        <td>削除</td>
+        <td>
+          <code class="from-path">agy/ai-news-2026-03-23.html</code><br>
+          → 削除（Contents/AINews/に同名あり）
+        </td>
+        <td><span class="badge badge-safe">SAFE</span></td>
+        <td>Contents/AINews/ai-news-2026-03-23.html と重複</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td>Obsidian_Export/</td>
+        <td>移動</td>
+        <td>
+          <code class="from-path">agy/Obsidian_Export/</code><br>
+          → <code class="to-path">agy/Contents/ObsidianExport/</code>
+        </td>
+        <td><span class="badge badge-safe">SAFE</span></td>
+        <td>コンテンツとしてContents以下に整理</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td>knowledge/</td>
+        <td>移動</td>
+        <td>
+          <code class="from-path">agy/knowledge/</code><br>
+          → <code class="to-path">agy/Contents/knowledge/</code>
+        </td>
+        <td><span class="badge badge-caution">CAUTION</span></td>
+        <td>.agent/knowledge/ との重複確認が必要。統合後移動</td>
+      </tr>
+      <tr>
+        <td>6</td>
+        <td>agy/Obsidian/ (ローカルvault)</td>
+        <td>確認→移動 or 統合</td>
+        <td>
+          <code class="from-path">agy/Obsidian/</code><br>
+          → <code class="to-path">~\Obsidian\</code> または <code>agy/Contents/ObsidianLocal/</code>
+        </td>
+        <td><span class="badge badge-caution">CAUTION</span></td>
+        <td>~\Obsidian\ との差分確認が必要。Obsidianで開いている場合は移動後に設定変更要</td>
+      </tr>
+      <tr>
+        <td>7</td>
+        <td>Contents/ObsidianVault/</td>
+        <td>確認→統合</td>
+        <td>
+          <code class="from-path">agy/Contents/ObsidianVault/</code><br>
+          → <code class="to-path">agy/Contents/ObsidianExport/</code> に統合
+        </td>
+        <td><span class="badge badge-caution">CAUTION</span></td>
+        <td>Export内容と重複していないか確認後</td>
+      </tr>
+      <tr>
+        <td>8</td>
+        <td>remotion-project内dotfiles</td>
+        <td>触らない</td>
+        <td>
+          <code>.agent/ .agents/ .codex/ .cursor/ .gemini/</code>
+        </td>
+        <td><span class="badge badge-skip">SKIP</span></td>
+        <td>各ツールがプロジェクトルートに自動生成。移動するとツールが再生成する</td>
+      </tr>
+      <tr>
+        <td>9</td>
+        <td>agy/.agent/ (Codex設定)</td>
+        <td>触らない</td>
+        <td>そのまま</td>
+        <td><span class="badge badge-skip">SKIP</span></td>
+        <td>Codex CLIが期待する位置。skills・knowledge等の参照が壊れる可能性あり</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Execution Phases -->
+  <h2>🚀 実行フェーズ</h2>
+
+  <div class="phase">
+    <div class="phase-header">
+      <div class="phase-num">1</div>
+      <div>
+        <div class="phase-title">新規フォルダ作成</div>
+        <div class="phase-desc">移動先ディレクトリを先に作成</div>
+      </div>
+      <span class="badge badge-safe">自動実行</span>
+    </div>
+    <ul class="cmd-list">
+      <li>mkdir -p /c/Users/mt_wa/projects/agy/assets <span class="comment"># スクリーンショット格納先</span></li>
+      <li>mkdir -p /c/Users/mt_wa/projects/agy/scripts <span class="comment"># PS1スクリプト格納先</span></li>
+      <li>mkdir -p /c/Users/mt_wa/projects/agy/Contents/ObsidianExport <span class="comment"># Obsidianエクスポート統合先</span></li>
+    </ul>
+  </div>
+
+  <div class="phase">
+    <div class="phase-header">
+      <div class="phase-num">2</div>
+      <div>
+        <div class="phase-title">ルートのファイル整理（スクショ＆スクリプト）</div>
+        <div class="phase-desc">agy/ 直下の散らかったファイルを移動</div>
+      </div>
+      <span class="badge badge-safe">自動実行</span>
+    </div>
+    <ul class="cmd-list">
+      <li>mv /c/Users/mt_wa/projects/agy/screenshot*.png /c/Users/mt_wa/projects/agy/assets/</li>
+      <li>mv /c/Users/mt_wa/projects/agy/*.ps1 /c/Users/mt_wa/projects/agy/scripts/</li>
+    </ul>
+  </div>
+
+  <div class="phase">
+    <div class="phase-header">
+      <div class="phase-num">3</div>
+      <div>
+        <div class="phase-title">重複HTMLの削除</div>
+        <div class="phase-desc">Contents/AINews/ に同名ファイルが存在するルートのHTMLを削除</div>
+      </div>
+      <span class="badge badge-safe">自動実行</span>
+    </div>
+    <ul class="cmd-list">
+      <li>rm /c/Users/mt_wa/projects/agy/ai-news-2026-03-23.html <span class="comment"># Contents/AINews/に同名あり</span></li>
+    </ul>
+  </div>
+
+  <div class="phase">
+    <div class="phase-header">
+      <div class="phase-num">4</div>
+      <div>
+        <div class="phase-title">Obsidian_Export/ を Contents/ 以下へ移動</div>
+        <div class="phase-desc">コンテンツ素材を Contents/ に集約</div>
+      </div>
+      <span class="badge badge-safe">自動実行</span>
+    </div>
+    <ul class="cmd-list">
+      <li>mv /c/Users/mt_wa/projects/agy/Obsidian_Export/* /c/Users/mt_wa/projects/agy/Contents/ObsidianExport/</li>
+      <li>rmdir /c/Users/mt_wa/projects/agy/Obsidian_Export <span class="comment"># 空になったら削除</span></li>
+    </ul>
+  </div>
+
+  <div class="phase">
+    <div class="phase-header">
+      <div class="phase-num">5</div>
+      <div>
+        <div class="phase-title">knowledge/ の整理（要確認）</div>
+        <div class="phase-desc">.agent/knowledge/ との重複を確認してから実行</div>
+      </div>
+      <span class="badge badge-caution">手動確認後</span>
+    </div>
+    <ul class="cmd-list">
+      <li><span class="comment"># 内容確認後に実行：</span></li>
+      <li>mv /c/Users/mt_wa/projects/agy/knowledge /c/Users/mt_wa/projects/agy/Contents/knowledge</li>
+    </ul>
+    <div class="note"><strong>注意：</strong> <code>agy/knowledge/nano_banana_pro/</code> と <code>agy/.agent/knowledge/</code> の差分を確認してからマージまたは移動</div>
+  </div>
+
+  <div class="phase">
+    <div class="phase-header">
+      <div class="phase-num">6</div>
+      <div>
+        <div class="phase-title">agy/Obsidian/ の処理（要確認）</div>
+        <div class="phase-desc">ローカルvaultの扱いを決定する</div>
+      </div>
+      <span class="badge badge-caution">手動確認後</span>
+    </div>
+    <div class="note">
+      <strong>確認事項：</strong><br>
+      <code>agy/Obsidian/</code> の内容が <code>~\Obsidian\</code> と同一なら削除。<br>
+      独自のノートがあれば <code>~\Obsidian\</code> にマージするか <code>Contents/ObsidianLocal/</code> として保管。<br>
+      Obsidianで現在開いている場合は、移動後に Obsidian の Vault 設定を更新すること。
+    </div>
+  </div>
+
+  <!-- Touch Nothing -->
+  <h2>🚫 触らないもの（ツール管理）</h2>
+  <table class="action-table">
+    <thead>
+      <tr><th>パス</th><th>ツール</th><th>理由</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>agy/.claude/</code></td>
+        <td>Claude Code</td>
+        <td>プロジェクトルートに必須。移動不可</td>
+      </tr>
+      <tr>
+        <td><code>agy/.agent/</code></td>
+        <td>Codex CLI / AntiGravity</td>
+        <td>Codex がプロジェクトルートで期待。skills・knowledge・workflows が内部参照</td>
+      </tr>
+      <tr>
+        <td><code>remotion-project/.codex/</code> 等</td>
+        <td>各AIツール</td>
+        <td>各ツールがプロジェクトルートに自動生成するため、移動しても再生成される</td>
+      </tr>
+      <tr>
+        <td><code>~/.claude/</code> <code>~/.codex/</code> 等</td>
+        <td>全AIツール</td>
+        <td>ホームディレクトリのdotfilesはツールが管理。触ると認証・設定が壊れる</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <footer>
+    Generated: 2026-03-24 | C:\Users\mt_wa\ Filesystem Cleanup Plan
+  </footer>
+</div>
+</body>
+</html>

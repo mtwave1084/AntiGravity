@@ -1,0 +1,42 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(claude mcp:*)",
+      "mcp__plugin_discord_discord__reply",
+      "mcp__plugin_discord_discord__fetch_messages",
+      "mcp__plugin_discord_discord__react",
+      "mcp__plugin_discord_discord__edit_message",
+      "Skill(today)",
+      "Skill(ccc-boot)",
+      "Skill(ccc-heartbeat)",
+      "WebSearch",
+      "CronCreate",
+      "CronList",
+      "CronDelete",
+      "Skill(ccc-handoff)",
+      "Skill(ccc-jobs)"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo ccc-session-start"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -NonInteractive -File C:\\Users\\mt_wa\\projects\\agy\\scripts\\on-stop.ps1"
+          }
+        ]
+      }
+    ]
+  }
+}

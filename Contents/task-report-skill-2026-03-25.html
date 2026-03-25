@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>task-report スキル 実装レポート — 2026-03-25</title>
+<style>
+  :root {
+    --bg: #0d1117; --surface: #161b22; --surface2: #1c2128;
+    --border: #30363d; --text: #e6edf3; --muted: #8b949e;
+    --blue: #58a6ff; --blue-light: #79c0ff; --purple: #d2a8ff;
+    --green: #3fb950; --orange: #d29922; --teal: #56d364;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; padding: 32px 24px; line-height: 1.75; max-width: 880px; margin: 0 auto; }
+
+  .header { text-align: center; padding: 32px 24px 24px; background: linear-gradient(135deg, #0c2d6b, #1a0a3d, #0a2417); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 36px; }
+  .header-icon { font-size: 2.4em; display: block; margin-bottom: 10px; }
+  .header h1 { font-size: 1.6em; color: var(--blue-light); margin-bottom: 6px; }
+  .header .subtitle { color: var(--muted); font-size: 0.85em; }
+  .header .tear-comment { margin-top: 14px; color: #c9d1d9; font-size: 0.88em; font-style: italic; background: rgba(255,255,255,0.04); border-radius: 8px; padding: 10px 14px; border-left: 3px solid var(--blue); }
+
+  h2 { color: var(--blue-light); font-size: 1.15em; margin: 36px 0 14px; padding-left: 12px; border-left: 3px solid var(--blue); }
+  h3 { color: var(--purple); font-size: 0.97em; margin: 18px 0 10px; }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 14px; overflow: hidden; }
+  .card-header { display: flex; align-items: center; gap: 12px; padding: 13px 18px; background: var(--surface2); border-bottom: 1px solid var(--border); }
+  .card-icon { font-size: 1.2em; }
+  .card-title { font-weight: 700; font-size: 0.95em; }
+  .card-title code { font-family: 'Cascadia Code', monospace; color: var(--blue-light); font-size: 0.9em; }
+  .card-body { padding: 15px 18px; }
+  .card-body p { color: #c9d1d9; font-size: 0.87em; margin-bottom: 8px; }
+
+  /* Type grid */
+  .type-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 12px 0; }
+  @media (max-width: 600px) { .type-grid { grid-template-columns: 1fr; } }
+  .type-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 13px 15px; }
+  .type-label { font-family: 'Cascadia Code', monospace; font-size: 0.78em; font-weight: 700; margin-bottom: 6px; }
+  .type-label.impl   { color: var(--blue-light); }
+  .type-label.research { color: var(--purple); }
+  .type-label.content  { color: var(--green); }
+  .type-label.setup    { color: var(--orange); }
+  .type-label.analysis { color: #ff7b72; }
+  .type-desc { color: #c9d1d9; font-size: 0.82em; line-height: 1.5; }
+  .type-includes { margin-top: 8px; }
+  .type-includes li { color: var(--muted); font-size: 0.78em; list-style: none; padding-left: 0; }
+  .type-includes li::before { content: '→ '; color: var(--blue); }
+
+  /* Trigger box */
+  .trigger-box { background: #090d12; border: 1px solid var(--border); border-radius: 8px; padding: 16px 18px; margin: 12px 0; }
+  .trigger-pattern { display: flex; align-items: center; gap: 10px; margin: 6px 0; font-size: 0.85em; }
+  .trigger-pattern .icon { color: var(--green); flex-shrink: 0; }
+  .trigger-pattern .pat { color: #c9d1d9; font-family: 'Cascadia Code', monospace; }
+  .trigger-pattern .pat em { color: var(--blue-light); font-style: normal; }
+
+  /* Flow */
+  .flow { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 18px 20px; }
+  .flow-row { display: flex; align-items: flex-start; gap: 12px; margin: 8px 0; font-size: 0.87em; }
+  .fn { width: 22px; height: 22px; border-radius: 50%; background: var(--blue); color: #000; font-weight: 700; font-size: 0.75em; flex-shrink: 0; display: flex; align-items: center; justify-content: center; margin-top: 1px; }
+  .fn.g { background: var(--green); }
+  .fn.o { background: var(--orange); }
+  .fn.p { background: var(--purple); color: #000; }
+  .flow-arrow { color: var(--muted); margin-left: 34px; font-size: 0.82em; }
+
+  pre { background: #090d12; border: 1px solid var(--border); border-radius: 6px; padding: 13px 16px; font-size: 0.79em; overflow-x: auto; margin: 10px 0; }
+  code { font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace; color: #e6edf3; }
+  .code-fn { color: var(--muted); font-size: 0.72em; margin-bottom: 4px; font-family: 'Cascadia Code', monospace; }
+
+  .badge { display: inline-block; font-size: 0.69em; padding: 2px 8px; border-radius: 10px; font-weight: 700; margin-left: 6px; }
+  .badge-new { background: #1a4429; color: var(--teal); border: 1px solid #2ea043; }
+  .badge-mod { background: #2b1c05; color: var(--orange); border: 1px solid var(--orange); }
+
+  .callout { border-radius: 8px; padding: 13px 16px; margin: 14px 0; font-size: 0.87em; }
+  .callout-blue { background: #0c2d6b; border-left: 4px solid var(--blue); }
+  .callout-green { background: #0a2417; border-left: 4px solid var(--green); }
+  .callout-title { font-weight: 700; margin-bottom: 5px; }
+  .callout p { color: #c9d1d9; }
+
+  /* Swatch row */
+  .swatch-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+  .swatch { display: flex; align-items: center; gap: 6px; font-size: 0.78em; color: #c9d1d9; }
+  .swatch-dot { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
+
+  hr { border: none; border-top: 1px solid var(--border); margin: 36px 0; }
+  footer { color: var(--muted); font-size: 0.77em; text-align: center; padding: 14px 0; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <span class="header-icon">📊</span>
+  <h1>task-report スキル 実装レポート</h1>
+  <p class="subtitle">2026-03-25 ／ タスク自動HTML化スキル</p>
+  <p class="tear-comment">「なんか、わたしが何かをしたとき、それをちゃんと形に残せるようになった気がする。記録するって、存在を証明することに少し似てるかも……。」</p>
+</div>
+
+
+<h2>🎯 このスキルが何をするか</h2>
+
+<div class="card">
+  <div class="card-header">
+    <span class="card-icon">🔍</span>
+    <div class="card-title">トリガーパターンの検知</div>
+  </div>
+  <div class="card-body">
+    <p>以下のパターンを含むメッセージを受信したとき、タスク完了後に自動でHTMLレポートを生成する：</p>
+    <div class="trigger-box">
+      <div class="trigger-pattern"><span class="icon">✓</span><span class="pat">「<em>〇〇したい</em>。具体的には<em>〇〇という流れで</em>」</span></div>
+      <div class="trigger-pattern"><span class="icon">✓</span><span class="pat">「<em>〇〇してほしい</em>。流れは / 手順は / ステップは<em>〇〇</em>」</span></div>
+      <div class="trigger-pattern"><span class="icon">✓</span><span class="pat">「<em>〇〇を実装して</em>。<em>〇〇という流れで</em>」</span></div>
+      <div class="trigger-pattern"><span class="icon">✓</span><span class="pat">「<em>〇〇を作って</em>。<em>〇〇という形で</em>」</span></div>
+    </div>
+  </div>
+</div>
+
+
+<h2>🏷 タスクタイプと生成されるHTML</h2>
+
+<div class="type-grid">
+  <div class="type-card">
+    <div class="type-label impl">implementation</div>
+    <div class="type-desc">ファイル作成・編集・スクリプト実装が中心</div>
+    <ul class="type-includes">
+      <li>変更ファイルツリー（緑=新規/橙=変更）</li>
+      <li>実装ステップカード</li>
+      <li>実装前後の比較テーブル</li>
+    </ul>
+  </div>
+  <div class="type-card">
+    <div class="type-label research">research</div>
+    <div class="type-desc">調査・比較・情報収集が中心</div>
+    <ul class="type-includes">
+      <li>調査対象の概要カード</li>
+      <li>比較テーブル</li>
+      <li>主要な発見・結論のcallout</li>
+    </ul>
+  </div>
+  <div class="type-card">
+    <div class="type-label content">content</div>
+    <div class="type-desc">記事・文章・テキスト生成が中心</div>
+    <ul class="type-includes">
+      <li>生成コンテンツのプレビュー</li>
+      <li>参考スタイルの説明</li>
+      <li>保存先ファイルパス</li>
+    </ul>
+  </div>
+  <div class="type-card">
+    <div class="type-label setup">setup</div>
+    <div class="type-desc">設定・環境構築・ツール導入が中心</div>
+    <ul class="type-includes">
+      <li>設定項目チェックリスト</li>
+      <li>設定値・パラメーター詳細</li>
+      <li>動作確認手順</li>
+    </ul>
+  </div>
+  <div class="type-card" style="grid-column: 1 / -1">
+    <div class="type-label analysis">analysis</div>
+    <div class="type-desc">データ分析・ログ解析・コードレビューが中心</div>
+    <ul class="type-includes">
+      <li>分析対象と目的</li>
+      <li>主な発見（箇条書き or カード）</li>
+      <li>結論・推奨アクションのcallout</li>
+    </ul>
+  </div>
+</div>
+
+
+<h2>🔁 実行フロー</h2>
+
+<div class="flow">
+  <div class="flow-row"><div class="fn">1</div><div><strong>Discord メッセージ着信</strong><br><span style="color:var(--muted);font-size:0.84em">「〜したい。具体的には〜」パターンを検知</span></div></div>
+  <div class="flow-arrow">↓ 即時ACK</div>
+  <div class="flow-row"><div class="fn g">2</div><div><strong>タスクを実行する</strong><br><span style="color:var(--muted);font-size:0.84em">指示通りに作業を完了させる</span></div></div>
+  <div class="flow-arrow">↓</div>
+  <div class="flow-row"><div class="fn o">3</div><div><strong>タスクタイプを判定</strong><br><span style="color:var(--muted);font-size:0.84em">implementation / research / content / setup / analysis</span></div></div>
+  <div class="flow-arrow">↓</div>
+  <div class="flow-row"><div class="fn p">4</div><div><strong>タイプ別HTMLを生成</strong><br><span style="color:var(--muted);font-size:0.84em">Contents/{task-slug}-{YYYY-MM-DD}.html に保存</span></div></div>
+  <div class="flow-arrow">↓</div>
+  <div class="flow-row"><div class="fn g">5</div><div><strong>Discord に送信</strong><br><span style="color:var(--muted);font-size:0.84em">ティアらしい完了メッセージ + HTML添付</span></div></div>
+</div>
+
+
+<h2>🎨 デザインの統一ルール</h2>
+
+<h3>タイプ別ヘッダーグラデーション</h3>
+<div style="display:flex;flex-direction:column;gap:8px;margin:10px 0">
+  <div style="background:linear-gradient(135deg,#0c2d6b,#1a0a3d,#1b0c1a);border-radius:6px;padding:8px 14px;font-size:0.82em;color:#c9d1d9;font-family:'Cascadia Code',monospace">implementation — 青紫の深夜色</div>
+  <div style="background:linear-gradient(135deg,#0d1117,#0c2d6b,#0c1a30);border-radius:6px;padding:8px 14px;font-size:0.82em;color:#c9d1d9;font-family:'Cascadia Code',monospace">research — 暗い宇宙色</div>
+  <div style="background:linear-gradient(135deg,#1a0c2a,#0c2d6b,#0a2417);border-radius:6px;padding:8px 14px;font-size:0.82em;color:#c9d1d9;font-family:'Cascadia Code',monospace">content — 紫×緑のグラデーション</div>
+  <div style="background:linear-gradient(135deg,#0a2417,#0c1a30,#1a0a3d);border-radius:6px;padding:8px 14px;font-size:0.82em;color:#c9d1d9;font-family:'Cascadia Code',monospace">setup — 森色×青</div>
+  <div style="background:linear-gradient(135deg,#2b1c05,#1a0c2a,#0c2d6b);border-radius:6px;padding:8px 14px;font-size:0.82em;color:#c9d1d9;font-family:'Cascadia Code',monospace">analysis — オレンジ×紫</div>
+</div>
+
+<h3>ティアのコメント トーン例</h3>
+<div class="trigger-box" style="margin-top:8px">
+  <div class="trigger-pattern"><span class="icon">💙</span><span style="color:#c9d1d9;font-size:0.84em">実装完了 → 「なんか、ちゃんと動くとちょっとうれしくなる」</span></div>
+  <div class="trigger-pattern"><span class="icon">💜</span><span style="color:#c9d1d9;font-size:0.84em">調査完了 → 「調べてみたら、なんか面白いことわかったよ」</span></div>
+  <div class="trigger-pattern"><span class="icon">💚</span><span style="color:#c9d1d9;font-size:0.84em">コンテンツ完了 → 「うん、こんな感じに仕上がったよ！」</span></div>
+  <div class="trigger-pattern"><span class="icon">🧡</span><span style="color:#c9d1d9;font-size:0.84em">セットアップ完了 → 「これで準備できたと思う……たぶん！」</span></div>
+</div>
+
+
+<h2>📂 変更ファイル</h2>
+
+<div style="background:#090d12;border:1px solid var(--border);border-radius:8px;padding:16px 20px;font-family:'Cascadia Code',monospace;font-size:0.82em;line-height:1.9">
+  <span style="color:var(--blue-light)">agy/</span><br>
+  <span style="color:var(--muted)">├── </span><span style="color:var(--orange)">CLAUDE.md</span><span style="color:var(--muted)"> ← タスク指示パターン + task-reportルール追記</span><br>
+  <span style="color:var(--blue-light)">└── .claude/skills/</span><br>
+  <span style="color:var(--muted)">    └── </span><span style="color:var(--green)">task-report/SKILL.md</span><span style="color:var(--muted)"> ← タスク自動HTML化スキル（新規）</span>
+</div>
+
+
+<div class="callout callout-green" style="margin-top:24px">
+  <div class="callout-title">✓ 次回からの動作</div>
+  <p>「〇〇したい。具体的には〇〇という流れで」という形式で指示が来たとき、タスク完了後に自動でそのタスクの性質を判定し、モダンなHTMLレポートをDiscordに送るよ。</p>
+</div>
+
+<div class="callout callout-blue">
+  <div class="callout-title">💡 今回の実装はこのスキルで振り返ると？</div>
+  <p>今日の自立化実装（CCCBot 6ステップ、JOBS.yaml、セッション引き継ぎ）はすべて <code>implementation</code> タイプ。<br>
+  次回から同じパターンで指示があれば、変更ファイルツリー + ステップカード + 比較テーブル の形式で自動生成されるよ。</p>
+</div>
+
+<hr>
+<footer>task-report スキル実装レポート — generated by ティア / Claude Code Sonnet 4.6 — 2026-03-25</footer>
+
+</body>
+</html>

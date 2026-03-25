@@ -1,0 +1,16 @@
+jobs:
+  morning-ai-news:
+    schedule: "30 7 * * *"
+    description: "毎朝7:30にAIニュースを調べてDiscordに送る"
+    active: true
+    skill: "ai-news"
+    chat_id: "1485323672959975444"
+    note: "バックナンバーindex.mdと重複しないトピックを収集し、HTMLレポートをDiscordに添付する"
+
+  # 追加したい定期タスクはここに書く
+  # weekly-summary:
+  #   schedule: "0 20 * * 0"
+  #   description: "毎週日曜20時に週次まとめをDiscordに送る"
+  #   active: false
+  #   prompt: "今週のコンテンツ制作の進捗をまとめてDiscordに送信する"
+  #   chat_id: "1485323672959975444"

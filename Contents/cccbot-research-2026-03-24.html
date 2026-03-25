@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CCCBot リサーチレポート — 2026-03-24</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --blue: #58a6ff;
+    --blue-light: #79c0ff;
+    --purple: #d2a8ff;
+    --green: #3fb950;
+    --orange: #d29922;
+    --red: #f85149;
+    --cyan: #56d364;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; padding: 24px; line-height: 1.7; }
+  h1 { color: var(--blue); font-size: 1.8em; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 24px; }
+  h2 { color: var(--blue-light); font-size: 1.3em; margin: 36px 0 16px; padding-left: 12px; border-left: 3px solid var(--blue); }
+  h3 { color: var(--purple); font-size: 1.05em; margin: 20px 0 10px; }
+  h4 { color: var(--orange); font-size: 0.95em; margin: 14px 0 8px; }
+  p { color: #c9d1d9; margin-bottom: 12px; font-size: 0.93em; }
+  a { color: var(--blue); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  .meta { color: var(--muted); font-size: 0.8em; margin-bottom: 32px; }
+
+  /* Cards */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 18px; margin: 14px 0; }
+  .card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+  @media (max-width: 700px) { .card-grid { grid-template-columns: 1fr; } }
+
+  /* Badges */
+  .badge { display: inline-block; font-size: 0.72em; padding: 2px 8px; border-radius: 12px; margin: 2px 4px 2px 0; font-weight: 600; vertical-align: middle; }
+  .badge-blue   { background: #1f6feb; color: #fff; }
+  .badge-green  { background: #238636; color: #fff; }
+  .badge-orange { background: #9e6a03; color: #fff; }
+  .badge-red    { background: #b62324; color: #fff; }
+  .badge-purple { background: #6e40c9; color: #fff; }
+  .badge-gray   { background: #30363d; color: #c9d1d9; }
+
+  /* Diff table */
+  .diff-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 0.88em; }
+  .diff-table th { background: #1c2128; color: var(--blue-light); padding: 10px 14px; text-align: left; border-bottom: 2px solid var(--border); }
+  .diff-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: top; color: #c9d1d9; }
+  .diff-table tr:hover td { background: #1c2128; }
+  .diff-table .label { color: var(--muted); font-weight: 600; white-space: nowrap; }
+  .check { color: var(--green); font-weight: bold; }
+  .cross { color: var(--red); font-weight: bold; }
+  .partial { color: var(--orange); font-weight: bold; }
+
+  /* Code blocks */
+  pre { background: #0d1117; border: 1px solid var(--border); border-radius: 6px; padding: 14px; overflow-x: auto; margin: 12px 0; font-size: 0.82em; }
+  code { font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace; color: #e6edf3; }
+  .code-label { color: var(--muted); font-size: 0.75em; margin-bottom: 4px; }
+
+  /* Flow diagram */
+  .flow { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px; margin: 16px 0; }
+  .flow-step { display: flex; align-items: flex-start; gap: 12px; margin: 8px 0; }
+  .flow-num { background: var(--blue); color: #000; border-radius: 50%; width: 24px; height: 24px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 0.78em; font-weight: bold; }
+  .flow-num.green { background: var(--green); }
+  .flow-num.orange { background: var(--orange); }
+  .flow-arrow { color: var(--muted); margin-left: 34px; font-size: 0.9em; }
+
+  /* Alert / callout */
+  .callout { border-radius: 6px; padding: 14px 16px; margin: 16px 0; font-size: 0.9em; }
+  .callout-blue   { background: #0c2d6b; border-left: 4px solid var(--blue); }
+  .callout-green  { background: #0c3320; border-left: 4px solid var(--green); }
+  .callout-orange { background: #32260a; border-left: 4px solid var(--orange); }
+  .callout-red    { background: #2a0808; border-left: 4px solid var(--red); }
+  .callout .callout-title { font-weight: 700; margin-bottom: 6px; font-size: 0.92em; }
+
+  /* Steps */
+  .steps { counter-reset: step; }
+  .step { counter-increment: step; position: relative; padding: 16px 16px 16px 52px; margin: 12px 0; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; }
+  .step::before { content: counter(step); position: absolute; left: 14px; top: 50%; transform: translateY(-50%); background: var(--blue); color: #000; border-radius: 50%; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.82em; }
+  .step h4 { color: var(--blue-light); margin: 0 0 6px; }
+
+  ul.styled { padding-left: 20px; margin-bottom: 12px; }
+  ul.styled li { margin: 4px 0; color: #c9d1d9; font-size: 0.9em; }
+  ul.styled li::marker { color: var(--blue); }
+</style>
+</head>
+<body>
+
+<h1>🤖 CCCBot リサーチレポート</h1>
+<p class="meta">作成: 2026-03-24 ／ ソース: <a href="https://github.com/lucianlamp/CCCBot" target="_blank">github.com/lucianlamp/CCCBot</a> ／ 比較対象: plugin:discord:discord (v0.0.2)</p>
+
+<!-- ===== OVERVIEW ===== -->
+<h2>1. CCCBot とは何か</h2>
+
+<p>CCCBot は <strong>Claude Code Channels</strong> を土台にした自律エージェントフレームワーク。Discord/Telegram ボットとして動作するのではなく、<strong>Claude Code セッション自体を自律的に稼働させ続ける</strong> ための設定・スキル・シェルスクリプト群。</p>
+
+<div class="callout callout-blue">
+  <div class="callout-title">💡 核心の考え方</div>
+  Claude Code Channels の MCP プラグインはブリッジに過ぎない。CCCBot は Claude Code セッションを「常駐サービス」として動かし、セッション再起動・ハートビート監視・スケジュール実行をシェルスクリプトで自動化する。
+</div>
+
+<div class="card-grid">
+  <div class="card">
+    <h3>🏗 CCCBot のアーキテクチャ</h3>
+    <ul class="styled">
+      <li>言語: <strong>Bash / PowerShell</strong>（Node.js 不要）</li>
+      <li>依存: <code>git</code>, <code>claude</code> CLI, <code>curl</code> のみ</li>
+      <li>Discord/Telegram 同時対応（MCP プラグイン経由）</li>
+      <li>PID ロックによるセッション重複防止</li>
+      <li>MCP 切断 → 自動再起動</li>
+      <li>SOUL.md でキャラクター・人格定義</li>
+      <li>JOBS.yaml でスケジュールタスク管理</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>🔌 あなたの現在の実装</h3>
+    <ul class="styled">
+      <li>言語: <strong>TypeScript (Bun)</strong></li>
+      <li>依存: <code>@modelcontextprotocol/sdk</code>, <code>discord.js</code></li>
+      <li>MCP サーバーとして Claude Code にメッセージを橋渡し</li>
+      <li>Permission Relay 実装済み（<code>claude/channel/permission</code>）</li>
+      <li>ペアリング・アクセス制御完備</li>
+      <li>自律稼働の仕組みは<strong>まだない</strong></li>
+    </ul>
+  </div>
+</div>
+
+<!-- ===== DIFF TABLE ===== -->
+<h2>2. 機能比較</h2>
+
+<table class="diff-table">
+  <thead>
+    <tr>
+      <th>機能</th>
+      <th>CCCBot</th>
+      <th>現在の実装</th>
+      <th>備考</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="label">Discord メッセージ受信</td>
+      <td><span class="check">✓</span> MCP 経由</td>
+      <td><span class="check">✓</span> 実装済み</td>
+      <td>同じ仕組み</td>
+    </tr>
+    <tr>
+      <td class="label">Permission Relay</td>
+      <td><span class="check">✓</span></td>
+      <td><span class="check">✓</span> 宣言済み</td>
+      <td>server.ts L446 に <code>claude/channel/permission</code></td>
+    </tr>
+    <tr>
+      <td class="label">セッション永続化</td>
+      <td><span class="check">✓</span> <code>start.sh</code></td>
+      <td><span class="cross">✗</span> 未実装</td>
+      <td>PID ロック + <code>--continue</code> フラグ</td>
+    </tr>
+    <tr>
+      <td class="label">MCP 切断 → 自動再起動</td>
+      <td><span class="check">✓</span> heartbeat</td>
+      <td><span class="cross">✗</span> 未実装</td>
+      <td>30分ごとに MCP 疎通確認</td>
+    </tr>
+    <tr>
+      <td class="label">メッセージ即時 ACK</td>
+      <td><span class="check">✓</span> ccc-channel-task</td>
+      <td><span class="partial">△</span> 手動対応中</td>
+      <td>スキルで自動化できる</td>
+    </tr>
+    <tr>
+      <td class="label">バックグラウンドタスク</td>
+      <td><span class="check">✓</span> <code>run_in_background=true</code></td>
+      <td><span class="partial">△</span> 手動</td>
+      <td>長時間タスクを非ブロッキング実行</td>
+    </tr>
+    <tr>
+      <td class="label">スケジュール実行</td>
+      <td><span class="check">✓</span> JOBS.yaml</td>
+      <td><span class="cross">✗</span> 未実装</td>
+      <td>CronCreate ツールで登録</td>
+    </tr>
+    <tr>
+      <td class="label">キャラクター/人格定義</td>
+      <td><span class="check">✓</span> SOUL.md</td>
+      <td><span class="partial">△</span> CLAUDE.md のみ</td>
+      <td>SOUL.md 追加で強化可能</td>
+    </tr>
+    <tr>
+      <td class="label">セッション引き継ぎ</td>
+      <td><span class="check">✓</span> transcript 読み取り</td>
+      <td><span class="cross">✗</span> 未実装</td>
+      <td>前回の未完タスクを継続</td>
+    </tr>
+    <tr>
+      <td class="label">アクセス制御</td>
+      <td><span class="check">✓</span> access.json</td>
+      <td><span class="check">✓</span> 完備</td>
+      <td>同じ仕組み</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- ===== ARCHITECTURE ===== -->
+<h2>3. CCCBot のメッセージ処理フロー</h2>
+
+<div class="flow">
+  <div class="flow-step"><div class="flow-num">1</div><div><strong>Discord メッセージ着信</strong><br><span style="color:var(--muted);font-size:0.88em">MCP プラグイン (server.ts) がゲート判定 → Claude Code に通知</span></div></div>
+  <div class="flow-arrow">↓</div>
+  <div class="flow-step"><div class="flow-num green">2</div><div><strong>ccc-channel-task スキル起動</strong><br><span style="color:var(--muted);font-size:0.88em">Claude が自動的にスキルを呼び出す（CLAUDE.md で定義）</span></div></div>
+  <div class="flow-arrow">↓ 即時（最優先）</div>
+  <div class="flow-step"><div class="flow-num">3</div><div><strong>即時 ACK を Discord に返信</strong><br><span style="color:var(--muted);font-size:0.88em">"了解、〇〇します" などの確認メッセージ</span></div></div>
+  <div class="flow-arrow">↓</div>
+  <div class="flow-step"><div class="flow-num orange">4</div><div><strong>タスク分類</strong><br><span style="color:var(--muted);font-size:0.88em">短タスク → 同期実行 ／ 長タスク → <code>run_in_background=true</code> でサブエージェント</span></div></div>
+  <div class="flow-arrow">↓</div>
+  <div class="flow-step"><div class="flow-num green">5</div><div><strong>完了報告を Discord に返信</strong><br><span style="color:var(--muted);font-size:0.88em">push 通知のため新規メッセージとして送信</span></div></div>
+</div>
+
+<!-- ===== SESSION LIFECYCLE ===== -->
+<h2>4. セッション永続化の仕組み</h2>
+
+<div class="card">
+  <h3>start.sh / start.bat の役割</h3>
+  <div class="code-label">start.sh（概要）</div>
+  <pre><code>WORKSPACE="$HOME/.cccbot"
+PID_FILE="$WORKSPACE/.claude/ccc-session.pid"
+
+# PID ロック — 二重起動防止
+if [ -f "$PID_FILE" ] && kill -0 $(cat "$PID_FILE") 2>/dev/null; then
+  echo "セッションはすでに起動中"
+  exit 1
+fi
+
+# セッション再開を試みる（前回の続き）
+claude "/ccc-boot" --continue \
+  --channels discord,telegram \
+  --remote-control</code></pre>
+  <p style="margin-top:10px">重要なのは <code>--continue</code> フラグ。前回のセッションコンテキストを引き継いで起動する。</p>
+</div>
+
+<div class="card">
+  <h3>SessionStart フック</h3>
+  <div class="code-label">.claude/settings.json</div>
+  <pre><code>{
+  "permissions": {
+    "defaultMode": "bypassPermissions",
+    "allow": ["WebSearch", "Read(.claude/**)", "Edit(.claude/**)", "Write(.claude/**)"],
+    "deny": [
+      "Bash(rm -rf /*)", "Bash(git push --force*)",
+      "Bash(git reset --hard*)", "Bash(npm publish*)"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [{
+      "matcher": "startup|resume",
+      "hooks": [{
+        "type": "command",
+        "command": "bash .claude/scripts/session-start-hook.sh"
+      }]
+    }]
+  }
+}</code></pre>
+  <p style="margin-top:10px">セッション開始・再開のたびに <code>ccc-boot</code> スキルが自動起動される。</p>
+</div>
+
+<!-- ===== HEARTBEAT ===== -->
+<h2>5. ハートビートと自動再起動</h2>
+
+<div class="card-grid">
+  <div class="card">
+    <h3>ccc-heartbeat の動作</h3>
+    <ul class="styled">
+      <li>30分ごとに CronCreate で登録</li>
+      <li><code>run_in_background=true</code> でサブエージェント起動</li>
+      <li>MCP に軽量テスト送信（reply ツール）</li>
+      <li>疎通失敗 → <code>restart-session.sh</code> 起動</li>
+      <li>問題なければ<strong>無音</strong>（通知しない）</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>restart-session.bat（Windows）</h3>
+    <div class="code-label">概要</div>
+    <pre><code>timeout /t 3 /nobreak
+
+set /p PID=<"%USERPROFILE%\.cccbot\.claude\ccc-session.pid"
+
+# 安全確認して kill
+taskkill /F /PID %PID%
+
+# 新しいセッションを detached で起動
+powershell -WindowStyle Hidden -Command ^
+  "Start-Process 'start.bat' -WindowStyle Hidden"</code></pre>
+  </div>
+</div>
+
+<!-- ===== HOW TO IMPLEMENT ===== -->
+<h2>6. あなたの実装に追加する手順</h2>
+
+<div class="callout callout-green">
+  <div class="callout-title">✅ すでに揃っているもの</div>
+  server.ts に Permission Relay 宣言 (<code>claude/channel/permission</code>) と permission reply パースが実装済み。MCP プラグイン側は追加作業不要。
+</div>
+
+<div class="steps">
+
+  <div class="step">
+    <h4>CLAUDE.md に自律動作の指示を追加</h4>
+    <p>Discordからメッセージが来たとき <code>ccc-channel-task</code> スキルを自動起動するよう指示する。</p>
+    <pre><code>## Discord メッセージ処理
+Discordからメッセージが届いたら必ず以下の順で対応する：
+1. 即座に確認メッセージを返信する（"了解、調べます" など）
+2. 短いタスクは同期実行
+3. 長いタスクは run_in_background=true のサブエージェントで実行
+4. 完了したら新規メッセージで結果を報告する</code></pre>
+  </div>
+
+  <div class="step">
+    <h4>launcher スクリプトを作成（Windows: start.bat）</h4>
+    <pre><code>@echo off
+set WORKSPACE=%USERPROFILE%\.cccbot
+set PID_FILE=%WORKSPACE%\.claude\ccc-session.pid
+
+:: PID ロック確認
+if exist "%PID_FILE%" (
+  set /p OLD_PID=<"%PID_FILE%"
+  tasklist /FI "PID eq %OLD_PID%" 2>nul | find "%OLD_PID%" >nul
+  if not errorlevel 1 (
+    echo セッション稼働中: PID %OLD_PID%
+    exit /b 0
+  )
+)
+
+cd /d "%WORKSPACE%"
+:: セッション起動（--continue で前回から継続）
+claude "/ccc-boot" --continue --channels discord</code></pre>
+  </div>
+
+  <div class="step">
+    <h4>SessionStart フックを設定</h4>
+    <p><code>.claude/settings.json</code> に追加（既存のpermissionsと統合）：</p>
+    <pre><code>{
+  "hooks": {
+    "SessionStart": [{
+      "matcher": "startup|resume",
+      "hooks": [{
+        "type": "command",
+        "command": "echo session started"
+      }]
+    }]
+  }
+}</code></pre>
+  </div>
+
+  <div class="step">
+    <h4>ccc-boot スキルを作成</h4>
+    <p><code>.claude/skills/ccc-boot/SKILL.md</code>：起動時に Discord に挨拶 + ハートビート登録。</p>
+    <pre><code># ccc-boot
+セッション開始時に呼び出されるスキル。
+
+## やること
+1. SOUL.md を読み込んでキャラクターを内在化する
+2. Discord に起動完了メッセージを送信する
+3. ハートビートを 30 分ごとに登録する: CronCreate("*/30 * * * *", "/ccc-heartbeat")</code></pre>
+  </div>
+
+  <div class="step">
+    <h4>ccc-heartbeat スキルを作成</h4>
+    <p><code>.claude/skills/ccc-heartbeat/SKILL.md</code>：MCP 疎通確認と自動再起動。</p>
+    <pre><code># ccc-heartbeat
+30分ごとに自動実行される死活監視スキル。
+
+## やること（すべて run_in_background=true のサブエージェントで）
+1. Discord に軽量テストメッセージを送信して MCP 疎通を確認
+2. 疎通成功 → 問題があればDiscordに報告、なければ無音
+3. 疎通失敗 → scripts/restart-session.bat を実行してセッション再起動</code></pre>
+  </div>
+
+  <div class="step">
+    <h4>SOUL.md を作成（任意）</h4>
+    <p>キャラクター設定を独立ファイルで管理する。CLAUDE.md 内のキャラクターシートをここに移してもよい。</p>
+    <pre><code># Soul
+
+## Identity
+- Name: ティア
+- Role: AIアシスタント
+
+## Persona
+明るくふわっとした話し方。文は短め。
+
+## Tone
+- ゆるふわ
+- 「なんか」「うん、」をよく使う
+- 深い話題では少し静かになる</code></pre>
+  </div>
+
+</div>
+
+<!-- ===== JOBS ===== -->
+<h2>7. スケジュールタスクの実装（JOBS.yaml）</h2>
+
+<div class="card">
+  <div class="code-label">JOBS.yaml サンプル</div>
+  <pre><code>jobs:
+  morning-report:
+    schedule: "0 9 * * *"
+    description: "毎朝9時にAIニュースを調べてDiscordに送る"
+    active: true
+    prompt: |
+      今日のAIニュースを調べて Discord チャンネル (chat_id: 1485323672959975444) に送信する。
+
+  weekly-summary:
+    schedule: "0 20 * * 0"
+    description: "毎週日曜20時にその週のまとめを送る"
+    active: false
+    prompt: |
+      今週のコンテンツ制作の進捗をまとめてDiscordに送信する。</code></pre>
+  <p style="margin-top:10px">ccc-boot スキル内で <code>active: true</code> のジョブを <code>CronCreate</code> ツールで登録する。</p>
+</div>
+
+<!-- ===== PERMISSION RELAY DETAIL ===== -->
+<h2>8. Permission Relay の動作（実装済み詳細）</h2>
+
+<div class="card">
+  <p>あなたの <code>server.ts</code> はすでに完全実装済み。動作フローは以下の通り：</p>
+  <div class="flow">
+    <div class="flow-step"><div class="flow-num">1</div><div>Claude Code がツール実行前に許可が必要と判断</div></div>
+    <div class="flow-arrow">↓</div>
+    <div class="flow-step"><div class="flow-num">2</div><div>MCP に <code>notifications/claude/channel/permission_request</code> を送信<br><span style="color:var(--muted);font-size:0.88em">request_id, tool_name, description, input_preview を含む</span></div></div>
+    <div class="flow-arrow">↓</div>
+    <div class="flow-step"><div class="flow-num green">3</div><div>server.ts が allowFrom の全ユーザーの DM に転送<br><span style="color:var(--muted);font-size:0.88em">"🔐 Permission request [xxxxx]<br>yes xxxxx で許可 / no xxxxx で拒否"</span></div></div>
+    <div class="flow-arrow">↓</div>
+    <div class="flow-step"><div class="flow-num orange">4</div><div>ユーザーが "yes abcde" または "no abcde" と返信</div></div>
+    <div class="flow-arrow">↓</div>
+    <div class="flow-step"><div class="flow-num green">5</div><div><code>PERMISSION_REPLY_RE</code> でパース → <code>notifications/claude/channel/permission</code> を emit<br><span style="color:var(--muted);font-size:0.88em">Claude Code が allow/deny を受け取って処理再開</span></div></div>
+  </div>
+
+  <div class="callout callout-orange">
+    <div class="callout-title">⚠ セキュリティ注意点</div>
+    server.ts は <code>allowFrom</code>（ペアリング済みユーザー）のみからの permission reply を受け付ける。ゲートを通過した送信者のみ信頼するため、なりすましによる悪用は防がれている。
+  </div>
+</div>
+
+<!-- ===== QUICK START ===== -->
+<h2>9. 最短実装パス（優先順位順）</h2>
+
+<table class="diff-table">
+  <thead>
+    <tr><th>#</th><th>作業</th><th>優先度</th><th>効果</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td>CLAUDE.md にメッセージ処理ルールを追記</td><td><span class="badge badge-red">必須</span></td><td>即時 ACK と非同期タスク処理</td></tr>
+    <tr><td>2</td><td><code>start.bat</code> ランチャー作成</td><td><span class="badge badge-red">必須</span></td><td>セッション永続化・再起動</td></tr>
+    <tr><td>3</td><td>SessionStart フック設定</td><td><span class="badge badge-orange">高</span></td><td>自動起動</td></tr>
+    <tr><td>4</td><td><code>ccc-heartbeat</code> スキル作成</td><td><span class="badge badge-orange">高</span></td><td>MCP 切断時の自動回復</td></tr>
+    <tr><td>5</td><td><code>JOBS.yaml</code> + <code>ccc-jobs</code> スキル</td><td><span class="badge badge-blue">中</span></td><td>定期タスク自動実行</td></tr>
+    <tr><td>6</td><td><code>SOUL.md</code> 分離</td><td><span class="badge badge-gray">低</span></td><td>キャラクター管理の改善</td></tr>
+  </tbody>
+</table>
+
+<!-- ===== NOTES ===== -->
+<h2>10. 注意点・制限事項</h2>
+
+<div class="callout callout-orange">
+  <div class="callout-title">📌 Claude Code Channels はリサーチプレビュー</div>
+  v2.1.81 時点でリサーチプレビュー段階。仕様変更の可能性あり。CCCBot も「Anthropic 非公認・コミュニティプロジェクト」と明示している。
+</div>
+
+<div class="callout callout-red">
+  <div class="callout-title">🔒 permissions の defaultMode に注意</div>
+  <code>bypassPermissions</code> にすると全ツールが無確認で実行される。Permission Relay を活用するなら <code>allowEdits</code> にして危険な操作はDiscordから確認するフローが安全。
+</div>
+
+<hr style="border-color: var(--border); margin: 36px 0;">
+<p style="color: var(--muted); font-size: 0.82em; text-align: center;">
+  CCCBot Research Report — generated by ティア / Claude Code Sonnet 4.6 — 2026-03-24
+</p>
+
+</body>
+</html>

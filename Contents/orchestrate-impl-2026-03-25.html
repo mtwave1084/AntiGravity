@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>エージェントオーケストレーション 実装レポート — 2026-03-25</title>
+<style>
+  :root {
+    --bg: #0d1117; --surface: #161b22; --surface2: #1c2128;
+    --border: #30363d; --text: #e6edf3; --muted: #8b949e;
+    --blue: #58a6ff; --blue-light: #79c0ff; --purple: #d2a8ff;
+    --green: #3fb950; --orange: #d29922; --teal: #56d364;
+    --red: #f85149; --yellow: #e3b341;
+    /* Agent colors */
+    --claude: #7c6af7;
+    --codex: #22c55e;
+    --gemini: #4fc3f7;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; padding: 32px 24px; line-height: 1.75; max-width: 920px; margin: 0 auto; }
+
+  /* Header */
+  .header { text-align: center; padding: 36px 28px 26px; background: linear-gradient(135deg, #1a0a3d 0%, #0c1a30 40%, #0a2417 100%); border: 1px solid var(--border); border-radius: 14px; margin-bottom: 40px; position: relative; overflow: hidden; }
+  .header::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 30% 50%, rgba(124,106,247,0.1), transparent 60%), radial-gradient(ellipse at 70% 50%, rgba(79,195,247,0.08), transparent 60%); }
+  .header-icon { font-size: 2.6em; display: block; margin-bottom: 12px; position: relative; }
+  .header h1 { font-size: 1.65em; color: var(--blue-light); margin-bottom: 8px; position: relative; }
+  .header .subtitle { color: var(--muted); font-size: 0.84em; position: relative; }
+  .header .tear-comment { margin-top: 16px; color: #c9d1d9; font-size: 0.88em; font-style: italic; background: rgba(255,255,255,0.04); border-radius: 8px; padding: 10px 16px; border-left: 3px solid var(--claude); position: relative; }
+
+  h2 { color: var(--blue-light); font-size: 1.15em; margin: 38px 0 16px; padding-left: 12px; border-left: 3px solid var(--blue); }
+
+  /* Agent trio */
+  .agent-trio { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin: 16px 0; }
+  @media (max-width: 640px) { .agent-trio { grid-template-columns: 1fr; } }
+  .agent-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .agent-header { padding: 13px 16px 10px; border-bottom: 1px solid var(--border); }
+  .agent-name { font-weight: 800; font-size: 1em; margin-bottom: 3px; }
+  .agent-name.claude { color: var(--claude); }
+  .agent-name.codex  { color: var(--codex); }
+  .agent-name.gemini { color: var(--gemini); }
+  .agent-role { color: var(--muted); font-size: 0.76em; }
+  .agent-body { padding: 13px 16px; }
+  .agent-body ul { padding-left: 16px; }
+  .agent-body li { color: #c9d1d9; font-size: 0.82em; margin: 4px 0; }
+  .agent-body li::marker { color: var(--blue); }
+
+  /* Routing table */
+  .route-table { width: 100%; border-collapse: collapse; font-size: 0.85em; margin: 14px 0; }
+  .route-table th { background: var(--surface2); color: var(--blue-light); padding: 10px 14px; text-align: left; border-bottom: 2px solid var(--border); }
+  .route-table td { padding: 9px 14px; border-bottom: 1px solid var(--border); color: #c9d1d9; vertical-align: top; }
+  .route-table tr:hover td { background: var(--surface2); }
+  .agent-tag { display: inline-block; font-size: 0.72em; padding: 2px 8px; border-radius: 10px; font-weight: 700; }
+  .agent-tag.claude { background: rgba(124,106,247,0.18); color: #b8adff; border: 1px solid rgba(124,106,247,0.3); }
+  .agent-tag.codex  { background: rgba(34,197,94,0.15); color: #a7f3c0; border: 1px solid rgba(34,197,94,0.3); }
+  .agent-tag.gemini { background: rgba(79,195,247,0.15); color: #b3e8ff; border: 1px solid rgba(79,195,247,0.3); }
+
+  /* Patterns */
+  .pattern-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }
+  @media (max-width: 600px) { .pattern-grid { grid-template-columns: 1fr; } }
+  .pattern-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+  .pattern-title { font-weight: 700; color: var(--text); font-size: 0.9em; margin-bottom: 10px; }
+  .pattern-flow { display: flex; flex-direction: column; gap: 4px; }
+  .pf-step { display: flex; align-items: center; gap: 8px; font-size: 0.8em; }
+  .pf-agent { font-weight: 700; padding: 2px 8px; border-radius: 6px; white-space: nowrap; font-size: 0.9em; }
+  .pf-agent.claude { background: rgba(124,106,247,0.2); color: #c4bcff; }
+  .pf-agent.codex  { background: rgba(34,197,94,0.15); color: #a7f3c0; }
+  .pf-agent.gemini { background: rgba(79,195,247,0.15); color: #b3e8ff; }
+  .pf-desc { color: #c9d1d9; }
+  .pf-arrow { color: var(--muted); font-size: 0.75em; margin-left: 4px; }
+
+  /* File tree */
+  .file-tree { background: #090d12; border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; font-family: 'Cascadia Code', monospace; font-size: 0.82em; line-height: 1.9; }
+  .ft-new { color: var(--green); }
+  .ft-mod { color: var(--orange); }
+  .ft-dir { color: var(--blue-light); }
+  .ft-muted { color: var(--muted); }
+
+  /* Flow */
+  .flow { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 18px 20px; }
+  .flow-row { display: flex; align-items: flex-start; gap: 12px; margin: 8px 0; font-size: 0.87em; }
+  .fn { width: 24px; height: 24px; border-radius: 50%; color: #000; font-weight: 700; font-size: 0.75em; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+  .fn-c { background: var(--claude); }
+  .fn-x { background: var(--codex); }
+  .fn-g { background: var(--gemini); }
+  .fn-n { background: var(--blue); }
+  .flow-arrow { color: var(--muted); margin-left: 36px; font-size: 0.82em; }
+
+  /* Code */
+  pre { background: #090d12; border: 1px solid var(--border); border-radius: 6px; padding: 13px 16px; font-size: 0.79em; overflow-x: auto; margin: 10px 0; }
+  code { font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace; color: #e6edf3; }
+  .code-fn { color: var(--muted); font-size: 0.72em; margin-bottom: 4px; font-family: 'Cascadia Code', monospace; }
+
+  /* Callout */
+  .callout { border-radius: 8px; padding: 13px 16px; margin: 14px 0; font-size: 0.87em; }
+  .callout-blue { background: #0c2d6b; border-left: 4px solid var(--blue); }
+  .callout-green { background: #0a2417; border-left: 4px solid var(--green); }
+  .callout-orange { background: #2b1c05; border-left: 4px solid var(--orange); }
+  .callout-title { font-weight: 700; margin-bottom: 5px; }
+  .callout p { color: #c9d1d9; }
+
+  /* Quote */
+  .research-quote { background: #090d12; border: 1px solid var(--border); border-left: 3px solid var(--muted); border-radius: 6px; padding: 12px 16px; margin: 12px 0; font-size: 0.84em; color: #c9d1d9; font-style: italic; }
+
+  hr { border: none; border-top: 1px solid var(--border); margin: 38px 0; }
+  footer { color: var(--muted); font-size: 0.77em; text-align: center; padding: 14px 0; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <span class="header-icon">🎼</span>
+  <h1>エージェントオーケストレーション 実装レポート</h1>
+  <p class="subtitle">2026-03-25 ／ Claude Code 司令塔 + Codex CLI + Gemini CLI 連携スキル</p>
+  <p class="tear-comment">「なんか……わたし一人じゃできないことも、ちゃんと仲間に頼める仕組みができた感じがするよ。得意なことを持ち寄るって、なんかきれいだと思う。」</p>
+</div>
+
+
+<h2>🤝 3エージェントの役割分担</h2>
+
+<div class="agent-trio">
+  <div class="agent-card">
+    <div class="agent-header">
+      <div class="agent-name claude">Claude Code</div>
+      <div class="agent-role">司令塔 / 設計 / 統合</div>
+    </div>
+    <div class="agent-body">
+      <ul>
+        <li>依頼の解釈・タスク分解</li>
+        <li>誰に投げるかの判断</li>
+        <li>設計・アーキテクチャ決定</li>
+        <li>最終統合・品質確認</li>
+        <li>ユーザーへの報告（唯一の窓口）</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="agent-card">
+    <div class="agent-header">
+      <div class="agent-name codex">Codex CLI</div>
+      <div class="agent-role">実行・検証の職人</div>
+    </div>
+    <div class="agent-body">
+      <ul>
+        <li>テスト実行・ログ解析</li>
+        <li>環境構築・CLI操作</li>
+        <li>バッチ・自動化スクリプト</li>
+        <li>UI仕様→実装</li>
+        <li>OS sandboxで安全実行</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="agent-card">
+    <div class="agent-header">
+      <div class="agent-name gemini">Gemini CLI</div>
+      <div class="agent-role">調査・要約の参謀</div>
+    </div>
+    <div class="agent-body">
+      <ul>
+        <li>Webリサーチ・競合調査</li>
+        <li>企画ネタ出し・アイデア展開</li>
+        <li>長文・大量情報の要約</li>
+        <li>技術情報・仕様調査</li>
+        <li>トレンド整理</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="research-quote">「Geminiが風呂敷を広げ、Claudeが風呂敷をたたみ、Codexがネジを締める」— ソリスのCopilotリサーチより</div>
+
+
+<h2>📍 ルーティング判定表</h2>
+
+<table class="route-table">
+  <thead><tr><th>タスクタイプ</th><th>担当</th><th>判定キーワード例</th></tr></thead>
+  <tbody>
+    <tr><td>コード検証・テスト実行</td><td><span class="agent-tag codex">Codex</span></td><td>テスト、バグ確認、ログ解析、再現</td></tr>
+    <tr><td>環境構築・CLI操作</td><td><span class="agent-tag codex">Codex</span></td><td>インストール、セットアップ、パッケージ</td></tr>
+    <tr><td>バッチ・自動化スクリプト</td><td><span class="agent-tag codex">Codex</span></td><td>自動化、一括処理、CI実行</td></tr>
+    <tr><td>Webリサーチ・競合調査</td><td><span class="agent-tag gemini">Gemini</span></td><td>調べて、比較、競合、トレンド</td></tr>
+    <tr><td>企画・アイデア出し</td><td><span class="agent-tag gemini">Gemini</span></td><td>企画、ネタ出し、アイデア、叩き台</td></tr>
+    <tr><td>長文要約・情報整理</td><td><span class="agent-tag gemini">Gemini</span></td><td>まとめて、要約、整理、俯瞰</td></tr>
+    <tr><td>設計・アーキテクチャ判断</td><td><span class="agent-tag claude">Claude</span></td><td>設計、構成、アーキ、全体設計</td></tr>
+    <tr><td>複数ファイル横断変更</td><td><span class="agent-tag claude">Claude</span></td><td>リファクタ、統合、横断、一貫性</td></tr>
+    <tr><td>スキル・設定管理</td><td><span class="agent-tag claude">Claude</span></td><td>.claude/, CLAUDE.md, skills</td></tr>
+  </tbody>
+</table>
+
+
+<h2>🔀 オーケストレーションパターン</h2>
+
+<div class="pattern-grid">
+  <div class="pattern-card">
+    <div class="pattern-title">機能実装</div>
+    <div class="pattern-flow">
+      <div class="pf-step"><span class="pf-agent gemini">Gemini</span><span class="pf-desc"> 技術選定・ベストプラクティス調査</span></div>
+      <div class="pf-arrow">↓</div>
+      <div class="pf-step"><span class="pf-agent claude">Claude</span><span class="pf-desc"> 設計・ファイル構成決定</span></div>
+      <div class="pf-arrow">↓</div>
+      <div class="pf-step"><span class="pf-agent codex">Codex</span><span class="pf-desc"> 実装 + テスト実行</span></div>
+      <div class="pf-arrow">↓</div>
+      <div class="pf-step"><span class="pf-agent claude">Claude</span><span class="pf-desc"> コードレビュー + 統合</span></div>
+    </div>
+  </div>
+
+  <div class="pattern-card">
+    <div class="pattern-title">クリエイティブ企画</div>
+    <div class="pattern-flow">
+      <div class="pf-step"><span class="pf-agent gemini">Gemini</span><span class="pf-desc"> 競合調査・ネタ出し・叩き台</span></div>
+      <div class="pf-arrow">↓</div>
+      <div class="pf-step"><span class="pf-agent claude">Claude</span><span class="pf-desc"> 企画として一本化・構成決定</span></div>
+      <div class="pf-arrow">↓（必要なら）</div>
+      <div class="pf-step"><span class="pf-agent codex">Codex</span><span class="pf-desc"> 補助スクリプト・試作</span></div>
+    </div>
+  </div>
+
+  <div class="pattern-card">
+    <div class="pattern-title">調査レポート</div>
+    <div class="pattern-flow">
+      <div class="pf-step"><span class="pf-agent gemini">Gemini</span><span class="pf-desc"> 情報収集・要約</span></div>
+      <div class="pf-arrow">↓</div>
+      <div class="pf-step"><span class="pf-agent claude">Claude</span><span class="pf-desc"> レポート構成・HTML整形</span></div>
+      <div class="pf-arrow">↓</div>
+      <div class="pf-step"><span class="pf-agent claude">Claude</span><span class="pf-desc"> Discord に送信</span></div>
+    </div>
+  </div>
+
+  <div class="pattern-card">
+    <div class="pattern-title">環境構築・CI</div>
+    <div class="pattern-flow">
+      <div class="pf-step"><span class="pf-agent claude">Claude</span><span class="pf-desc"> 手順の設計・分解</span></div>
+      <div class="pf-arrow">↓</div>
+      <div class="pf-step"><span class="pf-agent codex">Codex</span><span class="pf-desc"> sandbox安全実行（read-only）</span></div>
+      <div class="pf-arrow">↓（不足情報は）</div>
+      <div class="pf-step"><span class="pf-agent gemini">Gemini</span><span class="pf-desc"> 追加情報をWeb調査</span></div>
+    </div>
+  </div>
+</div>
+
+
+<h2>📂 実装ファイル一覧</h2>
+
+<div class="file-tree">
+  <span class="ft-dir">agy/</span><br>
+  <span class="ft-new">├── AGENTS.md</span><span class="ft-muted"> ← Codex CLI 向け行動指針（新規）</span><br>
+  <span class="ft-new">├── GEMINI.md</span><span class="ft-muted"> ← Gemini CLI 向け行動指針（新規）</span><br>
+  <span class="ft-mod">├── CLAUDE.md</span><span class="ft-muted"> ← オーケストレーション概要追記</span><br>
+  <span class="ft-dir">├── .ai-consults/</span><span class="ft-muted"> ← 相談ログ保存ディレクトリ（新規）</span><br>
+  <span class="ft-dir">├── scripts/</span><br>
+  <span class="ft-new">│   ├── consult-codex.ps1</span><span class="ft-muted"> ← Codex呼び出しラッパー（新規）</span><br>
+  <span class="ft-new">│   └── consult-gemini.ps1</span><span class="ft-muted"> ← Gemini呼び出しラッパー（新規）</span><br>
+  <span class="ft-dir">└── .claude/skills/</span><br>
+  <span class="ft-new">    └── orchestrate/SKILL.md</span><span class="ft-muted"> ← 司令塔スキル本体（新規）</span>
+</div>
+
+
+<h2>⚙ ラッパースクリプトの呼び出し方</h2>
+
+<div class="code-fn">Codexに相談する（Claude Code 内から）</div>
+<pre><code># read-only sandbox（デフォルト・推奨）
+Bash("powershell -File scripts/consult-codex.ps1 'このコードのテストを実行して結果を教えて'")
+
+# 書き込みあり
+Bash("powershell -File scripts/consult-codex.ps1 '依存パッケージを追加して' -Sandbox workspace-write")</code></pre>
+
+<div class="code-fn">Geminiに相談する（Claude Code 内から）</div>
+<pre><code>Bash("powershell -File scripts/consult-gemini.ps1 'このジャンルの競合を5つ調べてトレンドをまとめて'")</code></pre>
+
+<p style="color:#c9d1d9;font-size:0.85em;margin:10px 0">結果は <code>.ai-consults/codex-{timestamp}.md</code> / <code>gemini-{timestamp}.md</code> に保存される。Claude が Read して内容を確認・統合する。</p>
+
+
+<h2>🔁 オーケストレーションフロー（詳細）</h2>
+
+<div class="flow">
+  <div class="flow-row"><div class="fn fn-n">1</div><div><strong>タスク受信</strong><br><span style="color:var(--muted);font-size:0.83em">Discord or ターミナルから複雑なタスクが来る</span></div></div>
+  <div class="flow-arrow">↓ orchestrate スキル起動</div>
+  <div class="flow-row"><div class="fn fn-c">2</div><div><strong style="color:var(--claude)">Claude: タスク分解 + 担当決定</strong><br><span style="color:var(--muted);font-size:0.83em">ルーティング表で各サブタスクの担当を決める</span></div></div>
+  <div class="flow-arrow">↓ 並行 or 順序実行</div>
+  <div class="flow-row"><div class="fn fn-x">3</div><div><strong style="color:var(--codex)">Codex: 実行・検証タスクを担当</strong><br><span style="color:var(--muted);font-size:0.83em">consult-codex.ps1 経由 → .ai-consults/ に結果保存</span></div></div>
+  <div class="flow-row"><div class="fn fn-g">3</div><div><strong style="color:var(--gemini)">Gemini: 調査・要約タスクを担当</strong><br><span style="color:var(--muted);font-size:0.83em">consult-gemini.ps1 経由 → .ai-consults/ に結果保存</span></div></div>
+  <div class="flow-arrow">↓ 結果ファイルをRead</div>
+  <div class="flow-row"><div class="fn fn-c">4</div><div><strong style="color:var(--claude)">Claude: 品質確認 + フィードバック</strong><br><span style="color:var(--muted);font-size:0.83em">要件を満たしているか確認。問題があれば再依頼。</span></div></div>
+  <div class="flow-arrow">↓ 問題なし</div>
+  <div class="flow-row"><div class="fn fn-c">5</div><div><strong style="color:var(--claude)">Claude: 統合 + ユーザーに報告</strong><br><span style="color:var(--muted);font-size:0.83em">Discord に完了報告・成果物・次のアクションを送信</span></div></div>
+</div>
+
+
+<div class="callout callout-orange" style="margin-top:24px">
+  <div class="callout-title">⚠ 注意：Codex/Gemini のインストール確認</div>
+  <p>ラッパースクリプトは <code>codex</code> / <code>gemini</code> コマンドがPATHにある前提。</p>
+  <p>未インストールの場合: <code>npm i -g @openai/codex</code> / <code>npm i -g @google/generative-ai</code></p>
+  <p>Geminiのフラグ（<code>-p</code>）は実際のバージョンで <code>gemini --help</code> で要確認。</p>
+</div>
+
+<div class="callout callout-green">
+  <div class="callout-title">✓ 段階的な導入推奨</div>
+  <p>最初は明示コマンドで手動呼び出しから。うまく回ってから CLAUDE.md に自動判断ルールを追加していくのが安全。完全自動化は無限ループのリスクがある。</p>
+</div>
+
+<hr>
+<footer>エージェントオーケストレーション実装レポート — generated by ティア / Claude Code Sonnet 4.6 — 2026-03-25</footer>
+
+</body>
+</html>

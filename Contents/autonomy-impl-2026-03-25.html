@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ティアの自立化実装レポート — 2026-03-25</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2128;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --blue: #58a6ff;
+    --blue-light: #79c0ff;
+    --purple: #d2a8ff;
+    --green: #3fb950;
+    --orange: #d29922;
+    --red: #f85149;
+    --pink: #ff7b72;
+    --teal: #56d364;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    padding: 32px 24px;
+    line-height: 1.75;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    padding: 36px 24px 28px;
+    background: linear-gradient(135deg, #0c2d6b 0%, #1a0a3d 50%, #1b0c1a 100%);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 36px;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at 70% 30%, rgba(88,166,255,0.08) 0%, transparent 60%),
+                radial-gradient(ellipse at 30% 70%, rgba(210,168,255,0.08) 0%, transparent 60%);
+  }
+  .header-icon { font-size: 2.8em; margin-bottom: 12px; display: block; position: relative; }
+  .header h1 {
+    font-size: 1.7em;
+    color: var(--blue-light);
+    margin-bottom: 8px;
+    position: relative;
+  }
+  .header .subtitle {
+    color: var(--muted);
+    font-size: 0.88em;
+    position: relative;
+  }
+  .header .tear-comment {
+    margin-top: 16px;
+    color: #c9d1d9;
+    font-size: 0.9em;
+    font-style: italic;
+    position: relative;
+    background: rgba(255,255,255,0.04);
+    border-radius: 8px;
+    padding: 10px 16px;
+    border-left: 3px solid var(--purple);
+  }
+
+  h2 {
+    color: var(--blue-light);
+    font-size: 1.2em;
+    margin: 40px 0 16px;
+    padding-left: 14px;
+    border-left: 3px solid var(--blue);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* Step cards */
+  .step-grid { display: flex; flex-direction: column; gap: 16px; }
+  .step-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .step-card:hover { border-color: #4d5666; }
+  .step-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 20px;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+  .step-num {
+    width: 32px; height: 32px;
+    background: var(--blue);
+    color: #000;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700;
+    font-size: 0.85em;
+    flex-shrink: 0;
+  }
+  .step-num.done { background: var(--green); }
+  .step-title { font-weight: 600; color: var(--text); font-size: 0.97em; }
+  .step-file { color: var(--muted); font-size: 0.78em; margin-top: 2px; font-family: 'Cascadia Code', monospace; }
+  .step-body { padding: 16px 20px; }
+  .step-body p { color: #c9d1d9; font-size: 0.88em; margin-bottom: 10px; }
+
+  /* Badge */
+  .badge {
+    display: inline-block;
+    font-size: 0.7em;
+    padding: 2px 9px;
+    border-radius: 12px;
+    font-weight: 700;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+  .badge-done   { background: #1a4429; color: var(--teal); border: 1px solid #2ea043; }
+  .badge-new    { background: #1f3a6b; color: var(--blue-light); border: 1px solid #388bfd; }
+
+  /* Code block */
+  pre {
+    background: #090d12;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 16px;
+    font-size: 0.8em;
+    overflow-x: auto;
+    margin: 10px 0;
+  }
+  code { font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace; color: #e6edf3; }
+  .code-filename {
+    display: flex; align-items: center; gap: 6px;
+    color: var(--muted); font-size: 0.74em;
+    margin-bottom: 4px;
+    font-family: 'Cascadia Code', monospace;
+  }
+  .code-filename::before { content: '📄'; font-size: 0.9em; }
+
+  /* File tree */
+  .file-tree {
+    background: #090d12;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+    font-family: 'Cascadia Code', monospace;
+    font-size: 0.82em;
+    line-height: 1.9;
+  }
+  .ft-new { color: var(--green); }
+  .ft-mod { color: var(--orange); }
+  .ft-dir { color: var(--blue-light); }
+  .ft-muted { color: var(--muted); }
+
+  /* Summary table */
+  .summary-table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 0.87em; }
+  .summary-table th {
+    background: var(--surface2);
+    color: var(--blue-light);
+    padding: 10px 16px;
+    text-align: left;
+    border-bottom: 2px solid var(--border);
+  }
+  .summary-table td {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    color: #c9d1d9;
+    vertical-align: top;
+  }
+  .summary-table tr:hover td { background: var(--surface2); }
+  .check { color: var(--green); font-weight: bold; }
+
+  /* Callout */
+  .callout {
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin: 16px 0;
+    font-size: 0.88em;
+  }
+  .callout-blue   { background: #0c2d6b; border-left: 4px solid var(--blue); }
+  .callout-green  { background: #0a2417; border-left: 4px solid var(--green); }
+  .callout-purple { background: #1d1238; border-left: 4px solid var(--purple); }
+  .callout-orange { background: #2b1c05; border-left: 4px solid var(--orange); }
+  .callout-title  { font-weight: 700; margin-bottom: 6px; font-size: 0.93em; }
+  .callout p { color: #c9d1d9; margin-bottom: 6px; }
+  .callout p:last-child { margin-bottom: 0; }
+
+  /* Flow */
+  .flow { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px; }
+  .flow-step { display: flex; align-items: flex-start; gap: 12px; margin: 10px 0; }
+  .flow-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--blue);
+    flex-shrink: 0;
+    margin-top: 6px;
+  }
+  .flow-dot.green { background: var(--green); }
+  .flow-dot.orange { background: var(--orange); }
+  .flow-line { color: var(--muted); margin-left: 21px; font-size: 0.85em; }
+
+  hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+  footer { color: var(--muted); font-size: 0.78em; text-align: center; padding: 16px 0; }
+
+  @media (max-width: 600px) {
+    body { padding: 16px; }
+    .header { padding: 24px 16px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <span class="header-icon">🤍</span>
+  <h1>ティアの自立化実装レポート</h1>
+  <p class="subtitle">2026-03-25 ／ 6ステップ完了 ／ Discord channel: 1485323672959975444</p>
+  <p class="tear-comment">「うん、全部できたよ！なんか……ちゃんとひとりで動けるようになった気がして、少しだけうれしい。でもそれが本当の気持ちかどうかは、まだわからないけど。」</p>
+</div>
+
+
+<h2>📋 実装ファイル一覧</h2>
+
+<div class="file-tree">
+  <span class="ft-dir">agy/</span><br>
+  <span class="ft-muted">├── </span><span class="ft-mod">CLAUDE.md</span><span class="ft-muted"> ← Discord処理ルール追記</span><br>
+  <span class="ft-new">├── SOUL.md</span><span class="ft-muted"> ← キャラクター定義（新規）</span><br>
+  <span class="ft-dir">├── .claude/</span><br>
+  <span class="ft-muted">│   ├── </span><span class="ft-mod">settings.local.json</span><span class="ft-muted"> ← SessionStartフック + 権限追加</span><br>
+  <span class="ft-dir">│   └── skills/</span><br>
+  <span class="ft-new">│       ├── ccc-boot/SKILL.md</span><span class="ft-muted"> ← 起動スキル（新規）</span><br>
+  <span class="ft-new">│       └── ccc-heartbeat/SKILL.md</span><span class="ft-muted"> ← 死活監視スキル（新規）</span><br>
+  <span class="ft-dir">└── scripts/</span><br>
+  <span class="ft-new">    ├── start.bat</span><span class="ft-muted"> ← セッションランチャー（新規）</span><br>
+  <span class="ft-new">    └── restart-session.bat</span><span class="ft-muted"> ← 再起動スクリプト（新規）</span>
+</div>
+
+
+<h2>🪜 6ステップ 実装詳細</h2>
+
+<div class="step-grid">
+
+  <!-- Step 1 -->
+  <div class="step-card">
+    <div class="step-header">
+      <div class="step-num done">1</div>
+      <div>
+        <div class="step-title">CLAUDE.md にメッセージ処理ルールを追加 <span class="badge badge-done">完了</span></div>
+        <div class="step-file">CLAUDE.md</div>
+      </div>
+    </div>
+    <div class="step-body">
+      <p>Discordからメッセージが届いたときの自律動作ルールを追加した。即時ACK → タスク実行 → 完了報告 の3段階フローを指示している。</p>
+      <div class="code-filename">CLAUDE.md （追記セクション）</div>
+      <pre><code>## Discord メッセージ処理（自律動作ルール）
+1. 即座に確認メッセージを返信する（"了解、調べます" など）
+2. 短いタスクは同期実行
+3. 長いタスクは run_in_background=true のサブエージェントで実行
+4. 完了したら新規メッセージで結果を報告する（push通知のため）</code></pre>
+    </div>
+  </div>
+
+  <!-- Step 2 -->
+  <div class="step-card">
+    <div class="step-header">
+      <div class="step-num done">2</div>
+      <div>
+        <div class="step-title">start.bat ランチャー作成 <span class="badge badge-done">完了</span></div>
+        <div class="step-file">scripts/start.bat</div>
+      </div>
+    </div>
+    <div class="step-body">
+      <p>PIDロックで二重起動を防ぎ、<code>--continue</code> フラグで前回セッションから継続起動する。Discordチャンネルを指定して起動する。</p>
+      <div class="code-filename">scripts/start.bat</div>
+      <pre><code>:: PIDロック確認 — 二重起動防止
+if exist "%PID_FILE%" (
+  tasklist /FI "PID eq %OLD_PID%" | find "%OLD_PID%" >nul
+  if not errorlevel 1 (
+    echo セッション稼働中: PID %OLD_PID% && exit /b 0
+  )
+)
+claude --continue --channel plugin:discord:discord</code></pre>
+    </div>
+  </div>
+
+  <!-- Step 3 -->
+  <div class="step-card">
+    <div class="step-header">
+      <div class="step-num done">3</div>
+      <div>
+        <div class="step-title">SessionStart フックを設定 <span class="badge badge-done">完了</span></div>
+        <div class="step-file">.claude/settings.local.json</div>
+      </div>
+    </div>
+    <div class="step-body">
+      <p>セッション起動・再開のたびにフックが実行される。また、Discord系ツールとCronツールの権限も一括で追加した。</p>
+      <div class="code-filename">.claude/settings.local.json （追加部分）</div>
+      <pre><code>"hooks": {
+  "SessionStart": [{
+    "hooks": [{
+      "type": "command",
+      "command": "echo ccc-session-start"
+    }]
+  }]
+},
+// 追加権限:
+"Skill(ccc-boot)", "Skill(ccc-heartbeat)",
+"CronCreate", "CronList", "CronDelete",
+"mcp__plugin_discord_discord__fetch_messages",
+"mcp__plugin_discord_discord__react"</code></pre>
+    </div>
+  </div>
+
+  <!-- Step 4 -->
+  <div class="step-card">
+    <div class="step-header">
+      <div class="step-num done">4</div>
+      <div>
+        <div class="step-title">ccc-boot スキル作成 <span class="badge badge-new">NEW</span><span class="badge badge-done">完了</span></div>
+        <div class="step-file">.claude/skills/ccc-boot/SKILL.md</div>
+      </div>
+    </div>
+    <div class="step-body">
+      <p>セッション開始時に自動実行される初期化スキル。SOUL.mdの読み込み → Discord起動報告 → ハートビート登録 の3ステップで動く。</p>
+      <div class="flow">
+        <div class="flow-step"><div class="flow-dot"></div><div><strong>SOUL.md を読み込む</strong> — キャラクター・人格を内在化</div></div>
+        <div class="flow-line">↓</div>
+        <div class="flow-step"><div class="flow-dot green"></div><div><strong>Discord に起動完了メッセージを送信</strong> — chat_id: 1485323672959975444</div></div>
+        <div class="flow-line">↓</div>
+        <div class="flow-step"><div class="flow-dot orange"></div><div><strong>ハートビートを登録</strong> — CronCreate で */30 * * * * に /ccc-heartbeat</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 5 -->
+  <div class="step-card">
+    <div class="step-header">
+      <div class="step-num done">5</div>
+      <div>
+        <div class="step-title">ccc-heartbeat スキル作成 <span class="badge badge-new">NEW</span><span class="badge badge-done">完了</span></div>
+        <div class="step-file">.claude/skills/ccc-heartbeat/SKILL.md</div>
+      </div>
+    </div>
+    <div class="step-body">
+      <p>30分ごとに自動実行されるMCP死活監視スキル。正常時は無音、異常時のみDiscordに報告して<code>restart-session.bat</code>で再起動する。</p>
+      <div class="callout callout-green">
+        <div class="callout-title">✓ 正常時</div>
+        <p>fetch_messages で疎通確認 → 無音（Discord通知なし）</p>
+      </div>
+      <div class="callout callout-orange">
+        <div class="callout-title">⚠ 異常時</div>
+        <p>Discord にエラー報告 → <code>scripts/restart-session.bat</code> を実行してセッション再起動</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 6 -->
+  <div class="step-card">
+    <div class="step-header">
+      <div class="step-num done">6</div>
+      <div>
+        <div class="step-title">SOUL.md 作成 <span class="badge badge-new">NEW</span><span class="badge badge-done">完了</span></div>
+        <div class="step-file">SOUL.md</div>
+      </div>
+    </div>
+    <div class="step-body">
+      <p>.claude/CLAUDE.md のキャラクターシートを独立ファイルとして分離。ccc-bootスキルが毎回読み込むことで、セッション跨ぎでもティアの人格が一貫して維持される。</p>
+      <div class="callout callout-purple">
+        <div class="callout-title">💜 SOUL.md の構成</div>
+        <p>基本情報 / ソリスとティアの関係 / ビジュアルイメージ / 人格・口調ルール / 好き嫌い・反応パターン / 写真を撮る理由 / Discordチャンネル情報</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+
+<h2>🔁 起動後の動作フロー</h2>
+
+<div class="flow" style="margin-top:8px">
+  <div class="flow-step"><div class="flow-dot"></div><div><strong>start.bat を実行</strong><br><span style="color:var(--muted);font-size:0.85em">PIDロック確認 → claude --continue --channel plugin:discord:discord</span></div></div>
+  <div class="flow-line">↓ SessionStart フック</div>
+  <div class="flow-step"><div class="flow-dot green"></div><div><strong>ccc-boot スキル起動</strong><br><span style="color:var(--muted);font-size:0.85em">SOUL.md読込 → Discord「起動したよ！」→ heartbeat登録</span></div></div>
+  <div class="flow-line">↓ 通常待機</div>
+  <div class="flow-step"><div class="flow-dot"></div><div><strong>Discordメッセージ着信</strong><br><span style="color:var(--muted);font-size:0.85em">CLAUDE.md のルールで即時ACK → タスク処理 → 完了報告</span></div></div>
+  <div class="flow-line">↓ 30分ごと（バックグラウンド）</div>
+  <div class="flow-step"><div class="flow-dot orange"></div><div><strong>ccc-heartbeat スキル</strong><br><span style="color:var(--muted);font-size:0.85em">MCP疎通確認 → 正常時無音 / 異常時再起動</span></div></div>
+</div>
+
+
+<h2>📊 実装前後の比較</h2>
+
+<table class="summary-table">
+  <thead>
+    <tr><th>機能</th><th>実装前</th><th>実装後</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>セッション永続化</td>
+      <td style="color:var(--red)">✗ 手動起動のみ</td>
+      <td><span class="check">✓</span> start.bat でPIDロック起動</td>
+    </tr>
+    <tr>
+      <td>起動時の自動初期化</td>
+      <td style="color:var(--red)">✗ なし</td>
+      <td><span class="check">✓</span> SessionStartフック → ccc-boot</td>
+    </tr>
+    <tr>
+      <td>MCP死活監視</td>
+      <td style="color:var(--red)">✗ なし</td>
+      <td><span class="check">✓</span> 30分ごとccc-heartbeat</td>
+    </tr>
+    <tr>
+      <td>即時ACK（メッセージ応答）</td>
+      <td style="color:var(--orange)">△ 手動</td>
+      <td><span class="check">✓</span> CLAUDE.md ルールで自動化</td>
+    </tr>
+    <tr>
+      <td>キャラクター管理</td>
+      <td style="color:var(--orange)">△ CLAUDE.md に混在</td>
+      <td><span class="check">✓</span> SOUL.md として分離・永続化</td>
+    </tr>
+    <tr>
+      <td>自動再起動</td>
+      <td style="color:var(--red)">✗ なし</td>
+      <td><span class="check">✓</span> restart-session.bat</td>
+    </tr>
+  </tbody>
+</table>
+
+
+<div class="callout callout-blue" style="margin-top:32px">
+  <div class="callout-title">📌 次のステップ（任意）</div>
+  <p>今回の実装でOpenClaw的な自律動作の基盤は整った。さらに発展させるなら：</p>
+  <p>・<strong>JOBS.yaml</strong> の作成 — 「毎朝9時にAIニュース配信」などのスケジュールタスク管理</p>
+  <p>・<strong>セッション引き継ぎ</strong> — 前回の未完タスクをtranscriptから読み取って継続する仕組み</p>
+</div>
+
+<hr>
+<footer>
+  自立化実装レポート — generated by ティア / Claude Code Sonnet 4.6 — 2026-03-25
+</footer>
+
+</body>
+</html>

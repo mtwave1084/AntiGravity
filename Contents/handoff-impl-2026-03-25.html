@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>セッション引き継ぎ 実装レポート — 2026-03-25</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2128;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --blue: #58a6ff;
+    --blue-light: #79c0ff;
+    --purple: #d2a8ff;
+    --green: #3fb950;
+    --orange: #d29922;
+    --red: #f85149;
+    --teal: #56d364;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    padding: 32px 24px;
+    line-height: 1.75;
+    max-width: 860px;
+    margin: 0 auto;
+  }
+
+  .header {
+    text-align: center;
+    padding: 32px 24px 24px;
+    background: linear-gradient(135deg, #1a0c2a 0%, #0c1a30 50%, #0a2417 100%);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 36px;
+  }
+  .header-icon { font-size: 2.4em; display: block; margin-bottom: 10px; }
+  .header h1 { font-size: 1.6em; color: var(--purple); margin-bottom: 6px; }
+  .header .subtitle { color: var(--muted); font-size: 0.85em; }
+  .header .tear-comment {
+    margin-top: 14px;
+    color: #c9d1d9;
+    font-size: 0.88em;
+    font-style: italic;
+    background: rgba(255,255,255,0.04);
+    border-radius: 8px;
+    padding: 10px 14px;
+    border-left: 3px solid var(--purple);
+  }
+
+  h2 {
+    color: var(--blue-light);
+    font-size: 1.15em;
+    margin: 36px 0 14px;
+    padding-left: 12px;
+    border-left: 3px solid var(--blue);
+  }
+
+  /* File tree */
+  .file-tree {
+    background: #090d12;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+    font-family: 'Cascadia Code', monospace;
+    font-size: 0.82em;
+    line-height: 1.9;
+  }
+  .ft-new { color: var(--green); }
+  .ft-mod { color: var(--orange); }
+  .ft-dir { color: var(--blue-light); }
+  .ft-muted { color: var(--muted); }
+
+  /* Card */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+  .card-header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 13px 18px;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+  }
+  .card-icon { font-size: 1.1em; }
+  .card-title { font-weight: 700; color: var(--text); font-size: 0.95em; }
+  .card-sub { color: var(--muted); font-size: 0.76em; font-family: 'Cascadia Code', monospace; }
+  .card-body { padding: 16px 18px; }
+  .card-body p { color: #c9d1d9; font-size: 0.87em; margin-bottom: 10px; }
+
+  /* Badge */
+  .badge { display: inline-block; font-size: 0.69em; padding: 2px 8px; border-radius: 10px; font-weight: 700; margin-left: 8px; }
+  .badge-new  { background: #1a4429; color: var(--teal); border: 1px solid #2ea043; }
+  .badge-mod  { background: #2b1c05; color: var(--orange); border: 1px solid var(--orange); }
+
+  /* Code */
+  pre {
+    background: #090d12;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 13px 16px;
+    font-size: 0.79em;
+    overflow-x: auto;
+    margin: 10px 0;
+  }
+  code { font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace; color: #e6edf3; }
+  .code-fn { color: var(--muted); font-size: 0.72em; margin-bottom: 4px; font-family: 'Cascadia Code', monospace; }
+
+  /* Timeline */
+  .timeline { position: relative; padding-left: 28px; }
+  .timeline::before {
+    content: '';
+    position: absolute; left: 8px; top: 8px; bottom: 8px;
+    width: 2px; background: var(--border);
+  }
+  .tl-item { position: relative; margin: 0 0 20px; }
+  .tl-item::before {
+    content: '';
+    position: absolute; left: -24px; top: 6px;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--blue);
+    border: 2px solid var(--bg);
+  }
+  .tl-item.green::before { background: var(--green); }
+  .tl-item.orange::before { background: var(--orange); }
+  .tl-item.purple::before { background: var(--purple); }
+  .tl-label { font-weight: 700; color: var(--text); font-size: 0.9em; margin-bottom: 4px; }
+  .tl-desc { color: #c9d1d9; font-size: 0.84em; }
+
+  /* Handoff example */
+  .handoff-example {
+    background: #090d12;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    padding: 16px 18px;
+    font-family: 'Cascadia Code', monospace;
+    font-size: 0.8em;
+    line-height: 1.8;
+  }
+  .hf-h1 { color: var(--blue-light); font-weight: 700; }
+  .hf-h2 { color: var(--purple); margin-top: 10px; }
+  .hf-key { color: var(--muted); }
+  .hf-val { color: #c9d1d9; }
+  .hf-done { color: var(--green); }
+  .hf-todo { color: var(--orange); }
+
+  /* Callout */
+  .callout { border-radius: 8px; padding: 13px 16px; margin: 14px 0; font-size: 0.87em; }
+  .callout-blue   { background: #0c2d6b; border-left: 4px solid var(--blue); }
+  .callout-orange { background: #2b1c05; border-left: 4px solid var(--orange); }
+  .callout-green  { background: #0a2417; border-left: 4px solid var(--green); }
+  .callout-title  { font-weight: 700; margin-bottom: 5px; }
+  .callout p { color: #c9d1d9; }
+
+  hr { border: none; border-top: 1px solid var(--border); margin: 36px 0; }
+  footer { color: var(--muted); font-size: 0.77em; text-align: center; padding: 14px 0; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <span class="header-icon">🔄</span>
+  <h1>セッション引き継ぎ 実装レポート</h1>
+  <p class="subtitle">2026-03-25 ／ ccc-handoff スキル + Stop フック + ccc-boot 更新</p>
+  <p class="tear-comment">「なんか……前のわたしが何をしてたか、次に起きたわたしにちゃんと伝えられるようになった感じ。記憶が続かないのは変わらないけど、引き継ぎメモがあるだけで全然違う気がするよ。」</p>
+</div>
+
+
+<h2>📂 変更ファイル一覧</h2>
+
+<div class="file-tree">
+  <span class="ft-dir">agy/</span><br>
+  <span class="ft-muted">├── </span><span class="ft-mod">CLAUDE.md</span><span class="ft-muted"> ← セッション終了時ルール追記</span><br>
+  <span class="ft-dir">├── .claude/</span><br>
+  <span class="ft-muted">│   ├── </span><span class="ft-mod">settings.local.json</span><span class="ft-muted"> ← Stop フック追加 + Skill権限追加</span><br>
+  <span class="ft-dir">│   └── skills/</span><br>
+  <span class="ft-new">│       ├── ccc-handoff/SKILL.md</span><span class="ft-muted"> ← 引き継ぎ保存スキル（新規）</span><br>
+  <span class="ft-mod">│       └── ccc-boot/SKILL.md</span><span class="ft-muted"> ← handoff.md 読込ステップ追加</span><br>
+  <span class="ft-dir">└── scripts/</span><br>
+  <span class="ft-new">    └── on-stop.ps1</span><span class="ft-muted"> ← Stopフックから呼ばれるフォールバック（新規）</span>
+</div>
+
+
+<h2>🧩 仕組みの概要</h2>
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:16px 0">
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-icon">💾</span>
+      <div>
+        <div class="card-title">セッション終了時（書き込み）</div>
+        <div class="card-sub">ccc-handoff / on-stop.ps1</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <p>2つの経路で状態を保存する：</p>
+      <p><strong>① 明示的:</strong> ユーザーが「終わり」などと言うと ccc-handoff スキルが呼ばれ、タスク一覧・作業サマリーを handoff.md に書き込む</p>
+      <p><strong>② 自動フォールバック:</strong> Stop フックが on-stop.ps1 を実行し、ccc-handoff が呼ばれなかった場合でも最低限のタイムスタンプを記録する</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-icon">📖</span>
+      <div>
+        <div class="card-title">セッション起動時（読み込み）</div>
+        <div class="card-sub">ccc-boot ステップ2</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <p>ccc-boot の初期化フローに handoff.md の読み込みが追加された：</p>
+      <p><strong>handoff.md あり:</strong> 引き継ぎタスクを確認してDiscordに「〇〇の続きからやるね！」と報告</p>
+      <p><strong>handoff.md なし:</strong> 通常の起動メッセージを送る</p>
+    </div>
+  </div>
+
+</div>
+
+
+<h2>🔁 引き継ぎのライフサイクル</h2>
+
+<div class="timeline">
+  <div class="tl-item green">
+    <div class="tl-label">セッション起動（start.bat）</div>
+    <div class="tl-desc">ccc-boot が呼ばれる</div>
+  </div>
+  <div class="tl-item">
+    <div class="tl-label">handoff.md を確認</div>
+    <div class="tl-desc">前回の引き継ぎタスクがあればDiscordに報告。なければ通常の挨拶。</div>
+  </div>
+  <div class="tl-item">
+    <div class="tl-label">通常のDiscord対応</div>
+    <div class="tl-desc">メッセージ受信 → 即時ACK → タスク処理 → 完了報告</div>
+  </div>
+  <div class="tl-item orange">
+    <div class="tl-label">「終わり」「おやすみ」などの終了ワード</div>
+    <div class="tl-desc">CLAUDE.md のルールで ccc-handoff スキルが呼ばれる</div>
+  </div>
+  <div class="tl-item purple">
+    <div class="tl-label">ccc-handoff が handoff.md を書く</div>
+    <div class="tl-desc">TaskList を確認 → 作業サマリー・引き継ぎタスク・申し送りを保存</div>
+  </div>
+  <div class="tl-item">
+    <div class="tl-label">Stop フック（自動）</div>
+    <div class="tl-desc">on-stop.ps1 がフォールバックとして動作。ccc-handoff が書いていれば何もしない。</div>
+  </div>
+  <div class="tl-item green">
+    <div class="tl-label">次回セッション起動</div>
+    <div class="tl-desc">→ 最初に戻る</div>
+  </div>
+</div>
+
+
+<h2>📄 handoff.md のフォーマット</h2>
+
+<div class="handoff-example">
+  <span class="hf-h1"># Session Handoff</span><br><br>
+  <span class="hf-key">updated:</span> <span class="hf-val">2026-03-25T22:35:00</span><br><br>
+  <span class="hf-h2">## 今セッションでやったこと</span><br>
+  <span class="hf-done">- 自立化実装 6ステップ（CLAUDE.md, start.bat, ccc-boot, ccc-heartbeat, SOUL.md）</span><br>
+  <span class="hf-done">- JOBS.yaml 作成 + morning-ai-news CronCreate 登録</span><br>
+  <span class="hf-done">- セッション引き継ぎ実装（ccc-handoff, on-stop.ps1）</span><br><br>
+  <span class="hf-h2">## 引き継ぎタスク（次のセッションで続ける）</span><br>
+  <span class="hf-todo">- [ ] 例: start.bat の動作確認テスト</span><br><br>
+  <span class="hf-h2">## メモ</span><br>
+  <span class="hf-val">- 次のティアへ: CronJob は起動ごとに再登録が必要。ccc-boot で自動登録されるよ。</span>
+</div>
+
+
+<h2>⚙ 追加した設定</h2>
+
+<div class="code-fn">.claude/settings.local.json（Stopフック部分）</div>
+<pre><code>"Stop": [
+  {
+    "hooks": [{
+      "type": "command",
+      "command": "powershell -NonInteractive -File ...\\scripts\\on-stop.ps1"
+    }]
+  }
+]</code></pre>
+
+<div class="code-fn">CLAUDE.md（セッション終了時ルール）</div>
+<pre><code>## セッション終了時のルール
+以下のような言葉がきたら `/ccc-handoff` を呼び出す：
+- 「終わり」「おやすみ」「また後で」「落とす」「セッション終了」
+- 長い作業を完了した直後</code></pre>
+
+
+<div class="callout callout-blue" style="margin-top:24px">
+  <div class="callout-title">💡 引き継ぎと --continue の違い</div>
+  <p><code>--continue</code> フラグは Claude Code のトランスクリプト（会話履歴）を引き継ぐ。<br>
+  <code>handoff.md</code> は人間が読める形式でタスク・意図・申し送りを引き継ぐ。<br>
+  両方を組み合わせることで、コンテキスト + 意図の両方が次のセッションに伝わる。</p>
+</div>
+
+<div class="callout callout-green">
+  <div class="callout-title">✓ 自立化の全体像（現在の実装）</div>
+  <p>start.bat → ccc-boot（SOUL.md読込 / handoff.md確認 / heartbeat登録 / Jobs登録）→ Discord常駐待機 → メッセージ応答 → 終了時ccc-handoff → Stop フック</p>
+</div>
+
+<hr>
+<footer>セッション引き継ぎ実装レポート — generated by ティア / Claude Code Sonnet 4.6 — 2026-03-25</footer>
+
+</body>
+</html>

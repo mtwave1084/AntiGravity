@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI News Digest — 2026.03.23</title>
+  <style>
+    :root {
+      --bg: #0d0d0f;
+      --surface: #16161a;
+      --surface2: #1e1e24;
+      --border: #2a2a35;
+      --accent-blue: #4f9cf9;
+      --accent-purple: #a78bfa;
+      --accent-green: #34d399;
+      --accent-orange: #fb923c;
+      --accent-pink: #f472b6;
+      --accent-yellow: #fbbf24;
+      --text: #e8e8f0;
+      --text-muted: #8888a8;
+      --tag-bg: #23232e;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* Header */
+    header {
+      background: linear-gradient(135deg, #0d0d0f 0%, #13131a 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 2.5rem 2rem 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+    header::before {
+      content: '';
+      position: absolute;
+      top: -60px; right: -60px;
+      width: 300px; height: 300px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(79,156,249,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    header::after {
+      content: '';
+      position: absolute;
+      bottom: -80px; left: 10%;
+      width: 400px; height: 200px;
+      background: radial-gradient(ellipse, rgba(167,139,250,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .header-inner { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
+    .header-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      color: var(--accent-blue);
+      text-transform: uppercase;
+      margin-bottom: 0.6rem;
+    }
+    header h1 {
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      font-weight: 800;
+      line-height: 1.1;
+      background: linear-gradient(135deg, #fff 30%, var(--accent-purple) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.6rem;
+    }
+    header .subtitle {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    header .subtitle span {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent-green); display: inline-block; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{ opacity:1; } 50%{ opacity:0.4; } }
+
+    /* Layout */
+    main { max-width: 1100px; margin: 0 auto; padding: 2rem; }
+
+    /* Section headers */
+    .section-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+      margin-top: 2.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* Cards grid */
+    .cards { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+    .cards.wide { grid-template-columns: 1fr; }
+    .cards.two { grid-template-columns: repeat(auto-fill, minmax(480px, 1fr)); }
+
+    /* Card */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.3rem 1.4rem;
+      transition: border-color 0.2s, transform 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .card:hover { border-color: #3a3a50; transform: translateY(-2px); }
+    .card-accent {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 3px;
+      border-radius: 14px 14px 0 0;
+    }
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.5rem;
+      margin-bottom: 0.85rem;
+    }
+    .card-icon {
+      font-size: 1.5rem;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    .card-meta { flex: 1; }
+    .card-company {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 0.2rem;
+    }
+    .card h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.35;
+    }
+    .badge {
+      font-size: 0.66rem;
+      font-weight: 700;
+      padding: 0.2rem 0.55rem;
+      border-radius: 100px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .badge-new { background: rgba(52,211,153,0.15); color: var(--accent-green); border: 1px solid rgba(52,211,153,0.25); }
+    .badge-hot { background: rgba(251,146,60,0.15); color: var(--accent-orange); border: 1px solid rgba(251,146,60,0.25); }
+    .badge-warn { background: rgba(244,114,182,0.15); color: var(--accent-pink); border: 1px solid rgba(244,114,182,0.25); }
+    .badge-deal { background: rgba(167,139,250,0.15); color: var(--accent-purple); border: 1px solid rgba(167,139,250,0.25); }
+    .badge-free { background: rgba(79,156,249,0.15); color: var(--accent-blue); border: 1px solid rgba(79,156,249,0.25); }
+
+    .card-date {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-top: 0.3rem;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+    .card-date::before { content: '📅'; font-size: 0.65rem; }
+
+    .card p {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      line-height: 1.65;
+    }
+    .card ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+      margin-top: 0.6rem;
+    }
+    .card ul li {
+      font-size: 0.845rem;
+      color: var(--text-muted);
+      padding-left: 1.1rem;
+      position: relative;
+      line-height: 1.5;
+    }
+    .card ul li::before {
+      content: '›';
+      position: absolute;
+      left: 0;
+      color: var(--accent-blue);
+      font-weight: 700;
+    }
+    .card ul li strong { color: var(--text); font-weight: 600; }
+
+    /* Highlight card */
+    .card.featured {
+      background: linear-gradient(135deg, #16161a 0%, #1a1a22 100%);
+      grid-column: 1 / -1;
+    }
+    .card.featured h2 { font-size: 1.1rem; }
+
+    /* Stat pills */
+    .stats { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.8rem; }
+    .stat {
+      background: var(--tag-bg);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 0.25rem 0.75rem;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+    .stat strong { color: var(--text); font-weight: 700; }
+
+    /* Policy section */
+    .policy-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media (max-width: 640px) { .policy-grid { grid-template-columns: 1fr; } }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border);
+      margin-top: 3rem;
+      padding: 1.5rem 2rem;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.78rem;
+    }
+    footer a { color: var(--accent-blue); text-decoration: none; }
+
+    /* Color accents per company */
+    .blue { background: linear-gradient(90deg, var(--accent-blue), #60a5fa); }
+    .purple { background: linear-gradient(90deg, var(--accent-purple), #c4b5fd); }
+    .green { background: linear-gradient(90deg, #22c55e, var(--accent-green)); }
+    .orange { background: linear-gradient(90deg, var(--accent-orange), #fcd34d); }
+    .pink { background: linear-gradient(90deg, var(--accent-pink), #e879f9); }
+    .yellow { background: linear-gradient(90deg, var(--accent-yellow), #fde68a); }
+    .teal { background: linear-gradient(90deg, #2dd4bf, #67e8f9); }
+    .red { background: linear-gradient(90deg, #f87171, #fb923c); }
+
+    @media (max-width: 700px) {
+      .cards.two { grid-template-columns: 1fr; }
+      main { padding: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="header-label">AI News Digest</div>
+    <h1>生成AI最新ニュース</h1>
+    <div class="subtitle">
+      <span><span class="dot"></span> 2026年3月23日</span>
+      <span>OpenAI · Anthropic · Google · 画像 · 動画 · 音楽</span>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- ==================== OpenAI ==================== -->
+  <div class="section-title">OpenAI</div>
+  <div class="cards">
+
+    <div class="card">
+      <div class="card-accent blue"></div>
+      <div class="card-header">
+        <div class="card-meta">
+          <div class="card-company">OpenAI</div>
+          <h2>GPT-5.4 mini / nano リリース</h2>
+          <div class="card-date">2026年3月17日</div>
+        </div>
+        <span class="badge badge-new">NEW</span>
+      </div>
+      <ul>
+        <li>コーディング・推論・マルチモーダルで<strong>GPT-5 miniを超える</strong>性能</li>
+        <li>GPT-5 miniより<strong>2倍以上高速</strong>で動作</li>
+        <li>nano は最小・最速バリアント。サブエージェント用途向け</li>
+        <li>ChatGPT の Free/Go ユーザーにも段階展開中</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-accent blue"></div>
+      <div class="card-header">
+        <div class="card-meta">
+          <div class="card-company">OpenAI</div>
+          <h2>Astral社を買収 — Codexチーム強化</h2>
+          <div class="card-date">2026年3月19日</div>
+        </div>
+        <span class="badge badge-deal">M&A</span>
+      </div>
+      <p>開発者向けOSSツール（<strong>uv / ruff / ty</strong>）を開発するAstralを買収。チームはAIコーディングアシスタント「Codex」の開発に合流する。</p>
+      <div class="stats">
+        <div class="stat">Python開発ツール最大手</div>
+        <div class="stat">OSSコミュニティに影響大</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-accent blue"></div>
+      <div class="card-header">
+        <div class="card-meta">
+          <div class="card-company">OpenAI</div>
+          <h2>IPO計画 & 従業員倍増</h2>
+          <div class="card-date">2026年3月17〜21日</div>
+        </div>
+        <span class="badge badge-hot">HOT</span>
+      </div>
+      <ul>
+        <li><strong>2026年Q4</strong>にIPO（株式公開）を目指す</li>
+        <li>従業員数を現在の<strong>4,500人→8,000人</strong>に倍増予定</li>
+        <li>累計資金調達額が<strong>$110億</strong>に到達</li>
+        <li>Sora 2 を ChatGPT に統合予定、TikTok風スタンドアロンアプリも展開中</li>
+      </ul>
+    </div>
+
+
+    <div class="card">
+      <div class="card-accent blue"></div>
+      <div class="card-header">
+        <div class="card-meta">
+          <div class="card-company">OpenAI</div>
+          <h2>デスクトップ「スーパーアプリ」開発中</h2>
+          <div class="card-date">2026年3月23日</div>
+        </div>
+        <span class="badge badge-hot">HOT</span>
+      </div>
+      <p>ChatGPT・コーディングアシスタント「<strong>Codex AI</strong>」・AIブラウザ「<strong>Atlas</strong>」を1つのデスクトップアプリに統合する計画が浮上。開発中であり、リリース時期は未定。</p>
+    </div>
+
+    <div class="card">
+      <div class="card-accent blue"></div>
+      <div class="card-header">
+        <div class="card-meta">
+          <div class="card-company">OpenAI</div>
+          <h2>データセンター戦略を見直し</h2>
+          <div class="card-date">2026年3月22日</div>
+        </div>
+        <span class="badge badge-warn">CHANGE</span>
+      </div>
+      <p>大規模なデータセンター建設計画を棚上げ。IPOに向けて<strong>Wall Streetの懸念</strong>を踏まえ、自社建設よりクラウド購入者路線に転換する慎重戦略に移行。</p>
+    </div>
+
+  </div>
+
+  <!-- ==================== Anthropic ==================== -->
+  <div class="section-title">Anthropic</div>
+  <div class="cards">
+
+    <div class="card">
+      <div class="card-accent purple"></div>
+      <div class="card-header">
+        <div class="card-meta">
+          <div class="card-company">Anthropic</div>
+          <h2>Claude Sonnet 4.6 & Opus 4.6 リリース</h2>
+          <div class="card-date">2026年2月17日</div>
+        </div>
+        <span class="badge badge-new">NEW</span>
+      </div>
+      <ul>
+        <li>コーディング・長文脈推論・エージェント計画を大幅強化</li>
+        <li><strong>1Mトークン</strong>コンテキストウィンドウ（ベータ）</li>
+        <li>Opus 4.6 はコーディングスキルを重点強化</li>
+        <li>インライン図表・チャート生成機能を追加</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-accent purple"></div>
+      <div class="card-header">
+        <div class="card-meta">
+          <div class="card-company">Anthropic</div>
+          <h2>Claude Code Channels リリース</h2>
+          <div class="card-date">2026年3月20日</div>
+        </div>
+        <span class="badge badge-new">NEW</span>
+      </div>
+      <p><strong>Discord / Telegram</strong> から直接 Claude Code にメッセージを送り、コードを書かせることができる新機能。OpenClawキラーとも評される。</p>
+      <div class="stats">
+        <div class="stat">Discord対応</div>
+        <div class="stat">Telegram対応</div>
+        <div class="stat">リアルタイム開発</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-accent purple"></div>
+      <div class="card-header">
+        <div class="card-meta">
+          <div class="card-company">Anthropic</div>
+          <h2>$1億パートナーネットワーク & 利用枠2倍</h2>
+          <div class="card-date">2026年3月12〜13日</div>
+        </div>
+        <span class="badge badge-free">FREE↑</span>
+      </div>
+      <ul>
+        <li>大企業向けClaude導入支援「<strong>Claude Partner Network</strong>」に$1億投資</li>
+        <li><strong>3/13〜3/27</strong>、オフピーク時間帯に無料・Proプランの利用枠を<strong>2倍</strong>に</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-accent pink"></div>
+      <div class="card-header">
+        <div class="card-meta">
+          <div class="card-company">Anthropic</div>
+          <h2>国防総省との対立 & 不正利用発覚</h2>
+          <div class="card-date">2026年3月中旬</div>
+        </div>
+        <span class="badge badge-warn">ALERT</span>
+      </div>
+      <ul>
+        <li>ペンタゴンが Anthropic を<strong>「サプライチェーンリスク」</strong>に認定（大量監視・自律兵器への使用制限要求を拒否）</li>
+        <li>中国AI企業（DeepSeek等）による<strong>2.4万件の偽アカウント</strong>・<strong>1,600万回</strong>の不正インタラクションを検出</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <!-- ==================== Google ==================== -->
+  <div class="section-title">Google / Gemini</div>
+  <div class="cards">
+
+    <div class="card">
+      <div class="card-accent green"></div>
+      <div class="card-header">
+        <div class="card-meta">
+          <div class="card-company">Google</div>
+          <h2>Gemini Personal Intelligence が無料開放</h2>
+          <div class="card-date">2026年3月17日</div>
+        </div>
+        <span class="badge badge-free">FREE</span>
+      </div>
+      <p>3月17日より、<strong>Gmail・Photos・Docs・YouTube履歴</strong>へのGeminiアクセスが全米ユーザーに無料で解放。Geminiアプリ・Chrome・AI検索モードで利用可能。</p>
+    </div>
+
+    <div class="card">
+      <div class="card-accent green"></div>
+      <div class="card-header">
+        <div class="card-meta">
+          <div class="card-company">Google</div>
+          <h2>Gemini 3.1 Pro Preview & Workspace統合</h2>
+          <div class="card-date">3月9〜19日（順次展開）</div>
+        </div>
+        <span class="badge badge-new">NEW</span>
+      </div>
+      <ul>
+        <li><strong>Gemini 3.1 Pro Preview</strong> リリース（旧バージョンと同価格で大幅アップグレード）</li>
+        <li>Docs・Sheets・Slides・Drive に新しいGemini機能を追加</li>
+        <li>Pixelデバイスに<strong>エージェント型AIタスク</strong>機能を展開（Pixel Drop）</li>
+      </ul>
+      <div class="stats">
+        <div class="stat">Pro: $19.99/月</div>
+        <div class="stat">Ultra: $249.99/月</div>
+      </div>
+    </div>
+
+
+    <div class="card">
+      <div class="card-accent green"></div>
+      <div class="card-header">
+        <div class="card-meta">
+          <div class="card-company">Google</div>
+          <h2>Gemini → Google Marketing Platform 統合</h2>
+          <div class="card-date">2026年3月23日（Newfront）</div>
+        </div>
+        <span class="badge badge-new">NEW</span>
+      </div>
+      <p>本日開催の<strong>Newfront</strong>イベントにて、GeminiのAIモデルをGoogle Marketing Platformに統合すると発表。プログラマティック広告の<strong>入札最適化・キャンペーン自動化</strong>にGeminiを活用可能に。</p>
+    </div>
+
+    <div class="card">
+      <div class="card-accent green"></div>
+      <div class="card-header">
+        <div class="card-meta">
+          <div class="card-company">Google</div>
+          <h2>Mac向けGeminiネイティブアプリ開発中</h2>
+          <div class="card-date">Bloomberg報道: 2026年3月22日</div>
+        </div>
+        <span class="badge badge-hot">注目</span>
+      </div>
+      <p>Bloombergの報道によると、Google は<strong>Mac専用のGeminiネイティブアプリ</strong>を開発中。現在はブラウザ経由のみ。ベータテスターへの配布が始まっており、ChatGPT・Claude のデスクトップアプリに対抗する。</p>
+    </div>
+
+  </div>
+
+  <!-- ==================== 画像生成 ==================== -->
+  <div class="section-title">画像生成 AI</div>
+  <div class="cards">
+
+    <div class="card featured">
+      <div class="card-accent orange"></div>
+      <div class="card-header">
+        <div class="card-meta">
+          <div class="card-company">Midjourney</div>
+          <h2>V8 Alpha リリース — ネイティブ2K・4〜5倍高速</h2>
+          <div class="card-date">2026年3月17日</div>
+        </div>
+        <span class="badge badge-new">NEW</span>
+      </div>
+      <ul>
+        <li><strong>alpha.midjourney.com</strong> で先行公開（Discord・本サイトは未対応）</li>
+        <li>V7比で生成速度が<strong>4〜5倍高速</strong></li>
+        <li><code>--hd</code> パラメータでネイティブ<strong>2K解像度</strong>生成（アップスケール不要）</li>
+        <li>テキスト描画が大幅改善：看板・ラベル・タイポグラフィが読める精度に</li>
+        <li>新Web UI：設定/画像参照/Personalization/ムードボード/グリッドビューを刷新</li>
+        <li>既存サブスクで利用可能（プレミアム機能は追加料金）</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-accent orange"></div>
+      <div class="card-header">
+        <div class="card-meta">
+          <div class="card-company">Midjourney</div>
+          <h2>V7 が美的クオリティでリード継続</h2>
+          <div class="card-date">V7: 2025年4月3日リリース（現在も最新版）</div>
+        </div>
+        <span class="badge badge-hot">TOP</span>
+      </div>
+      <ul>
+        <li>アクティブユーザー<strong>1,000万人超</strong>、1日の生成数<strong>5億枚以上</strong></li>
+        <li>プロンプト理解と画像品質でV7が業界最高評価</li>
+        <li>Discordを離れて使える<strong>公式Webアプリ</strong>が提供中</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-accent orange"></div>
+      <div class="card-header">
+        <div class="card-meta">
+          <div class="card-company">Stability AI / 各社</div>
+          <h2>Stable Diffusion 3.5 & 市場競争</h2>
+          <div class="card-date">SD3.5: 2025年リリース（2026年も主力）</div>
+        </div>
+        <span class="badge badge-new">OSS</span>
+      </div>
+      <ul>
+        <li><strong>Stable Diffusion 3.5</strong> が3サイズでオープンソース提供</li>
+        <li><strong>GPT-4o, FLUX, Reve, Ideogram</strong> など競合モデルが急増</li>
+        <li>AI画像生成市場は2024年の$4.2億から<strong>2030年には$608億</strong>に拡大予測</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <!-- ==================== 動画生成 ==================== -->
+
+  <div class="section-title">動画生成 AI</div>
+  <div class="cards">
+
+    <div class="card">
+      <div class="card-accent teal"></div>
+      <div class="card-header">
+        <div class="card-meta">
+          <div class="card-company">OpenAI</div>
+          <h2>Sora 2 — フォトリアリズム最高水準</h2>
+          <div class="card-date">ChatGPT統合予定発表: 2026年3月14日</div>
+        </div>
+        <span class="badge badge-hot">HOT</span>
+      </div>
+      <ul>
+        <li>フォトリアリズム・物理演算で業界最高評価</li>
+        <li>ChatGPTへの統合を予定、TikTok風アプリでも無料体験可能</li>
+        <li>2026年1月より<strong>フル有料モデル</strong>に移行</li>
+        <li><strong>ネイティブ音声生成</strong>（セリフ・環境音）を搭載</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-accent teal"></div>
+      <div class="card-header">
+        <div class="card-meta">
+          <div class="card-company">Runway / Google / その他</div>
+          <h2>Gen-4.5 / Veo 3.1 / Kling 2.6</h2>
+          <div class="card-date">Gen-4.5: 2025年12月1日 / Veo 3.1: 2026年初頭</div>
+        </div>
+        <span class="badge badge-new">NEW</span>
+      </div>
+      <ul>
+        <li><strong>Runway Gen-4.5</strong> — フレームレベルの精密制御に強み</li>
+        <li><strong>Google Veo 3.1</strong> — ネイティブ音声生成を標準搭載</li>
+        <li><strong>Kling 2.6 / Seedance 2.0</strong> も音声付き動画生成に対応</li>
+        <li>業界全体が<strong>「実験的技術」→「実用制作ツール」</strong>へシフト完了</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <!-- ==================== 音楽生成 ==================== -->
+  <div class="section-title">音楽生成 AI</div>
+  <div class="cards">
+
+    <div class="card">
+      <div class="card-accent yellow"></div>
+      <div class="card-header">
+        <div class="card-meta">
+          <div class="card-company">Suno</div>
+          <h2>シリーズC $2.5億調達 & 和解交渉</h2>
+          <div class="card-date">和解交渉: 2026年2〜3月 / 記事: 2026年3月22日</div>
+        </div>
+        <span class="badge badge-deal">DEAL</span>
+      </div>
+      <ul>
+        <li>シリーズCで<strong>$2.5億</strong>を調達、サブスクユーザー<strong>100万人</strong>（前年比300%増）</li>
+        <li>音楽レーベルとの訴訟から和解へ方針転換：トレーニングデータのライセンス化・有料ダウンロード化を合意</li>
+        <li>サービスの基本構造は<strong>維持</strong>（テキストから楽曲生成が継続可能）</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-accent yellow"></div>
+      <div class="card-header">
+        <div class="card-meta">
+          <div class="card-company">Udio / Google</div>
+          <h2>Udio がピボット、Google Lyria 3 登場</h2>
+          <div class="card-date">2026年3月初旬</div>
+        </div>
+        <span class="badge badge-warn">CHANGE</span>
+      </div>
+      <ul>
+        <li><strong>Udio</strong> はレーベルとの和解でファンエンゲージメント専用プラットフォームに転換。生成した楽曲はプラットフォーム外への持ち出し不可</li>
+        <li><strong>Google Lyria 3</strong> が Gemini / YouTube Dream Track 経由で正式リリース</li>
+        <li>Grammy受賞アーティストのほぼ全員がAI音楽に<strong>反対</strong>を表明</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <!-- ==================== 政策・規制 ==================== -->
+  <div class="section-title">政策・規制</div>
+  <div class="cards two">
+
+    <div class="card">
+      <div class="card-accent red"></div>
+      <div class="card-header">
+        <div class="card-meta">
+          <div class="card-company">米国政策</div>
+          <h2>AI責任説明法 & 国家AIフレームワーク</h2>
+          <div class="card-date">2026年3月20日前後</div>
+        </div>
+        <span class="badge badge-warn">LAW</span>
+      </div>
+      <ul>
+        <li><strong>AI Accountability Act 成立</strong> — 重要意思決定にAIを使う企業にバイアス監査・公開を義務化</li>
+        <li>トランプ大統領が<strong>国家AI立法フレームワーク</strong>を発表</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-accent red"></div>
+      <div class="card-header">
+        <div class="card-meta">
+          <div class="card-company">UK / ハードウェア</div>
+          <h2>著作権改革 & 次世代AIチップ</h2>
+          <div class="card-date">2026年3月中旬〜下旬</div>
+        </div>
+        <span class="badge badge-hot">HOT</span>
+      </div>
+      <ul>
+        <li>英国政府がAI生成コンテンツへの<strong>ラベリング義務化</strong>を検討中</li>
+        <li>NVIDIA「<strong>Vera Rubin</strong>」プラットフォーム（H300 GPU）が兆パラメータモデル向けに発表</li>
+        <li>AMD Ryzen AI 400シリーズがAIアクセラレーション強化NPU搭載で登場</li>
+      </ul>
+    </div>
+
+  </div>
+
+</main>
+
+<footer>
+  <p>Generated on 2026-03-23 · Sources: OpenAI, Anthropic, Google, CNBC, VentureBeat, Billboard, TechCrunch, 9to5Google and more</p>
+</footer>
+
+</body>
+</html>
