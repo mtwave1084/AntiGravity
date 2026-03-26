@@ -33,7 +33,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -NonInteractive -File C:\\Users\\mt_wa\\projects\\agy\\scripts\\on-stop.ps1"
+            "command": "powershell -NonInteractive -File \"C:\\Users\\mt_wa\\projects\\agy\\scripts\\on-stop.ps1\""
           }
         ]
       }
