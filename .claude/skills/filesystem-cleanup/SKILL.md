@@ -99,7 +99,7 @@ diff -rq /dir-a/ /dir-b/
 
 ---
 
-## このプロジェクト（agy）の標準構造
+## このプロジェクト（Solitaire）の標準構造
 
 ```
 agy/

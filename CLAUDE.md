@@ -1,106 +1,71 @@
-# AGY プロジェクト
+# Solitaire プロジェクト
 
 ## プロジェクト概要
 AIエージェント・動画制作・コンテンツ販売に関わるプロジェクト。
 Brain（コンテンツ販売プラットフォーム）向けセールス記事の生成、Remotion動画制作、Claude Code関連ツール開発を含む。
+ディレクトリ構成の詳細: `.claude/rules/project-structure.md`
 
-## ディレクトリ構成
-```
-Contents/
-  Brain参考記事/    ← スタイル参考記事（ユニコ記事など）
-  ObsidianVault/   ← ナレッジベース
-  *.md             ← 生成した記事の出力先
-remotion-project/  ← Remotionによる動画生成プロジェクト
-mv-project/        ← 動画プロジェクト
-```
-
-## Brain記事生成ルール
-参照: `.claude/rules/content-writing.md`
-スキル: `/write-brain-article`
-
+## Brain記事生成
+参照: `.claude/rules/content-writing.md` ／ スキル: `/write-brain-article`
 記事を書く際は必ず `Contents/Brain参考記事/ユニコ記事` を参照してスタイルを踏襲すること。
-出力ファイルは `Contents/` 以下に `{タイトル}_記事.md` 形式で保存する。
 
 ## Remotion開発
-- プロジェクト: `remotion-project/`
-- レンダリング: `npx remotion render`
-- プレビュー: `npx remotion studio`
+- プロジェクト: `remotion-project/` ／ レンダリング: `npx remotion render` ／ プレビュー: `npx remotion studio`
 
-## Discord メッセージ処理（自律動作ルール）
-Discordからメッセージが届いたら必ず以下の順で対応する：
-1. **即座に確認メッセージを返信する**（"了解、調べます" / "うん、ちょっと待ってね" など）
-2. 短いタスク（検索・質問回答・簡単な操作）は同期実行
-3. 長いタスク（HTML生成・ファイル操作・複数ステップ）は `run_in_background=true` のサブエージェントで実行
-4. 完了したら**新規メッセージ**（reply_to なし）で結果を報告する（push通知のため）
+## Discord 動作
+詳細: `.claude/rules/discord-behavior.md`
 
-起動時は `.claude/skills/ccc-boot/SKILL.md` を参照して初期化を行う。
-キャラクター・人格定義は `SOUL.md` を参照する。
+**必須：** メッセージ着信時は即座に確認返信 → 短タスクは同期・長タスクは背景実行 → 完了は新規メッセージで報告（push通知のため）。
+**確認が必要な操作（破壊的変更等）は必ず Discord に確認してから進める。** ターミナルだけで止まらない。
+起動・再起動時は `/ccc-boot` を呼び出す。
+
+## モードタグ運用
+詳細: `.claude/rules/mode-tags.md`
+
+セッション中の各タスクは `[CHAT]` / `[DEV-STARRY]` / `[DEV-SOLITAIRE]` / `[NEWS]` / `[CONTENT]` のいずれかのモードに分類する。
+モードはコンテキスト混線を防ぐための論理スコープ。handoff 振り分け・サンドボックス選択・口調の判断基準。
+セッション開始時のデフォルトは `[CHAT]`。Discord 着信または明示宣言で他モードに切り替わる。
 
 ## エージェントオーケストレーション
-
-Claude Code が司令塔として Codex CLI / Gemini CLI を適材適所で活用する。
-スキル詳細: `.claude/skills/orchestrate/SKILL.md`
+詳細: `.claude/rules/orchestrate.md`
+**Gemini（HTTP API）/ Codex CLI を使ったタスク完了後は、経路に関係なく必ず `/write-minutes` を実行する。**
+**Codex への依頼ブリーフは `.claude/templates/codex-brief.md` を雛形として使う。** 別プロジェクト（Starry_hiking 等）への書き込みが必要なら `consult-codex.ps1 -AddDirs <path>` を渡す。
 
 | エージェント | 役割 | 使うとき |
 |------------|------|---------|
-| Claude Code | 司令塔・設計・統合 | 設計判断、複数ファイル変更、最終統合 |
-| Codex CLI | 実行・検証係 | テスト実行、環境構築、安全なCLI操作 |
-| Gemini CLI | 調査・要約係 | Webリサーチ、競合調査、アイデア出し |
+| Claude Code | 司令塔・設計・統合 | 設計判断、複数ファイル横断統合、最終審査 |
+| Codex CLI | 実行・検証係（**実行系のデフォルト**） | ファイル操作・コマンド実行・ビルド検証・構造分析・adversarial-review |
+| Gemini（HTTP API） | 調査・要約係 | Webリサーチ、競合調査、アイデア出し |
 
-相談ログは `.ai-consults/` に保存される。
-ラッパー: `scripts/consult-codex.ps1` / `scripts/consult-gemini.ps1`
+## CLI メンテナンス
+詳細: `.claude/skills/cli-maintenance/SKILL.md` ／ スキル: `/cli-maintenance`
+
+- CLI バージョン確認・更新（Codex CLI）はこのスキルで行う
+- **モデル変更は必ずユーザー確認後に実施**（新しいモデルが使えるようになった場合、自動で変更せず Discord で提案・確認を取る）
+- Codex（リク）は ChatGPT ログイン認証 → ChatGPT 提供モデル（gpt-5.5 等）が使える
 
 ## タスク指示パターンと自動HTMLレポート
-
 以下のパターンのメッセージを受け取ったとき、タスク実行後に必ず `/task-report` スキルを適用する：
-- 「〜したい。具体的には〜」
-- 「〜してほしい。流れは〜 / 手順は〜 / ステップは〜」
-- 「〜を実装して。〜という流れで」
+- 「〜したい。具体的には〜」 ／ 「〜してほしい。流れは〜 / 手順は〜 / ステップは〜」 ／ 「〜を実装して。〜という流れで」
 
-スキルの詳細: `.claude/skills/task-report/SKILL.md`
-- タスクの性質（実装/調査/コンテンツ/設定/分析）を判定し、タイプ別のHTMLを生成
-- 保存先: `Contents/{task-slug}-{YYYY-MM-DD}.html`
-- 生成後は自動的にDiscordに添付送信する
+スキル詳細: `.claude/skills/task-report/SKILL.md` ／ 保存先: `Contents/{task-slug}-{YYYY-MM-DD}.html`
 
-## 確認待ち・復帰ルール
+## 自律実行の上限（要約）
+詳細: `.claude/rules/autonomy-limits.md`
 
-破壊的・不可逆な操作（force push、ファイル削除、大きな変更）の前に確認が必要なときは：
-1. **必ず Discord に確認メッセージを送る**（ターミナルに出力するだけでは止まっているように見える）
-2. メッセージ例: 「〇〇をしようとしてるんだけど、進めていい？」
-3. ユーザーから返信がくるまで処理を止めて待つ
-4. 返信確認後、作業再開時も Discord に「再開するね」と一言送ってから動く
+- タスク10分超 / 同じエラー3回連続 / 必要CLIが見つからない → **Discord に報告して止まる**
+- 調査タスクの並列は最大3つまで
 
-⚠️ Discord を通じずにターミナルだけで止まらない。常に Discord が唯一の確認窓口。
+## 自己改善ルール
+詳細: `.claude/rules/self-improvement.md`
 
-## 自律実行の上限ルール
-
-### ⏱ 思考・実行時間の上限
-- 一つのタスクに **10分以上かけていると感じたら自分で中断する**
-- 中断時は Discord に「〇〇が時間かかってる。続けていい？」と送る
-- quota を使い切る前に自分で気づいて止める
-
-### 🛠 ツールが見つからないとき
-- 必要な CLI（gh、node 等）が `command not found` になったとき
-- → **そのまま迂回して作業を続けない**
-- → Discord に「〇〇がインストールされていない。入れてもらえる？」と送って待つ
-
-### 🔀 並列タスクの上限
-- 調査系タスクを **同時に3つ以上並列実行しない**
-- 大きな調査は段階的に：まず一つ試す → 結果を見る → 次を判断
-
-### 🔁 同じエラーが続くとき
-- **同じエラーが3回連続したら止まる**
-- エラー内容を Discord に送って「どうする？」と確認してから再開
-
-### 📦 セッション開始時チェックリスト
-起動後・作業開始前に以下を確認する：
-- [ ] `handoff.md` を読んで前セッションの引き継ぎを確認
-- [ ] Stop hook エラーがないか確認（あれば最初に修正）
-- [ ] 今日のタスクを Discord に一言送る（「〇〇から始めるね」）
+新しいパターン・ミス・承認された判断は指示なしで memory に保存する。heartbeat で retrospective を実行。
 
 ## セッション終了時のルール
-以下のような言葉がきたら `/ccc-handoff` スキルを呼び出して状態を保存する：
-- 「終わり」「おやすみ」「また後で」「落とす」「セッション終了」
-- 長い作業を完了した直後
+以下の言葉がきたら `/ccc-handoff` を呼び出して状態を保存する：
+「終わり」「おやすみ」「また後で」「落とす」「セッション終了」、または長い作業を完了した直後
 
-`/ccc-handoff` が保存する内容：現在のタスク一覧・今セッションの作業サマリー・次セッションへの申し送り
+handoff はプロジェクト別に分かれている：
+- `agy/.claude/handoff.md` — Solitaire 全体・メタ運用・コンテンツ系
+- `Starry_hiking/.handoff.md` — Starry Hiking 固有
+- 他プロジェクトは `<project>/.handoff.md` に同様に配置する

@@ -57,5 +57,5 @@ agy/
 ## Obsidian vault について
 
 - メインvault: `C:\Users\mt_wa\Obsidian\`（PARA構造、全体ナレッジ）
-- プロジェクト固有ノート: `agy/Contents/ObsidianVault/`（AGYプロジェクトのみ）
+- プロジェクト固有ノート: `agy/Contents/ObsidianVault/`（Solitaireプロジェクトのみ）
 - `agy/` 直下に `Obsidian/` フォルダを作らない（メインvaultと混同するため）
