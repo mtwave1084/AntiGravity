@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Claude Code / Codex CLI / Gemini CLI 比較</title>
+<style>
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:#0b1020;color:#eaf1ff;line-height:1.7}
+.wrap{max-width:1100px;margin:auto;padding:32px 20px 56px}
+.hero,.card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:24px;padding:24px;box-shadow:0 16px 40px rgba(0,0,0,.25)}
+.hero{background:linear-gradient(135deg,rgba(139,156,255,.18),rgba(94,234,212,.08))}
+h1{font-size:clamp(30px,5vw,48px);line-height:1.1;margin:.4em 0}.lead{color:#c3cff0}
+.grid{display:grid;gap:16px}.g3{grid-template-columns:repeat(3,1fr)}.g2{grid-template-columns:repeat(2,1fr)}@media(max-width:900px){.g3,.g2{grid-template-columns:1fr}}
+.pill{display:inline-block;background:rgba(139,156,255,.15);border:1px solid rgba(139,156,255,.25);padding:6px 10px;border-radius:999px;font-size:12px;margin:0 6px 6px 0}
+h2{margin:28px 0 12px}.sub{color:#b6c2e2}.rank{display:inline-block;padding:4px 10px;border-radius:999px;font-weight:700}.a{background:rgba(34,197,94,.14);color:#baf7ca}.b{background:rgba(255,209,102,.14);color:#ffe4a8}.c{background:rgba(248,113,113,.14);color:#ffd1d1}
+table{width:100%;border-collapse:collapse;background:rgba(255,255,255,.04)}th,td{border-bottom:1px solid rgba(255,255,255,.12);padding:12px 10px;vertical-align:top}th{text-align:left;background:rgba(255,255,255,.08)}
+pre{white-space:pre-wrap;background:#08111d;border:1px solid rgba(255,255,255,.08);padding:16px;border-radius:16px;overflow:auto}a{color:#b9d6ff}
+.small{font-size:14px;color:#b6c2e2} ol li{margin:8px 0}
+</style></head><body><div class="wrap">
+<section class="hero"><div class="pill">2026-03-24 時点</div><h1>Claude Code を司令塔にして、Codex CLI / Gemini CLI を適材適所で相談相手にする設計</h1>
+<p class="lead">結論: <strong>司令塔は Claude Code</strong>、<strong>実行・検証係は Codex CLI</strong>、<strong>調査・要約係は Gemini CLI</strong> がもっとも現実的です。Claude Code は hooks / skills / subagents / agent teams / worktree / MCP を持ち、オーケストレーションの材料が最も豊富です。Codex CLI は sandbox / approvals / non-interactive が強く、Gemini CLI は web search / web fetch / hooks / custom commands / GEMINI.md が強い、という住み分けです。<sup>[S1][S2][S3][S4][S5][S7][S9][S10][S11][S12]</sup></p>
+<div><span class="pill">Claude Code = 親分</span><span class="pill">Codex CLI = 安全実行・CI</span><span class="pill">Gemini CLI = 調査・比較・長文要約</span></div></section>
+
+<h2>1. サマリー</h2>
+<div class="grid g3">
+<div class="card"><h3>Claude Code</h3><p><span class="rank a">A+</span> 司令塔向き</p><ul><li>hooks / skills / subagents / agent teams / worktree が揃う。<sup>[S1][S2][S3][S4]</sup></li><li>コミュニティでも「CLI 体験が最良」「エージェントとして完成度が高い」という評判。<sup>[C1][C2][C3]</sup></li></ul></div>
+<div class="card"><h3>Codex CLI</h3><p><span class="rank a">A</span> 実行・検証向き</p><ul><li>OS レベル sandbox、approval、<code>codex exec</code> が強い。<sup>[S5][S7][S8]</sup></li><li>JSONL 出力で他エージェントから取り込みやすい。<sup>[S7][S8]</sup></li><li>ユーザー評価では「賢いがやや遅い」「ピンポイント修正に強い」。<sup>[C1][C2][C4]</sup></li></ul></div>
+<div class="card"><h3>Gemini CLI</h3><p><span class="rank a">A-</span> 調査・要約向き</p><ul><li>web search / fetch / hooks / custom commands / GEMINI.md が強い。<sup>[S9][S10][S11][S12]</sup></li><li>無料〜低コストで触りやすいという評価が多い。<sup>[S9][C2][C4]</sup></li><li>巨大文脈や検索は魅力だが、複雑実装の完成度は Claude/Codex 優勢という声。<sup>[C1][C2][C3]</sup></li></ul></div>
+</div>
+
+<h2>2. 作業適性の比較</h2>
+<div class="card"><table><thead><tr><th>観点</th><th>Claude Code</th><th>Codex CLI</th><th>Gemini CLI</th></tr></thead><tbody>
+<tr><td>司令塔 / ルータ</td><td><span class="rank a">最有力</span><br>hooks・skills・subagents・agent teams・worktree。<sup>[S1][S2][S3][S4]</sup></td><td><span class="rank b">可</span><br>AGENTS.md と exec は強いが表面積はやや狭い。<sup>[S6][S7][S8]</sup></td><td><span class="rank b">可</span><br>hooks / custom commands はある。<sup>[S11][S12]</sup></td></tr>
+<tr><td>大規模リファクタ</td><td><span class="rank a">強い</span><br>構造理解と整合性維持の評判が良い。<sup>[C2][C3][C4]</sup></td><td><span class="rank b">強いが慎重派</span><br>精密だが速度面では不利という声。<sup>[C1][C2]</sup></td><td><span class="rank b">資料整理寄り</span><br>広く読むのは得意。<sup>[C1][C2][C3]</sup></td></tr>
+<tr><td>CI / 自動バッチ</td><td><span class="rank b">強い</span><br>print mode / structured outputs。<sup>[S1]</sup></td><td><span class="rank a">最有力</span><br><code>codex exec</code> + sandbox + approvals。<sup>[S5][S7][S8]</sup></td><td><span class="rank b">強い</span><br>headless / hooks / custom commands。<sup>[S11][S12]</sup></td></tr>
+<tr><td>安全なコマンド実行</td><td><span class="rank b">中</span><br>permission モデル中心。<sup>[S1]</sup></td><td><span class="rank a">最有力</span><br>OS レベル sandbox。<sup>[S5][S8]</sup></td><td><span class="rank b">中〜高</span><br>sandboxing と hooks で補強。<sup>[S9][S11]</sup></td></tr>
+<tr><td>Web リサーチ</td><td><span class="rank b">可</span><br>MCP や browser 統合で拡張。<sup>[S1]</sup></td><td><span class="rank c">限定的</span><br>主戦場は実装と自動化。<sup>[S8]</sup></td><td><span class="rank a">最有力</span><br>Google 検索 / fetch 前提。<sup>[S9][S11][C2][C4]</sup></td></tr>
+<tr><td>規約共有</td><td><span class="rank a">CLAUDE.md</span><sup>[S2]</sup></td><td><span class="rank a">AGENTS.md</span><sup>[S6]</sup></td><td><span class="rank a">GEMINI.md</span><sup>[S10]</sup></td></tr>
+</tbody></table></div>
+
+<h2>3. 推奨ロール分担</h2>
+<div class="grid g3">
+<div class="card"><h3>Claude Code の役割</h3><ul><li>依頼の解釈とタスク分解</li><li>リポジトリ全体の把握</li><li>誰に投げるかの判断</li><li>最終統合と差分整合</li></ul></div>
+<div class="card"><h3>Codex CLI の役割</h3><ul><li>テスト実行・ログ解析・再現検証</li><li>CI / バッチ / 自動レビュー</li><li>安全制御が重要な shell 実行</li><li>機械可読な結果出力</li></ul></div>
+<div class="card"><h3>Gemini CLI の役割</h3><ul><li>仕様調査・比較・周辺情報収集</li><li>長文・大量ファイルの俯瞰</li><li>Web 検索前提の要件整理</li><li>ドラフト要約</li></ul></div>
+</div>
+
+<h2>4. 実装方法（最初にやるべき形）</h2>
+<div class="card"><p><strong>おすすめは、Claude Code の custom command / skill から Bash で Codex CLI / Gemini CLI を呼ぶ方法</strong>です。MCP で大掛かりに組む前に、まずは wrapper script 方式のほうが壊れにくく、差し替えやすいです。Claude は skills / custom commands を持ち、Codex は <code>codex exec</code>、Gemini は hooks / custom commands / GEMINI.md を持つので、この接着剤設計がしやすいです。<sup>[S3][S7][S11][S12]</sup></p>
+<pre># 1) 3つの指示ファイルを揃える
+CLAUDE.md   # Claude Code 用
+AGENTS.md   # Codex CLI 用
+GEMINI.md   # Gemini CLI 用
+
+# 中身は極力共通化
+- 変更前に関連ファイルを読む
+- TypeScript は strict 維持
+- 変更後は lint/test を実行
+- 危険コマンドは承認必須
+- 出力順は「結論→根拠→残課題」</pre>
+<pre>#!/usr/bin/env bash
+# scripts/consult-codex.sh
+set -euo pipefail
+mkdir -p .ai-consults
+OUT=".ai-consults/codex-$(date +%Y%m%d-%H%M%S).md"
+codex exec --sandbox read-only --ask-for-approval never   "あなたはコード検証専門。観測→原因→修正案→再確認項目で答える。 $*" > "$OUT"
+echo "$OUT"</pre>
+<pre>#!/usr/bin/env bash
+# scripts/consult-gemini.sh
+set -euo pipefail
+mkdir -p .ai-consults
+OUT=".ai-consults/gemini-$(date +%Y%m%d-%H%M%S).md"
+# 記法差があり得るため実運用前に gemini --help を確認
+gemini -p "あなたは調査専門。結論→根拠→参考URL→不確実点で要約。 $*" > "$OUT"
+echo "$OUT"</pre>
+<pre># .claude/commands/route-task.md の例
+あなたは司令塔。
+- コード修正の再現検証 / テスト実行 / CI 寄り -> Codex CLI
+- Web 調査 / 長文要約 / 周辺技術比較 -> Gemini CLI
+- 複数ファイル横断の設計変更 / 最終統合 -> Claude Code が主担当
+
+手順:
+1. 依頼を要約
+2. 振り分け理由を3点で示す
+3. 必要なら scripts/consult-codex.sh または scripts/consult-gemini.sh を Bash で実行
+4. 返りファイルを読んで最終統合する</pre>
+<p class="small">Hook は最初から自動委譲に使わず、「この依頼は Codex / Gemini に向く」と提案する程度から始めるのが安全です。Claude Code と Gemini CLI はどちらも hooks を持ちますが、完全自動化は無限ループと二重実行の温床になりがちです。<sup>[S2][S11]</sup></p></div>
+
+<h2>5. 最終提案</h2>
+<div class="card"><ul><li><strong>採用推奨:</strong> Claude Code = 司令塔、Codex CLI = 実装検証係、Gemini CLI = 調査要約係</li><li><strong>最初の一歩:</strong> 3つの記憶ファイルを揃える → wrapper script を作る → <code>/route-task</code> を作る</li><li><strong>運用方針:</strong> まずは明示コマンド中心、うまく回ってから hooks で半自動化</li></ul><p>要するに、<strong>Claude Code を「考えて振る親分」</strong>にして、<strong>Codex と Gemini は「専門店」</strong>として使うのが、いちばん実務的で壊れにくいです。</p></div>
+
+<h2>6. 参考ソース</h2>
+<div class="card"><ol>
+<li>[S1] Anthropic, <a href="https://code.claude.com/docs/en/cli-reference">Claude Code CLI reference</a></li>
+<li>[S2] Anthropic, <a href="https://code.claude.com/docs/en/hooks">Claude Code Hooks reference</a></li>
+<li>[S3] Anthropic, <a href="https://code.claude.com/docs/en/skills">Extend Claude with skills</a></li>
+<li>[S4] Anthropic, <a href="https://code.claude.com/docs/en/agent-teams">Agent Teams</a></li>
+<li>[S5] OpenAI, <a href="https://developers.openai.com/codex/agent-approvals-security">Codex approvals & security</a></li>
+<li>[S6] OpenAI, <a href="https://developers.openai.com/codex/guides/agents-md">AGENTS.md</a></li>
+<li>[S7] OpenAI, <a href="https://developers.openai.com/codex/noninteractive">Non-interactive mode</a></li>
+<li>[S8] OpenAI, <a href="https://developers.openai.com/codex/cli/reference">Codex CLI reference</a></li>
+<li>[S9] Google Cloud, <a href="https://docs.cloud.google.com/gemini/docs/codeassist/gemini-cli">Gemini CLI</a></li>
+<li>[S10] Gemini CLI Docs, <a href="https://google-gemini.github.io/gemini-cli/docs/cli/gemini-md.html">GEMINI.md</a></li>
+<li>[S11] Gemini CLI Docs, <a href="https://geminicli.com/docs/hooks/">Gemini CLI hooks</a></li>
+<li>[S12] Gemini CLI source docs, <a href="https://github.com/google-gemini/gemini-cli/blob/main/docs/cli/custom-commands.md">Custom commands</a></li>
+<li>[C1] Reddit snippet, <a href="https://www.reddit.com/r/ChatGPTCoding/comments/1pi4ojr/gemini_30_pro_has_been_out_for_long_enough_for/">user comparison thread</a></li>
+<li>[C2] InventiveHQ, <a href="https://inventivehq.com/blog/gemini-vs-claude-vs-codex-comparison">Gemini CLI vs Claude Code vs Codex</a></li>
+<li>[C3] DEV Community, <a href="https://dev.to/sivasai_nadella_941a8d122/the-ai-command-line-war-claude-code-vs-gemini-cli-vs-codex-cli-4fk5">The AI Command Line War</a></li>
+<li>[C4] DeployHQ, <a href="https://www.deployhq.com/blog/comparing-claude-code-openai-codex-and-google-gemini-cli-which-ai-coding-assistant-is-right-for-your-deployment-workflow">DeployHQ comparison</a></li>
+</ol><p class="small">注: [C1]〜[C4] はコミュニティ / ブログ由来であり、公式ベンチマークではありません。</p></div>
+</div></body></html>

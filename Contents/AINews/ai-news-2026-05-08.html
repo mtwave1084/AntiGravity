@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI News 2026-05-08</title>
+<style>
+  body { background: #0d1117; color: #e6edf3; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; }
+  h1 { color: #58a6ff; border-bottom: 1px solid #30363d; padding-bottom: 10px; }
+  h2 { color: #79c0ff; margin-top: 32px; }
+  .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 16px; margin: 12px 0; }
+  .card h3 { color: #d2a8ff; margin: 0 0 8px; font-size: 1em; }
+  .card p { margin: 0; color: #c9d1d9; font-size: 0.9em; line-height: 1.6; }
+  .badge { display: inline-block; background: #1f6feb; color: #fff; font-size: 0.75em; padding: 2px 8px; border-radius: 12px; margin-left: 8px; vertical-align: middle; }
+  .badge.red { background: #da3633; }
+  .badge.green { background: #238636; }
+  .badge.orange { background: #9e6a03; }
+  .date { color: #8b949e; font-size: 0.8em; }
+</style>
+</head>
+<body>
+<h1>🤖 AI News <span class="date">2026-05-08</span></h1>
+
+<h2>Anthropic</h2>
+
+<div class="card">
+  <h3>Anthropic × Google — 5年で $2000億のクラウド・TPU 支出契約を締結 <span class="badge">企業動向</span></h3>
+  <p>Anthropic が Google クラウドおよび Broadcom の TPU（Tensor Processing Unit）に対し、5年間で総額 $2000億（約30兆円）を支出する契約を締結したと The Information が報道（2026-05-05）。TPU 容量は複数ギガワット規模で 2027年から段階的に稼働開始。Alphabet は別途 Anthropic に最大 $400億を投資しており、Google との関係はコンピュート調達・投資・モデル展開の三層構造となる。Anthropic は SpaceX Colossus 1（GPU・短期）・AWS（$1000億超・10年）・Google（TPU・長期）と三方向でコンピュート基盤を確保する戦略。Anthropic の支出はGoogleが開示したクラウド売上残高の40%超を占めるとも指摘されており、AIスタートアップの規模が大手クラウドの収益構造を左右する局面になってきた。</p>
+  <p class="date">2026-05-05（The Information 報道）</p>
+</div>
+
+<h2>OpenAI</h2>
+
+<div class="card">
+  <h3>OpenAI × PwC — AI ネイティブ財務機能を共同開発、CFO 業務をエージェントで再設計 <span class="badge green">新機能</span></h3>
+  <p>OpenAI と PwC が提携し、企業の CFO 業務全体を AI エージェントで再構築する「AI ネイティブ財務機能」を発表（2026-05-05）。計画・予測・調達・支払い・財務クローズ・税務・レポーティングにわたる中核ワークフローを AI エージェントが人間の監督のもとで実行・調整する仕組みを構築する。まず OpenAI 自社の財務チームで調達エージェントを試験的に実装し、成果を検証しながら他企業への展開を進めるモデルを採用。PwC が財務変革・内部統制・実装ノウハウを、OpenAI がモデル・製品能力を提供する役割分担。財務 SaaS（ERP・FP&A ツール等）との統合も対象で、既存システムをそのまま活かしながらエージェント層を載せる設計とした。</p>
+  <p class="date">2026-05-05</p>
+</div>
+
+<h2>Google / Gemini</h2>
+
+<div class="card">
+  <h3>Gemini 3.1 Flash-Lite 正式 GA — Gemini 3 シリーズ最速・最安モデル <span class="badge green">新モデル</span></h3>
+  <p>Google が Gemini 3.1 Flash-Lite を正式に一般提供（GA）開始（2026-05-07）。Gemini 3.1 シリーズのエントリーモデルで、Gemini 3.1 Flash 比で 2.5倍高速・45%高速な出力生成を実現。料金は $0.25/百万入力トークンと Gemini 3 ファミリー最安。プレビュー版は 2026-03-03 にリリース済みで、今回の GA により本番環境での商用利用が正式に解禁された。バルク処理・単純データ変換・大量翻訳など高速かつ低コストが求められるユースケースに最適。Gemini 3.1 Pro・Flash・Flash-Lite の3モデル体制が確立した。</p>
+  <p class="date">2026-05-07</p>
+</div>
+
+<div class="card">
+  <h3>Gemini API — マルチモーダル File Search 対応：画像とテキストを同一ストアで検索・引用 <span class="badge green">新機能</span></h3>
+  <p>Google が Gemini API の File Search ツールをマルチモーダル対応に拡張（2026-05-05）。Gemini Embedding 2 モデルを採用し、テキスト文書と画像（チャート・製品写真・図表等）を同一ストアにネイティブにインデックス化して横断検索できるようになった。すべての回答に文書・ページ単位のグラウンディングメタデータが付与され、マルチモーダルストアではダウンロード可能な画像参照も引用として含まれる。Retrieval-Augmented Generation（RAG）アプリケーションの構築コストを大幅に下げる機能で、カスタムメタデータによるフィルタリングにも対応。合わせてページレベルの引用機能も追加された。</p>
+  <p class="date">2026-05-05</p>
+</div>
+
+<div class="card">
+  <h3>Gemini API — Event-driven Webhooks 導入：長時間ジョブのポーリング不要化 <span class="badge green">新機能</span></h3>
+  <p>Google が Gemini API にイベント駆動型 Webhooks を追加（2026-05-04）。これまで長時間の生成・エージェント処理ジョブの完了確認には継続的なポーリングが必要だったが、新機能ではジョブ完了の瞬間に開発者のサーバーへ HTTP POST で即時通知を送信するプッシュ型に切り替わる。Google は「少なくとも1回の配信」を保証し、最大24時間の指数バックオフ自動リトライを実施。コードが "are you done?" を繰り返す非効率なポーリングが不要になり、長時間タスクを含む AI ワークフローのアーキテクチャがシンプルになる。エンドポイント設定後はリアルタイムペイロードを受け取るだけでジョブ完了を検知できる。</p>
+  <p class="date">2026-05-04</p>
+</div>
+
+</body>
+</html>

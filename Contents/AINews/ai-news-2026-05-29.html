@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI News 2026-05-29</title>
+<style>
+  body { background: #0d1117; color: #e6edf3; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; }
+  h1 { color: #58a6ff; border-bottom: 1px solid #30363d; padding-bottom: 10px; }
+  h2 { color: #79c0ff; margin-top: 32px; }
+  .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 16px; margin: 12px 0; }
+  .card h3 { color: #d2a8ff; margin: 0 0 8px; font-size: 1em; }
+  .card p { margin: 0; color: #c9d1d9; font-size: 0.9em; line-height: 1.6; }
+  .badge { display: inline-block; background: #1f6feb; color: #fff; font-size: 0.75em; padding: 2px 8px; border-radius: 12px; margin-left: 8px; vertical-align: middle; }
+  .badge.green { background: #238636; }
+  .badge.orange { background: #9e6a03; }
+  .badge.purple { background: #6e40c9; }
+  .date { color: #8b949e; font-size: 0.8em; }
+  .highlight { color: #ffa657; font-weight: bold; }
+</style>
+</head>
+<body>
+<h1>🤖 AI News <span class="date">2026-05-29</span></h1>
+
+<h2>Anthropic / Claude</h2>
+
+<div class="card">
+  <h3>Claude Opus 4.8 正式リリース — Dynamic Workflows・Fast Mode・正直さ向上 <span class="badge">新モデル</span></h3>
+  <p>5/28 に Anthropic が Claude Opus 4.8 をリリース。<span class="highlight">SWE-bench Pro 69.2%</span>（4.7 の 64.3% から上昇）、USAMO 2026 は <span class="highlight">96.7%</span>（4.7 の 69.3% から大幅向上）。コードの欠陥をスルーする確率が 4.7 比 <span class="highlight">4分の1</span> に改善し、不確実な点を自発的に報告するようになった。料金は 4.7 と同じ（$5/$25 per 1M tokens）。</p>
+  <p class="date">2026-05-28</p>
+</div>
+
+<div class="card">
+  <h3>Dynamic Workflows（リサーチプレビュー）— 最大1,000サブエージェント並列実行 <span class="badge purple">新機能</span></h3>
+  <p>Claude Code（Max・Team・Enterprise プラン）で利用可能な新機能。Claude がタスクに応じた JavaScript オーケストレーションスクリプトを自動生成し、最大 <span class="highlight">16 並列・1,000 サブエージェント</span> をバックグラウンドで実行する。相互に反証するアドバーサリアルエージェントも含めて独立した角度から問題を攻撃し、答えが収束したら報告する設計。</p>
+  <p class="date">2026-05-28</p>
+</div>
+
+<div class="card">
+  <h3>Fast Mode が 3倍安く — 2.5倍速で $10/$25 per 1M tokens <span class="badge green">値下げ</span></h3>
+  <p>Opus 4.8 の Fast Mode は <span class="highlight">旧モデル比 3倍安い</span>（$10/$25 per 1M tokens）。Opus レベルの品質を維持しながら 2.5倍速で動作。Claude Code の /fast コマンドでトグル可能。Messages API の mid-task system messages 対応も同時追加。</p>
+  <p class="date">2026-05-28</p>
+</div>
+
+<div class="card">
+  <h3>「Mythos」クラスモデルが数週間以内に登場の見込み <span class="badge orange">予告</span></h3>
+  <p>Anthropic は Opus 4.8 発表時に「Mythos クラスのモデルは数週間以内」と言及。4.8 はその手前のアップグレード位置付けで、能力的に Mythos に及ばないことを認めている。Claude Code では Opus 4.8 + Dynamic Workflows で数十万行規模のコードベース移行（テストスイートを完了条件に設定）が可能になった。</p>
+  <p class="date">2026-05-28</p>
+</div>
+
+<h2>OpenAI</h2>
+
+<div class="card">
+  <h3>AI生成画像の真偽確認ツール プレビュー公開 — C2PA + SynthID 対応 <span class="badge">新機能</span></h3>
+  <p>OpenAI が C2PA 準拠・SynthID 透かし・公開検証ツール（プレビュー）の 3 本立てで AI 生成画像のコンテンツ来歴強化を発表。生成した画像が OpenAI ツール製かどうかをユーザーが確認できる公開ツールをプレビュー提供。Gartner のエンタープライズ コーディングエージェント Leader にも選定（5/27）。</p>
+  <p class="date">2026-05-27</p>
+</div>
+
+<h2>AI政策・業界動向</h2>
+
+<div class="card">
+  <h3>英国 DRCF「エージェンティックAIの未来」論文を公開 — ガバナンス・消費者権利・市場競争の4カテゴリ <span class="badge orange">規制動向</span></h3>
+  <p>英国のデジタル規制協力フォーラム（DRCF：ICO・CMA・Ofcom・FCA が参加）がエージェンティック AI に関する早期思考論文を公開。①ガバナンス、②データ保護とサイバーセキュリティ、③消費者の権利・利益、④市場競争の4カテゴリでリスクと機会を整理。規制方針の確定ではなく、各規制機関のアプローチを議論するための叩き台。ICO の採用プロセスにおける自動意思決定の調査報告書も同時期に公開。</p>
+  <p class="date">2026-05-29</p>
+</div>
+
+</body>
+</html>

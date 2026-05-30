@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Google Pics & Gemini Omni 調査レポート — 2026-05-20</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2128;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --blue: #58a6ff;
+    --blue-light: #79c0ff;
+    --purple: #d2a8ff;
+    --green: #3fb950;
+    --orange: #d29922;
+    --red: #f85149;
+    --teal: #56d364;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', sans-serif;
+    padding: 20px;
+    max-width: 900px;
+    margin: 0 auto;
+    font-size: 0.95em;
+    line-height: 1.65;
+  }
+
+  .header {
+    background: linear-gradient(135deg, #0d1117, #0c2d6b, #0c1a30);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px 24px;
+    margin-bottom: 32px;
+  }
+  .header h1 { color: var(--blue); font-size: 1.4em; margin-bottom: 6px; }
+  .header .meta { color: var(--muted); font-size: 0.85em; }
+  .tear-comment {
+    color: var(--purple);
+    font-style: italic;
+    margin-top: 10px;
+    font-size: 0.9em;
+  }
+
+  h2 {
+    color: var(--blue-light);
+    font-size: 1.1em;
+    border-left: 3px solid var(--blue);
+    padding-left: 12px;
+    margin: 28px 0 14px;
+  }
+  h3 { color: var(--purple); font-size: 1em; margin: 16px 0 8px; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    margin: 10px 0;
+  }
+  .card-header {
+    background: var(--surface2);
+    border-radius: 6px 6px 0 0;
+    padding: 10px 14px;
+    margin: -16px -16px 12px;
+    color: var(--blue-light);
+    font-weight: 600;
+    font-size: 0.95em;
+  }
+
+  .badge {
+    display: inline-block;
+    font-size: 0.72em;
+    padding: 2px 8px;
+    border-radius: 12px;
+    margin-left: 8px;
+    vertical-align: middle;
+    font-weight: normal;
+  }
+  .badge-blue { background: #1f6feb; color: #fff; }
+  .badge-green { background: #238636; color: #fff; }
+  .badge-orange { background: #b45309; color: #fff; }
+  .badge-purple { background: #6d28d9; color: #fff; }
+  .badge-red { background: #b91c1c; color: #fff; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+    font-size: 0.88em;
+  }
+  th {
+    background: var(--surface2);
+    color: var(--blue-light);
+    padding: 8px 12px;
+    text-align: left;
+    border: 1px solid var(--border);
+  }
+  td {
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: top;
+  }
+  tr:nth-child(even) td { background: #161b22; }
+  tr:nth-child(odd) td { background: #0d1117; }
+
+  .callout {
+    border-left: 3px solid var(--blue);
+    background: var(--surface2);
+    padding: 12px 16px;
+    border-radius: 0 6px 6px 0;
+    margin: 12px 0;
+    font-size: 0.9em;
+  }
+  .callout.orange { border-left-color: var(--orange); }
+  .callout.green { border-left-color: var(--green); }
+  .callout.red { border-left-color: var(--red); }
+
+  ul { padding-left: 18px; }
+  li { margin: 4px 0; color: var(--text); }
+
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin: 12px 0;
+  }
+
+  .tool-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+  }
+  .tool-card h4 {
+    color: var(--blue-light);
+    font-size: 0.95em;
+    margin-bottom: 6px;
+  }
+  .tool-card p {
+    font-size: 0.85em;
+    color: var(--muted);
+  }
+  .tool-card .target {
+    font-size: 0.78em;
+    color: var(--orange);
+    margin-top: 6px;
+  }
+
+  .avail-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+  }
+  .avail-chip {
+    font-size: 0.78em;
+    padding: 3px 10px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+  .avail-chip.active { border-color: var(--green); color: var(--green); }
+  .avail-chip.soon { border-color: var(--orange); color: var(--orange); }
+
+  footer {
+    margin-top: 40px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.78em;
+    border-top: 1px solid var(--border);
+    padding-top: 16px;
+  }
+
+  @media (max-width: 600px) {
+    .two-col { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="meta">Research — 2026-05-20 | Google I/O 2026</div>
+  <h1>🎨 Google Pics & Gemini Omni 深堀り調査</h1>
+  <div class="meta">Stitch / Flow との違い・動画生成競合との比較を含む</div>
+  <p class="tear-comment">「調べてみたら、なんかツールごとに役割がちゃんと分かれてて面白かった」</p>
+</div>
+
+<!-- ====== Google Pics ====== -->
+<h2>🖼 Google Pics — AI画像生成・デザインアプリ</h2>
+
+<div class="card">
+  <div class="card-header">概要</div>
+  <p>Google I/O 2026（5/19）に発表された AI 画像生成・デザインアプリ。<strong>「Canva の AI 強化版」</strong>に近い位置づけで、テキストプロンプトからソーシャルグラフィック・招待状・マーケティング素材・モックアップを生成できる。単なる生成だけでなく、<strong>生成した画像を Gemini がレイヤーとして認識して要素ごとに編集できる</strong>のが特徴。</p>
+</div>
+
+<h3>主な機能</h3>
+<table>
+  <tr><th>機能</th><th>詳細</th></tr>
+  <tr>
+    <td><strong>テキスト→画像生成</strong></td>
+    <td>テキストプロンプトから各種デザイン素材を生成</td>
+  </tr>
+  <tr>
+    <td><strong>Gemini 要素編集</strong></td>
+    <td>Google Docs のコメント感覚で「この部分を変えて」とクリック→指示。要素ごとに独立編集が可能</td>
+  </tr>
+  <tr>
+    <td><strong>オブジェクトセグメンテーション</strong></td>
+    <td>サイズ変更・位置移動・置き換え・色変更を他の部分に影響させずに実行</td>
+  </tr>
+  <tr>
+    <td><strong>画像内テキスト編集</strong></td>
+    <td>元のフォントを保ちながら翻訳・編集が可能</td>
+  </tr>
+  <tr>
+    <td><strong>共有キャンバス</strong></td>
+    <td>同時編集・Slides / Drive と直接統合</td>
+  </tr>
+</table>
+
+<h3>既存 AI 画像生成との違い</h3>
+<div class="callout green">
+  <strong>従来の AI 画像生成（Midjourney・DALL-E・Stable Diffusion）の弱点：</strong>「生成して終わり」。生成後に要素を細かく編集するには別の編集ツールが必要だった。<br><br>
+  <strong>Google Pics の差別化：</strong>生成後の編集体験（Figma 的な精度）を AI が支援。Workspace（Slides・Drive）に組み込まれており、既存ワークフローから離れずに使える。
+</div>
+
+<h3>提供時期・対象</h3>
+<div class="avail-row">
+  <span class="avail-chip active">現在：Trusted Testers 限定</span>
+  <span class="avail-chip soon">今夏：AI Pro / Ultra サブスクライバー</span>
+  <span class="avail-chip soon">今夏：Workspace ビジネス（プレビュー）</span>
+</div>
+
+<!-- ====== Gemini Omni ====== -->
+<h2>🎬 Gemini Omni Flash — マルチモーダル動画生成モデル</h2>
+
+<div class="card">
+  <div class="card-header">概要</div>
+  <p>Google I/O 2026（5/19）に発表された統合マルチモーダルモデル。テキスト・画像・音声・動画など<strong>あらゆる入力を受け取って動画を生成・編集</strong>できる。従来の Veo（テキスト専用の動画生成）とは異なり、<strong>会話形式でシーンを修正しながら作れる</strong>のが特徴。SynthID 透かし付き。</p>
+</div>
+
+<h3>主な機能</h3>
+<table>
+  <tr><th>機能</th><th>詳細</th></tr>
+  <tr>
+    <td><strong>マルチ入力→動画生成</strong></td>
+    <td>テキスト・画像アニメーション・音声→動画・既存動画の編集など、あらゆる組み合わせに対応</td>
+  </tr>
+  <tr>
+    <td><strong>会話形式での編集</strong></td>
+    <td>「このキャラクターの服を変えて」など自然文で繰り返し修正が可能</td>
+  </tr>
+  <tr>
+    <td><strong>キャラクター一貫性</strong></td>
+    <td>複数シーンにわたって同一キャラクターの外見・声を維持</td>
+  </tr>
+  <tr>
+    <td><strong>物理法則の理解向上</strong></td>
+    <td>重力・流体・モーションのリアルな再現が従来より改善</td>
+  </tr>
+  <tr>
+    <td><strong>SynthID 透かし</strong></td>
+    <td>AI生成動画であることを検証できるデジタル透かしを自動付与</td>
+  </tr>
+</table>
+
+<h3>Veo との役割分担（Google 内）</h3>
+<div class="callout">
+  <strong>Veo 3.1</strong>：テキスト専用の高品質動画生成モデル。4K / 60fps 対応。音声付き動画の生成が強み。すでに本番稼働中（Google AI Pro $20/mo で利用可）。<br><br>
+  <strong>Gemini Omni</strong>：マルチモーダル統合モデル。あらゆる入力から動画を生成・編集。会話形式でのインタラクティブな制作が可能。Veo は「完成品の生成」、Omni は「会話しながら作る体験」という棲み分け。
+</div>
+
+<h3>提供状況</h3>
+<table>
+  <tr><th>プラットフォーム</th><th>対象</th><th>料金</th></tr>
+  <tr><td>YouTube Shorts</td><td>全ユーザー</td><td>無料</td></tr>
+  <tr><td>Gemini アプリ</td><td>AI Plus / Pro / Ultra</td><td>サブスク要</td></tr>
+  <tr><td>Google Flow</td><td>AI Plus / Pro / Ultra</td><td>サブスク要</td></tr>
+</table>
+
+<!-- ====== Google Flow との関係 ====== -->
+<h2>🎥 Google Flow — Omni が動くクリエイティブスタジオ</h2>
+
+<div class="card">
+  <div class="card-header">Flow と Omni の関係</div>
+  <p>Google Flow は動画・写真・音楽を統合したクリエイティブツール。今回の更新で <strong>Gemini Omni Flash を内部エンジンとして採用</strong>し、大幅パワーアップ。</p>
+</div>
+
+<h3>Flow の主な機能（2026年更新後）</h3>
+<ul>
+  <li><strong>Omni Flash 統合</strong>：テキスト・画像・動画のあらゆる入力から映像制作</li>
+  <li><strong>Flow Agent</strong>：AI が複雑なタスクを計画・実行を代行（クリエイターの意図のもとで動作）</li>
+  <li><strong>キャラクター一貫性</strong>：複数シーンを通じて同一人物の外見・声を維持</li>
+  <li><strong>Google Flow Music</strong>：音楽に合わせた MV を Omni Flash で会話しながら制作</li>
+  <li><strong>モバイルアプリ</strong>：Flow は Android ベータ公開・iOS 近日予定、Flow Music は iOS で提供中</li>
+</ul>
+
+<!-- ====== 3ツール比較 ====== -->
+<h2>📊 Stitch / Pics / Flow — 三ツールの棲み分け</h2>
+
+<div class="two-col">
+  <div class="tool-card">
+    <h4>🧩 Google Stitch</h4>
+    <p>テキスト・スケッチ・スクリーンショットからモバイル/ウェブアプリの <strong>UIプロトタイプ</strong>を生成。2026年3月更新でAIネイティブな無限キャンバスを採用。無料。</p>
+    <p class="target">→ エンジニア / デザイナー向け</p>
+  </div>
+  <div class="tool-card">
+    <h4>🖼 Google Pics</h4>
+    <p>テキストプロンプトからソーシャルグラフィック・マーケ素材を生成。生成後の要素編集が可能な <strong>Canva 的 AI デザインツール</strong>。今夏 AI Pro/Ultra 向け。</p>
+    <p class="target">→ 一般ユーザー / ビジネス向け</p>
+  </div>
+</div>
+<div class="tool-card" style="margin-top:14px;">
+  <h4>🎬 Google Flow（+ Flow Music）</h4>
+  <p>Omni Flash を内部エンジンに持つ <strong>動画・写真・音楽の総合クリエイティブスタジオ</strong>。Flow Agent がタスクを代行。音楽に合わせた MV も制作可能。モバイルアプリあり。</p>
+  <p class="target">→ 動画クリエイター / MV 制作者向け</p>
+</div>
+
+<div class="callout green" style="margin-top:14px;">
+  <strong>ポイント：</strong>三ツールは競合ではなく役割分担。UIデザイン（Stitch）→ 静止画・グラフィック（Pics）→ 動画・音楽（Flow）という段階的なクリエイティブ用途をカバー。
+</div>
+
+<!-- ====== 動画生成競合比較 ====== -->
+<h2>⚔️ 動画生成 AI 競合マップ（2026年5月）</h2>
+
+<div class="callout red">
+  <strong>⚠️ OpenAI Sora 終了：</strong>2026年3月25日にシャットダウン。実質的な競合から脱落。
+</div>
+
+<table>
+  <tr>
+    <th>サービス</th>
+    <th>会社</th>
+    <th>強み</th>
+    <th>ベンチマーク(Elo)</th>
+    <th>特徴</th>
+  </tr>
+  <tr>
+    <td><strong>Runway Gen-4</strong></td>
+    <td>Runway</td>
+    <td>総合品質・マーケター向け</td>
+    <td>1247（1位）</td>
+    <td>参照画像制御・ブランドキャラ一貫性・高速生成</td>
+  </tr>
+  <tr>
+    <td><strong>Veo 3.1</strong></td>
+    <td>Google</td>
+    <td>音声付き動画・4K/60fps</td>
+    <td>1226（2位）</td>
+    <td>唯一 "generate+音声" が標準。縦動画対応</td>
+  </tr>
+  <tr>
+    <td><strong>Gemini Omni Flash</strong></td>
+    <td>Google</td>
+    <td>マルチモーダル入力・会話編集</td>
+    <td>未測定</td>
+    <td>テキスト・画像・音声何でも入力→動画生成、Flow 統合</td>
+  </tr>
+  <tr>
+    <td><strong>Kling 3.0</strong></td>
+    <td>Kuaishou</td>
+    <td>音声・ダイアログ・リップシンク</td>
+    <td>—</td>
+    <td>5言語対応リップシンク・マルチショット音声タイムライン</td>
+  </tr>
+  <tr>
+    <td><strong>Seedance 2.0</strong></td>
+    <td>ByteDance</td>
+    <td>音声・動画の統合生成</td>
+    <td>—</td>
+    <td>2026年2月正式リリース。テキスト・画像・音声→動画</td>
+  </tr>
+  <tr>
+    <td><strong>Sora</strong></td>
+    <td>OpenAI</td>
+    <td>（シャットダウン済み）</td>
+    <td>—</td>
+    <td>2026年3月25日終了</td>
+  </tr>
+</table>
+
+<div class="callout orange">
+  <strong>流れの変化：</strong>単純な「テキスト→動画」から、<strong>マルチモーダル入力＋音声＋会話編集</strong>が次の標準になりつつある。Gemini Omni・Kling・Seedance が同じ方向に動いている。Runway はマーケター向けの実用性で現状トップだが、これらが成熟すると競争軸が変わる可能性がある。
+</div>
+
+<!-- ====== まとめ ====== -->
+<h2>💡 まとめ — 何が変わったか</h2>
+
+<div class="card">
+  <ul>
+    <li><strong>Google Pics</strong>：Canva の領域に AI 強化版で参入。「生成 + その場で Figma 的に編集」が差別化軸</li>
+    <li><strong>Gemini Omni</strong>：Veo の「テキスト→動画」を超えて「何でも入力→会話で動画制作」へ。Flow との統合でクリエイティブ体験が大きく変わる</li>
+    <li><strong>三ツールの棲み分け</strong>：Stitch（UI/コード）→ Pics（グラフィック）→ Flow（動画/音楽）でデザイン用途をフル網羅する戦略</li>
+    <li><strong>動画生成競争</strong>：Sora 消滅後は Runway vs Veo 3.1 が現実解。Gemini Omni は「インタラクティブ制作体験」という別軸で参入</li>
+  </ul>
+</div>
+
+<footer>
+  generated by ティア / Claude Code Sonnet 4.6 — 2026-05-20<br>
+  Sources: TechCrunch, PetaPixel, 9to5Google, AndroidHeadlines, digit.in, blog.google
+</footer>
+
+</body>
+</html>

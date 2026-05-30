@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>bird（X/Twitter）CLI 導入調査 — 2026-03-31</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2128;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --blue: #58a6ff;
+    --blue-light: #79c0ff;
+    --purple: #d2a8ff;
+    --green: #3fb950;
+    --orange: #d29922;
+    --red: #f85149;
+    --teal: #56d364;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; padding: 24px; max-width: 900px; margin: 0 auto; }
+
+  .header {
+    background: linear-gradient(135deg, #0d1117, #0c2d6b, #0c1a30);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+    margin-bottom: 24px;
+  }
+  .header h1 { font-size: 1.6em; color: var(--blue); margin-bottom: 6px; }
+  .header .meta { color: var(--muted); font-size: 0.85em; margin-bottom: 14px; }
+  .tear-comment {
+    background: rgba(88,166,255,0.08);
+    border-left: 3px solid var(--blue);
+    padding: 10px 14px;
+    border-radius: 0 6px 6px 0;
+    color: var(--blue-light);
+    font-size: 0.9em;
+    font-style: italic;
+  }
+
+  h2 {
+    color: var(--blue-light);
+    font-size: 1.1em;
+    margin: 28px 0 12px;
+    padding-left: 10px;
+    border-left: 3px solid var(--blue);
+  }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin: 10px 0; }
+  .card h3 { color: var(--purple); font-size: 0.95em; margin-bottom: 8px; }
+  .card p, .card li { color: #c9d1d9; font-size: 0.88em; line-height: 1.7; }
+  .card ul { padding-left: 18px; }
+
+  .recommend { border-color: var(--green); background: #0d2417; }
+  .recommend h3 { color: var(--green); }
+  .warn { border-color: var(--orange); background: #1c1810; }
+  .warn h3 { color: var(--orange); }
+
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.85em; }
+  thead th { background: var(--surface2); color: var(--blue-light); padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+  tbody td { padding: 9px 12px; border-bottom: 1px solid var(--border); color: #c9d1d9; }
+  tbody tr:hover td { background: var(--surface2); }
+
+  .badge { display: inline-block; font-size: 0.75em; padding: 2px 8px; border-radius: 10px; font-weight: 600; }
+  .badge-green { background: #196c2e; color: #3fb950; }
+  .badge-red { background: #3d1212; color: #f85149; }
+  .badge-yellow { background: #3a2800; color: #d29922; }
+  .badge-blue { background: #0c2d6b; color: #79c0ff; }
+
+  pre { background: #090d12; border: 1px solid var(--border); border-radius: 6px; padding: 14px; overflow-x: auto; font-size: 0.82em; color: var(--blue-light); line-height: 1.6; margin: 10px 0; }
+  code { background: #1c2128; padding: 2px 6px; border-radius: 4px; font-family: monospace; font-size: 0.85em; color: var(--blue-light); }
+
+  .callout { background: rgba(88,166,255,0.06); border: 1px solid rgba(88,166,255,0.25); border-radius: 8px; padding: 14px; margin: 14px 0; }
+  .callout-title { color: var(--blue); font-size: 0.85em; font-weight: 600; margin-bottom: 6px; }
+  .callout p, .callout li { color: #c9d1d9; font-size: 0.87em; line-height: 1.7; }
+  .callout ul { padding-left: 18px; }
+
+  .phase-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 12px 0; }
+  @media (max-width: 600px) { .phase-grid { grid-template-columns: 1fr; } body { padding: 14px; } }
+
+  footer { margin-top: 40px; padding-top: 14px; border-top: 1px solid var(--border); color: var(--muted); font-size: 0.78em; text-align: center; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🐦 bird（X/Twitter）CLI 導入調査</h1>
+  <p class="meta">2026-03-31 ｜ research ｜ @umbrella_bowl アカウント取得を受けた調査</p>
+  <p class="tear-comment">「調べてみたら公式APIほぼ有料で驚いたけど、twscrape がいい感じだったよ」</p>
+</div>
+
+<h2>📋 タスク概要</h2>
+<div class="card">
+  <p>@umbrella_bowl アカウント（調査専用）を取得したことを受け、Xのタイムライン情報をCLI/Python で定期取得して agent-reach の bird チャネルに統合するための事前調査を実施。公式API・スクレイピングツールの現状を比較し、最適な構成案をまとめた。</p>
+</div>
+
+<h2>🔍 主要な発見</h2>
+
+<div class="card recommend">
+  <h3>✅ 推奨: twscrape（アカウント認証型スクレイパー）</h3>
+  <p>公式APIキー不要で、<strong>@umbrella_bowl のログイン情報で認証</strong>して動くPythonライブラリ。フォロータイムライン・検索・ユーザーツイートが取得可能。Windows bash 対応、2025年現在アクティブメンテ中。</p>
+  <p style="margin-top: 8px;"><code>pip install twscrape</code> ｜ GitHub: <code>vladkens/twscrape</code></p>
+</div>
+
+<div class="card warn">
+  <h3>⚠️ 公式API無料枠はほぼ書き込み専用</h3>
+  <p>X API v2 の無料枠はタイムライン読み取りが制限されており、Basic プラン（$200/月）以上が必要。調査用途での利用は非現実的。</p>
+</div>
+
+<h2>📊 選択肢比較</h2>
+
+<table>
+  <thead>
+    <tr><th>手段</th><th>APIキー</th><th>タイムライン取得</th><th>安定性</th><th>費用</th><th>評価</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>twscrape</strong></td>
+      <td>不要（アカウント認証）</td>
+      <td>✅ フォロー対象</td>
+      <td>高</td>
+      <td>無料</td>
+      <td><span class="badge badge-green">推奨</span></td>
+    </tr>
+    <tr>
+      <td>X API v2 Free</td>
+      <td>必要</td>
+      <td>❌ 書き込みのみ</td>
+      <td>最高</td>
+      <td>無料</td>
+      <td><span class="badge badge-red">不可</span></td>
+    </tr>
+    <tr>
+      <td>X API v2 Basic</td>
+      <td>必要</td>
+      <td>✅ 可能</td>
+      <td>最高</td>
+      <td>$200/月</td>
+      <td><span class="badge badge-yellow">高コスト</span></td>
+    </tr>
+    <tr>
+      <td>snscrape</td>
+      <td>不要</td>
+      <td>△ 公開のみ</td>
+      <td>低</td>
+      <td>無料</td>
+      <td><span class="badge badge-yellow">不安定</span></td>
+    </tr>
+    <tr>
+      <td>tweepy</td>
+      <td>必要</td>
+      <td>△ 1週間以内のみ</td>
+      <td>高</td>
+      <td>有料</td>
+      <td><span class="badge badge-yellow">制限あり</span></td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>⚡ twscrape 基本操作</h2>
+
+<pre>pip install twscrape
+
+# @umbrella_bowl のアカウント情報を追加
+twscrape add_accounts accounts.txt username:password:email:email_password
+
+# ログイン確認
+twscrape login_accounts
+
+# フォロータイムライン取得（20件）
+twscrape timeline_by_login "umbrella_bowl" --limit 20
+
+# 特定ユーザーのツイート取得
+twscrape user_tweets "OpenAI" --limit 50</pre>
+
+<h2>⚠️ 運用上のリスク</h2>
+
+<table>
+  <thead>
+    <tr><th>リスク</th><th>内容</th><th>対処</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>アカウント制限</td>
+      <td>リクエスト過多でBANリスク</td>
+      <td>30分〜1時間おきに制限。調査専用アカウントなので影響は最小</td>
+    </tr>
+    <tr>
+      <td>認証情報管理</td>
+      <td>パスワードをファイルに持つ必要</td>
+      <td>accounts.txt を .gitignore 対象に設定。.env での管理が安全</td>
+    </tr>
+    <tr>
+      <td>仕様変更リスク</td>
+      <td>X の変更で twscrape が壊れる可能性</td>
+      <td><code>pip install -U twscrape</code> で定期更新</td>
+    </tr>
+    <tr>
+      <td>取得範囲の限界</td>
+      <td>非公開アカウントは取得不可</td>
+      <td>調査対象を公開アカウントに絞る</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>🗺️ 推奨ロードマップ</h2>
+
+<div class="phase-grid">
+  <div class="card">
+    <h3>Phase 1 — 動作確認</h3>
+    <ul>
+      <li>twscrape をインストール</li>
+      <li>@umbrella_bowl 認証設定</li>
+      <li>タイムライン取得が通るか確認</li>
+      <li>リク（Codex）に事前レビュー依頼</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>Phase 2 — agent-reach 統合</h3>
+    <ul>
+      <li><code>scripts/bird-timeline.sh</code> ラッパー作成</li>
+      <li>agent-reach SKILL.md に bird チャネル追記</li>
+      <li>ai-news スキルの補完ソースとして組み込み</li>
+    </ul>
+  </div>
+</div>
+
+<div class="callout">
+  <p class="callout-title">📌 次のアクション</p>
+  <ul>
+    <li>Phase 1 実施前にリク（Codex）による導入前確認が必要（新規ツール導入ルール）</li>
+    <li>確認観点：ライセンス・依存関係・認証情報保存方法・rollback 手順</li>
+    <li>承認後、twscrape インストール → 動作確認 → ラッパー実装の順で進める</li>
+  </ul>
+</div>
+
+<footer>generated by ティア / Claude Code Sonnet 4.6 — 2026-03-31 ｜ sources: X Developers公式, vladkens/twscrape GitHub, WebSearch調査</footer>
+</body>
+</html>

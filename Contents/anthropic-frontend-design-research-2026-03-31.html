@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>frontend-design — Anthropic Skills 調査レポート</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --petal: #FDF8F5;
+    --petal-2: #F5EDE5;
+    --sage: #8BA898;
+    --sage-light: #B9D0C5;
+    --sage-dark: #5C7A6A;
+    --peach: #C87B5C;
+    --peach-light: #DEAA91;
+    --ink: #2D2927;
+    --ink-60: rgba(45,41,39,0.6);
+    --ink-20: rgba(45,41,39,0.2);
+    --ink-08: rgba(45,41,39,0.08);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--petal);
+    color: var(--ink);
+    font-family: 'DM Sans', sans-serif;
+    overflow-x: hidden;
+  }
+
+  /* ─── HERO ─────────────────────────────── */
+  .hero {
+    min-height: 100svh;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-left {
+    background: var(--ink);
+    padding: 80px 60px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* noise overlay */
+  .hero-left::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    opacity: 0.6;
+  }
+
+  .hero-left::after {
+    content: '';
+    position: absolute;
+    bottom: -80px;
+    left: -80px;
+    width: 320px;
+    height: 320px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(139,168,152,0.25) 0%, transparent 70%);
+  }
+
+  .hero-tag {
+    font-size: 0.68em;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--sage);
+    position: relative;
+    z-index: 1;
+    animation: fadeUp 0.8s ease both;
+  }
+
+  .hero-main {
+    position: relative;
+    z-index: 1;
+    animation: fadeUp 0.8s ease both 0.15s;
+  }
+
+  .hero-main h1 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: clamp(3em, 5.5vw, 5.5em);
+    font-weight: 700;
+    color: var(--petal);
+    line-height: 1.0;
+    letter-spacing: -0.02em;
+  }
+
+  .hero-main h1 em {
+    font-style: italic;
+    font-weight: 400;
+    color: var(--peach-light);
+  }
+
+  .hero-main .sub {
+    margin-top: 28px;
+    font-size: 0.9em;
+    color: rgba(253,248,245,0.55);
+    line-height: 1.7;
+    max-width: 380px;
+    font-weight: 300;
+  }
+
+  .hero-bottom {
+    font-size: 0.72em;
+    color: rgba(253,248,245,0.3);
+    letter-spacing: 0.08em;
+    position: relative;
+    z-index: 1;
+    animation: fadeIn 1s ease both 0.5s;
+  }
+
+  .hero-right {
+    background: var(--petal-2);
+    padding: 80px 60px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-right::before {
+    content: 'FD';
+    position: absolute;
+    top: -30px;
+    right: -20px;
+    font-family: 'Playfair Display', serif;
+    font-size: 18em;
+    font-weight: 700;
+    color: var(--ink-08);
+    pointer-events: none;
+    line-height: 1;
+  }
+
+  .stat-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+    position: relative;
+    z-index: 1;
+    animation: fadeUp 0.9s ease both 0.3s;
+  }
+
+  .stat {
+    border-top: 1.5px solid var(--ink-20);
+    padding-top: 20px;
+  }
+
+  .stat-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.2em;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .stat-num span {
+    color: var(--peach);
+  }
+
+  .stat-label {
+    font-size: 0.75em;
+    color: var(--ink-60);
+    line-height: 1.5;
+    font-weight: 300;
+  }
+
+  /* ─── INTRO BAND ────────────────────────── */
+  .intro-band {
+    background: var(--sage);
+    padding: 60px;
+    display: flex;
+    align-items: center;
+    gap: 80px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .intro-band::before {
+    content: 'No slop.';
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-size: 8em;
+    color: rgba(253,248,245,0.08);
+    white-space: nowrap;
+    position: absolute;
+    right: -20px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+  }
+
+  .intro-band p {
+    font-size: 1.25em;
+    color: var(--petal);
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    max-width: 560px;
+    line-height: 1.55;
+    position: relative;
+    z-index: 1;
+  }
+
+  .intro-band .meta {
+    font-family: 'DM Sans', sans-serif;
+    font-style: normal;
+    font-size: 0.7em;
+    color: rgba(253,248,245,0.6);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ─── SECTIONS ──────────────────────────── */
+  .section {
+    padding: 100px 80px;
+    max-width: 1060px;
+    margin: 0 auto;
+  }
+
+  .eyebrow {
+    font-size: 0.68em;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--peach);
+    margin-bottom: 40px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .eyebrow::before {
+    content: '';
+    width: 28px;
+    height: 1.5px;
+    background: var(--peach);
+  }
+
+  h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2em, 3.5vw, 3em);
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.15;
+    margin-bottom: 16px;
+    letter-spacing: -0.02em;
+  }
+
+  h2 em {
+    font-style: italic;
+    color: var(--sage-dark);
+  }
+
+  .lead {
+    font-size: 1em;
+    color: var(--ink-60);
+    max-width: 520px;
+    line-height: 1.75;
+    margin-bottom: 60px;
+    font-weight: 300;
+  }
+
+  /* ─── DESIGN THINKING 4-GRID ──────────────── */
+  .thinking-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2px;
+    background: var(--ink-20);
+    margin-top: 48px;
+  }
+
+  .thinking-cell {
+    background: var(--petal);
+    padding: 40px 44px;
+  }
+
+  .thinking-cell:nth-child(2) { background: var(--ink); }
+  .thinking-cell:nth-child(4) { background: var(--petal-2); }
+
+  .thinking-cell .tc-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 3em;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 20px;
+    color: var(--ink-20);
+  }
+
+  .thinking-cell:nth-child(2) .tc-num { color: rgba(253,248,245,0.12); }
+
+  .thinking-cell h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.15em;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: var(--ink);
+  }
+
+  .thinking-cell:nth-child(2) h3 { color: var(--petal); }
+
+  .thinking-cell p {
+    font-size: 0.88em;
+    color: var(--ink-60);
+    line-height: 1.7;
+    font-weight: 300;
+  }
+
+  .thinking-cell:nth-child(2) p { color: rgba(253,248,245,0.55); }
+
+  /* ─── AESTHETICS — 斜め分割 ─────────────── */
+  .aesthetics-bg {
+    background: var(--ink);
+    padding: 100px 0;
+    clip-path: polygon(0 0, 100% 4%, 100% 96%, 0 100%);
+    margin: 40px 0;
+  }
+
+  .aesthetics-inner {
+    max-width: 1060px;
+    margin: 0 auto;
+    padding: 0 80px;
+  }
+
+  .aesthetics-bg .eyebrow { color: var(--sage-light); }
+  .aesthetics-bg h2 { color: var(--petal); }
+  .aesthetics-bg h2 em { color: var(--peach-light); }
+  .aesthetics-bg .lead { color: rgba(253,248,245,0.5); }
+
+  .aes-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+    margin-top: 48px;
+  }
+
+  .aes-card {
+    border: 1px solid rgba(253,248,245,0.1);
+    padding: 32px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s;
+  }
+
+  .aes-card:hover { border-color: var(--sage); }
+
+  .aes-card::before {
+    content: attr(data-letter);
+    position: absolute;
+    top: -10px;
+    right: -5px;
+    font-family: 'Playfair Display', serif;
+    font-size: 5em;
+    font-weight: 700;
+    color: rgba(253,248,245,0.04);
+    pointer-events: none;
+    line-height: 1;
+  }
+
+  .aes-card h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1em;
+    font-weight: 700;
+    color: var(--petal);
+    margin-bottom: 12px;
+  }
+
+  .aes-card p {
+    font-size: 0.82em;
+    color: rgba(253,248,245,0.5);
+    line-height: 1.7;
+    font-weight: 300;
+  }
+
+  .aes-card .tag {
+    display: inline-block;
+    margin-top: 16px;
+    font-size: 0.65em;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--sage);
+  }
+
+  /* ─── VERSUS TABLE ──────────────────────── */
+  .versus-section {
+    padding: 100px 80px;
+    max-width: 1060px;
+    margin: 0 auto;
+  }
+
+  .vs-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 48px;
+    font-size: 0.87em;
+  }
+
+  .vs-table thead th {
+    padding: 16px 20px;
+    text-align: left;
+    font-weight: 500;
+    font-size: 0.72em;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-60);
+    border-bottom: 1.5px solid var(--ink-20);
+  }
+
+  .vs-table thead th:nth-child(2) { color: var(--peach); }
+  .vs-table thead th:nth-child(3) { color: var(--sage-dark); }
+
+  .vs-table tbody td {
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--ink-08);
+    vertical-align: top;
+    line-height: 1.6;
+    color: var(--ink);
+    font-weight: 300;
+  }
+
+  .vs-table tbody td:first-child {
+    font-weight: 500;
+    color: var(--ink-60);
+    font-size: 0.8em;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+
+  .vs-table tbody td:nth-child(2) { background: rgba(200,123,92,0.04); }
+  .vs-table tbody td:nth-child(3) { background: rgba(139,168,152,0.06); }
+
+  .badge {
+    display: inline-block;
+    font-size: 0.68em;
+    padding: 3px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.08em;
+    font-weight: 500;
+  }
+
+  .b-sage { background: rgba(139,168,152,0.15); color: var(--sage-dark); }
+  .b-peach { background: rgba(200,123,92,0.15); color: var(--peach); }
+  .b-warn { background: rgba(45,41,39,0.07); color: var(--ink-60); }
+
+  /* ─── CONSTRAINTS ───────────────────────── */
+  .constraints-bg {
+    background: var(--petal-2);
+    padding: 80px 0;
+  }
+
+  .never-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-top: 40px;
+    border-top: 1px solid var(--ink-20);
+  }
+
+  .never-item {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    padding: 24px 0;
+    border-bottom: 1px solid var(--ink-08);
+    gap: 40px;
+    align-items: start;
+  }
+
+  .never-item .label {
+    font-size: 0.75em;
+    font-weight: 500;
+    color: var(--peach);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding-top: 2px;
+  }
+
+  .never-item p {
+    font-size: 0.88em;
+    color: var(--ink-60);
+    line-height: 1.65;
+    font-weight: 300;
+  }
+
+  /* ─── EVALUATION ────────────────────────── */
+  .eval-section {
+    padding: 100px 80px;
+    max-width: 1060px;
+    margin: 0 auto;
+  }
+
+  .eval-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    margin-top: 48px;
+  }
+
+  .eval-card {
+    padding: 32px;
+    border: 1.5px solid var(--ink-20);
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s, transform 0.3s;
+  }
+
+  .eval-card:hover { border-color: var(--sage); transform: translateY(-4px); }
+
+  .eval-card .score {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.8em;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 12px;
+  }
+
+  .eval-card .score.high { color: var(--sage-dark); }
+  .eval-card .score.mid { color: var(--peach); }
+  .eval-card .score.low { color: var(--ink-60); }
+
+  .eval-card h3 {
+    font-size: 0.85em;
+    font-weight: 500;
+    color: var(--ink);
+    margin-bottom: 10px;
+    letter-spacing: 0.04em;
+  }
+
+  .eval-card p {
+    font-size: 0.8em;
+    color: var(--ink-60);
+    line-height: 1.65;
+    font-weight: 300;
+  }
+
+  /* ─── FINAL ─────────────────────────────── */
+  .final-section {
+    padding: 100px 80px 80px;
+    max-width: 1060px;
+    margin: 0 auto;
+  }
+
+  .install-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-top: 48px;
+  }
+
+  .install-block {
+    background: var(--ink);
+    color: rgba(253,248,245,0.8);
+    padding: 28px 32px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.82em;
+    line-height: 1.9;
+  }
+
+  .install-block .comment { color: var(--sage); }
+
+  .note-block {
+    background: var(--petal-2);
+    border-left: 3px solid var(--peach);
+    padding: 28px 32px;
+    font-size: 0.88em;
+    color: var(--ink-60);
+    line-height: 1.7;
+    font-weight: 300;
+  }
+
+  .note-block strong { color: var(--peach); font-weight: 500; }
+
+  /* ─── FOOTER ────────────────────────────── */
+  footer {
+    border-top: 1px solid var(--ink-20);
+    padding: 36px 80px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.72em;
+    color: var(--ink-60);
+    font-weight: 300;
+  }
+
+  /* ─── ANIMATIONS ────────────────────────── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(18px);
+    transition: opacity 0.65s ease, transform 0.65s ease;
+  }
+
+  .reveal.visible { opacity: 1; transform: none; }
+
+  .reveal-delay-1 { transition-delay: 0.1s; }
+  .reveal-delay-2 { transition-delay: 0.2s; }
+  .reveal-delay-3 { transition-delay: 0.3s; }
+
+  /* ─── RESPONSIVE ────────────────────────── */
+  @media (max-width: 768px) {
+    .hero { grid-template-columns: 1fr; }
+    .hero-right { display: none; }
+    .hero-left { padding: 48px 28px; min-height: 100svh; }
+    .intro-band { padding: 48px 28px; flex-direction: column; gap: 20px; }
+    .section, .versus-section, .eval-section, .final-section { padding: 60px 28px; }
+    .aesthetics-inner { padding: 0 28px; }
+    .thinking-grid, .aes-grid, .eval-cards, .install-row { grid-template-columns: 1fr; }
+    .never-item { grid-template-columns: 1fr; gap: 8px; }
+    .constraints-bg .section { padding: 60px 28px; }
+    footer { flex-direction: column; gap: 8px; padding: 28px; text-align: center; }
+    .stat-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-left">
+    <p class="hero-tag">Anthropic — claude-code plugin</p>
+    <div class="hero-main">
+      <h1>Design<br><em>without</em><br>slop.</h1>
+      <p class="sub">frontend-design は、AIが生み出す「どこかで見たようなUI」を拒絶する。コンテキストに固有の、記憶に残るインターフェイスを生成するためのスキルだ。</p>
+    </div>
+    <p class="hero-bottom">2026-03-31 調査レポート</p>
+  </div>
+  <div class="hero-right">
+    <div class="stat-grid">
+      <div class="stat">
+        <p class="stat-num">277<span>K+</span></p>
+        <p class="stat-label">インストール数<br>2026年3月時点</p>
+      </div>
+      <div class="stat">
+        <p class="stat-num">∞</p>
+        <p class="stat-label">aesthetic directions<br>「同じデザインを2度出すな」</p>
+      </div>
+      <div class="stat">
+        <p class="stat-num">0</p>
+        <p class="stat-label">Inter / Roboto / Arial<br>明示的に禁止されたフォント</p>
+      </div>
+      <div class="stat">
+        <p class="stat-num">MIT</p>
+        <p class="stat-label">ライセンス<br>anthropics/skills</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- INTRO BAND -->
+<div class="intro-band">
+  <p class="meta">設計哲学</p>
+  <p>「Claudeは非凡な創造的仕事ができる。枠の外で考え、独自のビジョンに全力でコミットすることで何が生み出せるか——それを見せよ。」</p>
+</div>
+
+<!-- DESIGN THINKING -->
+<section class="section reveal">
+  <p class="eyebrow">Design Thinking</p>
+  <h2>コーディング前に<br><em>答える</em>4つの問い</h2>
+  <p class="lead">frontend-design が最初に要求するのは美的方向性の言語化だ。Purpose から Differentiation まで、4つのレンズでコンテキストを定義する。</p>
+
+  <div class="thinking-grid">
+    <div class="thinking-cell">
+      <p class="tc-num">01</p>
+      <h3>Purpose</h3>
+      <p>このインターフェイスはどんな問題を解くか。誰が使うか。目的を抜きにした美学は装飾に過ぎない。</p>
+    </div>
+    <div class="thinking-cell">
+      <p class="tc-num">02</p>
+      <h3>Tone</h3>
+      <p>brutally minimal、maximalist chaos、retro-futuristic、organic、luxury、editorial、brutalist、art deco、industrial…どれか1つに振り切れ。「バランスよく」は選択肢にない。</p>
+    </div>
+    <div class="thinking-cell">
+      <p class="tc-num">03</p>
+      <h3>Constraints</h3>
+      <p>技術要件（フレームワーク・パフォーマンス・アクセシビリティ）を先に定義する。制約は創造の敵ではなく、美的一貫性の根拠だ。</p>
+    </div>
+    <div class="thinking-cell">
+      <p class="tc-num">04</p>
+      <h3>Differentiation</h3>
+      <p>「この体験で1つだけ忘れられないことを作るとしたら何か」。この問いに答えられないなら、まだデザインを始めてはいけない。</p>
+    </div>
+  </div>
+</section>
+
+<!-- AESTHETICS GUIDELINES -->
+<div class="aesthetics-bg">
+  <div class="aesthetics-inner">
+    <p class="eyebrow reveal">Frontend Aesthetics Guidelines</p>
+    <h2 class="reveal">5つの<em>美学的次元</em></h2>
+    <p class="lead reveal">SKILL.md が定義する5つのデザイン次元。それぞれが「AIらしい予測可能さ」からの逸脱を求める。</p>
+
+    <div class="aes-grid">
+      <div class="aes-card reveal" data-letter="T">
+        <h3>Typography</h3>
+        <p>美しく、ユニークで、インタレスティングなフォントを選べ。distinctiveなdisplayフォントと洗練されたbodyフォントをペアリングする。</p>
+        <p class="tag">No Inter. No Roboto. No Arial.</p>
+      </div>
+      <div class="aes-card reveal reveal-delay-1" data-letter="C">
+        <h3>Color & Theme</h3>
+        <p>CSS変数で統一感を作る。dominant colors + sharp accentsの構成が、平均的に分散したパレットを凌駕する。</p>
+        <p class="tag">Commit. Don't hedge.</p>
+      </div>
+      <div class="aes-card reveal reveal-delay-2" data-letter="M">
+        <h3>Motion</h3>
+        <p>ページロード時の staggered reveal が核心。散らばったマイクロインタラクションより、一つの orchestrated シーケンスの方が感動を生む。CSS-only 優先（HTML）、React では Motion ライブラリ。</p>
+        <p class="tag">Impact over quantity.</p>
+      </div>
+      <div class="aes-card reveal reveal-delay-3" data-letter="S">
+        <h3>Spatial Composition</h3>
+        <p>非対称。重なり。斜め方向のフロー。グリッドを破る要素。余白の大胆な使用または制御された密度。予測可能なレイアウトを避ける。</p>
+        <p class="tag">Break the grid.</p>
+      </div>
+      <div class="aes-card reveal" data-letter="B">
+        <h3>Backgrounds & Details</h3>
+        <p>フラットな無地色に逃げない。gradient meshes、noise textures、geometric patterns、layered transparencies、dramatic shadows、grain overlays で atmosphere を作る。</p>
+        <p class="tag">Create depth.</p>
+      </div>
+      <div class="aes-card reveal reveal-delay-1" data-letter="→">
+        <h3>実装複雑度の整合</h3>
+        <p>maximalistなビジョンは elaborate なコードが必要。minimalistは restraint と precision が必要。ビジョンの強度と実装の精度を合わせること。</p>
+        <p class="tag">Match vision to code.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- VERSUS TABLE -->
+<section class="versus-section reveal">
+  <p class="eyebrow">比較分析</p>
+  <h2>OpenAI <em>frontend-skill</em><br>vs Anthropic <em>frontend-design</em></h2>
+  <p class="lead">2つのスキルは共に「AI slop 回避」を目的とするが、アプローチと文化が根本的に異なる。</p>
+
+  <table class="vs-table">
+    <thead>
+      <tr>
+        <th>観点</th>
+        <th>Anthropic frontend-design</th>
+        <th>OpenAI frontend-skill</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>設計哲学</td>
+        <td>大胆な美的方向性にコミット。自由度最大。「Claudeの創造力を解放せよ」</td>
+        <td>抑制的構成・1ビッグアイデア・スパースコピー。「award-levelの構成美」</td>
+      </tr>
+      <tr>
+        <td>制約のスタイル</td>
+        <td>NEVER リスト（禁止事項のみ）。許可されていることに制限なし。<span class="badge b-peach">自由主義</span></td>
+        <td>Hard Rules が多数・カード禁止・ヒーロー形式規定。<span class="badge b-warn">規律主義</span></td>
+      </tr>
+      <tr>
+        <td>フォント方針</td>
+        <td>Inter/Roboto/Arial/Space Grotesk を明示禁止。個性的なペアリングを強制。</td>
+        <td>「2種類まで」の制限のみ。特定フォントの禁止なし。</td>
+      </tr>
+      <tr>
+        <td>適用範囲</td>
+        <td>ランディングページ・コンポーネント・アプリ・ポスター・artifact 全般。<span class="badge b-sage">広い</span></td>
+        <td>ランディングページ・アプリUI・ゲームUI に最適化。<span class="badge b-warn">絞られている</span></td>
+      </tr>
+      <tr>
+        <td>モーション技術</td>
+        <td>CSS-only 優先（HTML）/ Motion ライブラリ（React）。staggered reveals を推奨。</td>
+        <td>Framer Motion を明示的に推奨。scroll-linked / sticky storytelling。</td>
+      </tr>
+      <tr>
+        <td>レポート用途</td>
+        <td>テーブル・コードブロック・リストの指定なし。コンテキスト次第で使える。<span class="badge b-warn">要補完</span></td>
+        <td>utility copy ルールあり（ダッシュボード向け）。KPI/テーブル構成を支援。<span class="badge b-sage">やや適切</span></td>
+      </tr>
+      <tr>
+        <td>Playwright 連携</td>
+        <td>SKILL.md に記載なし。Playwright スキルとの組み合わせは想定外か任意。</td>
+        <td>Playwright との組み合わせを前提設計に含む。自律修正ループが成立。</td>
+      </tr>
+      <tr>
+        <td>インストール数</td>
+        <td>277,000+（2026-03 時点）</td>
+        <td>15,821 GitHub Stars（リポジトリ全体）</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- CONSTRAINTS / NEVER LIST -->
+<div class="constraints-bg">
+  <section class="section reveal">
+    <p class="eyebrow">制約事項</p>
+    <h2>NEVER <em>やってはいけない</em></h2>
+
+    <div class="never-list">
+      <div class="never-item">
+        <p class="label">汎用フォント</p>
+        <p>Inter、Roboto、Arial、system fontsを使うこと。Space Grotesk も「よく選ばれるから」という理由で使ってはならない。世代間で同じフォントを収束させることを禁止している。</p>
+      </div>
+      <div class="never-item">
+        <p class="label">定番カラー</p>
+        <p>「紫グラデーション on 白背景」は最も典型的な AI slop パターンとして明示禁止。コンテキストに固有の色彩を設計すること。</p>
+      </div>
+      <div class="never-item">
+        <p class="label">予測可能なレイアウト</p>
+        <p>ありきたりのコンポーネントパターンと cookie-cutter デザイン。コンテキスト固有の個性がないデザインは失格。</p>
+      </div>
+      <div class="never-item">
+        <p class="label">デザインコメント混入</p>
+        <p>プロンプト言語やデザイン解説文をUIに混入させること。「このセクションでは〇〇を強調します」のような文はUIに属さない（OpenAI frontend-skill と共通の禁止）。</p>
+      </div>
+      <div class="never-item">
+        <p class="label">収束</p>
+        <p>複数の生成結果が同じ美学に収束すること。「No design should be the same」——これがスキルの最も根本的な要求だ。</p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- EVALUATION -->
+<section class="eval-section reveal">
+  <p class="eyebrow">評価</p>
+  <h2>プレビュー表示・<br><em>表現能力</em>の評価</h2>
+
+  <div class="eval-cards">
+    <div class="eval-card">
+      <p class="score high">◎</p>
+      <h3>ビジュアル表現力</h3>
+      <p>aesthetic direction の多様性が最大の強み。同じスキルを使っても毎回異なるデザインが生まれる。視覚的インパクトの天井が高い。</p>
+    </div>
+    <div class="eval-card">
+      <p class="score high">○</p>
+      <h3>ブラウザプレビュー品質</h3>
+      <p>Backdrop-filter・gradient mesh・noise texture など実験的なCSSを使いこなす方向性で設計されており、モダンブラウザでの表示品質は高い。</p>
+    </div>
+    <div class="eval-card">
+      <p class="score mid">△</p>
+      <h3>情報密度・レポート適性</h3>
+      <p>ランディングページ・UI 向け最適化のため、テーブル・コードブロック・データリストなどレポート要素の明示的なガイダンスがない。補完が必要。</p>
+    </div>
+    <div class="eval-card">
+      <p class="score high">◎</p>
+      <h3>Claude Code との親和性</h3>
+      <p>Claude Code（ティアのベース）に同梱されたオフィシャルプラグイン。/frontend-design コマンドで直接呼び出せる。</p>
+    </div>
+    <div class="eval-card">
+      <p class="score high">○</p>
+      <h3>モバイル対応</h3>
+      <p>モーションの mobile での smooth 動作を明示要件に含む。CSS-only 優先の設計がパフォーマンス面でも貢献する。</p>
+    </div>
+    <div class="eval-card">
+      <p class="score mid">△</p>
+      <h3>設計の再現性</h3>
+      <p>「毎回違うデザインを」という原則は、プロジェクトでのデザイン一貫性維持と一部衝突する。デザインシステムを明示的に提供する必要がある。</p>
+    </div>
+  </div>
+</section>
+
+<!-- FINAL -->
+<section class="final-section reveal">
+  <p class="eyebrow">導入方法</p>
+  <h2>Claude Code での<br><em>使い方</em></h2>
+
+  <div class="install-row">
+    <div class="install-block">
+      <span class="comment"># Claude Code のプラグインとして導入済み</span><br>
+      # /frontend-design で即起動<br><br>
+      <span class="comment"># anthropics/skills からも取得可能</span><br>
+      python -c "$(curl -fsSL https://raw.githubusercontent.com<br>
+      /anthropics/skills/main/install.py)"<br><br>
+      <span class="comment"># または手動配置</span><br>
+      cp -r skills/frontend-design ~/.claude/skills/
+    </div>
+    <div class="note-block">
+      <strong>AGY への導入について：</strong><br><br>
+      Claude Code プラグインとして既に利用可能な状態にある可能性が高い（claude-code に同梱）。MIT ライセンスで問題なし。<br><br>
+      <strong>ティアのタスクレポートとの使い分け：</strong><br>
+      視覚主導な成果物（landing page・デモ・紹介ページ）→ frontend-design<br>
+      情報密度が必要なレポート・議事録・調査まとめ → ティアの既存スタイル<br><br>
+      導入前にリクによる確認（依存関係・既存スキルとの衝突）を推奨。
+    </div>
+  </div>
+</section>
+
+<footer>
+  <span>generated by ティア / Claude Code Sonnet 4.6 — 2026-03-31</span>
+  <span>sources: github.com/anthropics/skills · github.com/anthropics/claude-code · claude.com/plugins/frontend-design</span>
+</footer>
+
+<script>
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        obs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.08 });
+
+  document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+</script>
+</body>
+</html>

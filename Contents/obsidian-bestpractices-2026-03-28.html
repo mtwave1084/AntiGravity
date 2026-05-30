@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Obsidian 活用術リサーチ</title>
+<style>
+  body { background: #0f1117; color: #e0e0e0; font-family: 'Segoe UI', sans-serif; max-width: 900px; margin: 0 auto; padding: 24px; line-height: 1.7; }
+  h1 { color: #7dd3fc; border-bottom: 1px solid #334155; padding-bottom: 12px; }
+  h2 { color: #a5f3fc; margin-top: 36px; font-size: 1.2em; letter-spacing: 0.02em; }
+  h3 { color: #c084fc; font-size: 1em; margin: 20px 0 8px; }
+  a { color: #7dd3fc; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.92em; }
+  th { background: #1e293b; color: #7dd3fc; padding: 9px 13px; text-align: left; }
+  td { padding: 9px 13px; border-bottom: 1px solid #1e293b; vertical-align: top; }
+  tr:hover td { background: #1a2233; }
+  .tag { display: inline-block; padding: 2px 9px; border-radius: 10px; font-size: 0.8em; margin: 1px; }
+  .high { background: #14532d; color: #86efac; }
+  .mid { background: #422006; color: #fde68a; }
+  .low { background: #1e3a5f; color: #93c5fd; }
+  .card { background: #1e293b; border-radius: 8px; padding: 16px 20px; margin: 12px 0; }
+  .card.pick { border-left: 3px solid #7dd3fc; }
+  .card.warn { border-left: 3px solid #fbbf24; }
+  .card.good { border-left: 3px solid #34d399; }
+  .section-meta { color: #64748b; font-size: 0.86em; }
+  .case-num { color: #64748b; font-size: 0.85em; margin-right: 6px; }
+  hr { border: none; border-top: 1px solid #1e293b; margin: 28px 0; }
+</style>
+</head>
+<body>
+
+<h1>📓 Obsidian 活用術リサーチ</h1>
+<p class="section-meta">調査日: 2026-03-28 ／ 対象: Obsidian × Claude Code + PKM ベストプラクティス</p>
+
+<!-- ====== SUMMARY ====== -->
+<div class="card good">
+  <strong>サマリー（3行）</strong>
+  <ul style="margin:8px 0">
+    <li>Claude Code と Obsidian の統合は MCP ブリッジと Hook の2系統が実用化されており、今すぐ使える</li>
+    <li>「頑張らないObsidian」が日本での主流。Inbox に放り込んで週1整理、が現実的</li>
+    <li>AGYとの組み合わせで最も有効度が高いのは <strong>Hook自動記録</strong> と <strong>MCPブリッジ</strong> の2つ</li>
+  </ul>
+</div>
+
+<!-- ====== THEME 1 ====== -->
+<h2>🔧 テーマ1：Obsidian × Claude Code の組み合わせ事例</h2>
+
+<table>
+  <tr><th>事例</th><th>概要</th><th>有効度</th><th>AGY可用性</th></tr>
+  <tr>
+    <td><a href="https://github.com/iansinnott/obsidian-claude-code-mcp">① obsidian-claude-code-mcp</a></td>
+    <td>WebSocket（port 22360）で Claude Code と Vault を直接繋ぐ MCP ブリッジ。Vault が作業ディレクトリでなくても Claude がノートを読み書きできる</td>
+    <td><span class="tag high">高</span></td>
+    <td><span class="tag high">◎</span></td>
+  </tr>
+  <tr>
+    <td><a href="https://forum.obsidian.md/t/new-plugin-agent-client-bring-claude-code-codex-gemini-cli-inside-obsidian/108448">② Agent Client プラグイン</a></td>
+    <td>Obsidian のサイドパネルから Claude Code / Codex / Gemini CLI をチャット形式で操作。ターミナル不要で Vault 内から完結</td>
+    <td><span class="tag mid">中</span></td>
+    <td><span class="tag mid">△</span></td>
+  </tr>
+  <tr>
+    <td><a href="https://www.whytryai.com/p/claude-code-obsidian">③ Vault ルートに CLAUDE.md</a></td>
+    <td>Vault ルートに置いた CLAUDE.md がセッション毎に自動読み込み。「毎回コンテキストを渡す手間」ゼロ</td>
+    <td><span class="tag high">高</span></td>
+    <td><span class="tag low">○（既に類似構成）</span></td>
+  </tr>
+  <tr>
+    <td><a href="https://blog.starmorph.com/blog/obsidian-claude-code-integration-guide">④ フラットなファイル構造</a></td>
+    <td>深いフォルダ階層はパス解決にトークンを消費するため、なるべくフラットに。ファイル名を文章形式にすると Claude がパスだけでコンテキストを得られる</td>
+    <td><span class="tag mid">中</span></td>
+    <td><span class="tag mid">△</span></td>
+  </tr>
+  <tr>
+    <td><a href="https://medium.com/@martk/obsidian-claude-code-the-claude-code-skills-that-make-your-vault-feel-alive-4ec05a1ec1e6">⑤ Skills を Vault 上位ディレクトリに</a></td>
+    <td>複数 Vault を持つ場合、`.claude/skills/` を Vault の一段上に置くと全 Vault から共通スキルを呼べる</td>
+    <td><span class="tag low">低</span></td>
+    <td><span class="tag low">不要</span></td>
+  </tr>
+</table>
+
+<div class="card pick">
+  <strong>⭐ AGY 最推奨: obsidian-claude-code-mcp（①）</strong><br>
+  現状の Claude Code から Obsidian ノートを読み書きするには直接ファイルパスを指定する必要があるが、このプラグインを入れると Vault のどのノートでも自然に参照できる。
+  heartbeat での `99_Insights` 書き込みがより安定する。
+</div>
+
+<!-- ====== THEME 2 ====== -->
+<h2>🤖 テーマ2：Obsidian × AI 自動化（日本語事例）</h2>
+
+<table>
+  <tr><th>事例</th><th>概要</th><th>有効度</th><th>AGY可用性</th></tr>
+  <tr>
+    <td><a href="https://qiita.com/delphinus/items/9325c8dd750c85bac944">⑥ Hook で全会話を Obsidian に自動記録</a></td>
+    <td>Claude Code の Hook 機能で、Claude との全会話を自動的に Obsidian ノートへ書き出す。User/Assistant セクションに自動分類。ナレッジが会話の中に自然に蓄積される</td>
+    <td><span class="tag high">高</span></td>
+    <td><span class="tag high">◎</span></td>
+  </tr>
+  <tr>
+    <td><a href="https://iret.media/169031">⑦ MCP 多連携で朝ルーティン自動化</a></td>
+    <td>Gmail・Google Calendar・Notion・Slack などを一括統合。毎朝のタスク整理を30分→3分に短縮した実例</td>
+    <td><span class="tag mid">中</span></td>
+    <td><span class="tag mid">△</span></td>
+  </tr>
+  <tr>
+    <td><a href="https://qiita.com/hoge_kawamuro/items/20a91a58680ed93326ee">⑧ 記事執筆の完全自動化パイプライン</a></td>
+    <td>Claude Code × Obsidian でインタビュー形式の質問 → 文章生成 → AI表現検出・修正 → 投稿まで自動化</td>
+    <td><span class="tag mid">中</span></td>
+    <td><span class="tag mid">△（Brain記事に応用可）</span></td>
+  </tr>
+  <tr>
+    <td><a href="https://future-architect.github.io/articles/20260317a/">⑨ 対話型ジャーナリング</a></td>
+    <td>単なる記録を脱却し、過去ノートを MCP で渡して Claude との対話で思考を深めるジャーナリング手法</td>
+    <td><span class="tag high">高</span></td>
+    <td><span class="tag high">◎（ソリス向け）</span></td>
+  </tr>
+  <tr>
+    <td><a href="https://www.myaiexp.com/jp/insights/claudesidian-guide">⑩ Claudesidian（統合プロジェクト）</a></td>
+    <td>Obsidian と Claude を完全統合するオープンソース。フォルダ構造・ワークフロー・カスタムコマンド・自動化スクリプトをパッケージ提供</td>
+    <td><span class="tag low">低</span></td>
+    <td><span class="tag low">重すぎる可能性</span></td>
+  </tr>
+</table>
+
+<div class="card pick">
+  <strong>⭐ AGY 最推奨: Hook で全会話を自動記録（⑥）</strong><br>
+  Claude Code の Hook（PostToolUse / Stop）を設定するだけで、ティアとの会話が Obsidian に自動保存される。<br>
+  現状の handoff.md + memory/ を補完し、Obsidian から会話履歴を参照できるようになる。
+</div>
+
+<!-- ====== THEME 3 ====== -->
+<h2>📚 テーマ3：Obsidian PKM の実践的な使い方</h2>
+
+<table>
+  <tr><th>事例</th><th>概要</th><th>ソリス向け評価</th></tr>
+  <tr>
+    <td><a href="https://zenn.dev/game8_blog/articles/0e50c36cd63b98">⑪ 最小フォルダ＋階層タグ</a></td>
+    <td>フォルダは最小限、タグを `#親/子/孫` 形式で階層化。MOC ノートで入口を作れば深いフォルダ階層は不要</td>
+    <td>中 — 今のPARA構造は複雑すぎるなら検討</td>
+  </tr>
+  <tr>
+    <td><a href="https://frontiernotes7.com/obsidian%E3%81%AE%E9%81%94%E4%BA%BA%E3%81%8C%E8%AA%9E%E3%82%8B%E3%80%8C%E8%80%83%E3%81%88%E3%82%8B%E3%83%8E%E3%83%BC%E3%83%81%E3%82%99%E8%A1%93%E3%80%8D%E2%94%80%E2%94%80odysseas%E6%B0%8F%E3%81%8C%E5%BE%B9">⑫ Odysseas 式（思考ライフサイクル型）</a></td>
+    <td>Inbox → Rough Notes → Source Material → Permanent Notes → Projects という思考の流れに沿った構成</td>
+    <td>中 — PARAより直感的だが移行コストあり</td>
+  </tr>
+  <tr>
+    <td><a href="https://tech-blog.optim.co.jp/entry/2025/12/25/100000">⑬ 「頑張らない」Obsidian</a></td>
+    <td>完璧な構造より「書き続けること」を優先。Inbox に何でも放り込み、週次レビューで整理するゆるいフロー</td>
+    <td><strong>高 ← 今のソリスの状況に最適</strong></td>
+  </tr>
+  <tr>
+    <td><a href="https://9d9.co.jp/obsidian/617/">⑭ ツェッテルカステン</a></td>
+    <td>「永続ノート」に自分の言葉で再記述し、リンクで繋いでネットワーク化。読書メモ→自分の考えに昇華するフロー</td>
+    <td>低 — 手間がかかるため今は不向き</td>
+  </tr>
+  <tr>
+    <td><a href="https://wonrei.com/blog/obsidian-ark/">⑮ Ark フォルダ構成</a></td>
+    <td>Archive / Resources / Knowledge の 3〜4 フォルダに集約。PARAの簡略版として日本のブロガーに広まっている</td>
+    <td>中 — PARAが重く感じるなら代替として検討</td>
+  </tr>
+</table>
+
+<div class="card warn">
+  <strong>⚠ 今のソリスの状況への提言：「頑張らない」が最適解</strong><br>
+  PARA を完璧に使おうとするより、<strong>LINE → Inbox に放り込む仕組みだけを維持</strong>して、整理は気が向いたときだけでOK。
+  整理はティアに「Obsidian の Inbox 整理して」と言えば Claude Code がやれる。
+</div>
+
+<!-- ====== PROPOSAL ====== -->
+<h2>🎯 AGY プロジェクトへの実運用提案</h2>
+
+<table>
+  <tr><th>優先度</th><th>提案</th><th>難易度</th><th>効果</th></tr>
+  <tr>
+    <td><span class="tag high">今すぐ</span></td>
+    <td>⑥ Hook で会話自動記録を設定する（PostToolUse Hook）</td>
+    <td>低</td>
+    <td>ティアとの会話が全部 Obsidian に残る</td>
+  </tr>
+  <tr>
+    <td><span class="tag high">今すぐ</span></td>
+    <td>LINE → Inbox の仕組みをそのまま維持。整理は Claude Code に任せる</td>
+    <td>ゼロ</td>
+    <td>「使えてない」感が消える</td>
+  </tr>
+  <tr>
+    <td><span class="tag mid">近い将来</span></td>
+    <td>① obsidian-claude-code-mcp をインストールしてみる</td>
+    <td>中</td>
+    <td>Obsidian ノートを Claude が自然に参照できる</td>
+  </tr>
+  <tr>
+    <td><span class="tag mid">近い将来</span></td>
+    <td>⑨ 対話型ジャーナリング：LINE メモをティアに渡して思考を深める</td>
+    <td>低</td>
+    <td>LINE の放り込みが「対話の種」になる</td>
+  </tr>
+  <tr>
+    <td><span class="tag low">気が向いたら</span></td>
+    <td>PARA → Ark への簡略化（フォルダ4つに整理）</td>
+    <td>中</td>
+    <td>構造がシンプルになり管理しやすくなる</td>
+  </tr>
+</table>
+
+<hr>
+<p style="color:#475569; font-size:0.85em">リサーチ: ティア（Claude Code）× Explore エージェント ／ 2026-03-28</p>
+
+</body>
+</html>

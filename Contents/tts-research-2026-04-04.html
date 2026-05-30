@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>タスクレポート — TTS比較リサーチ 2026-04-04</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface2: #1c2128;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --blue: #58a6ff;
+      --blue-light: #79c0ff;
+      --purple: #d2a8ff;
+      --green: #3fb950;
+      --orange: #d29922;
+      --red: #f85149;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', 'Helvetica Neue', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      padding: 2rem 1rem;
+    }
+    .container { max-width: 880px; margin: 0 auto; }
+
+    header {
+      background: linear-gradient(135deg, #0d1117, #0c2d6b, #0c1a30);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 2rem 2rem 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .task-type {
+      display: inline-block;
+      background: rgba(88,166,255,0.15);
+      color: var(--blue-light);
+      border: 1px solid rgba(88,166,255,0.3);
+      border-radius: 99px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 3px 12px;
+      margin-bottom: 0.75rem;
+    }
+    header h1 { font-size: 1.6rem; color: var(--text); margin-bottom: 0.25rem; }
+    .date { font-size: 0.85rem; color: var(--muted); margin-bottom: 0.75rem; }
+    .tear-comment {
+      font-size: 0.9rem;
+      color: var(--purple);
+      font-style: italic;
+      border-left: 2px solid var(--purple);
+      padding-left: 0.75rem;
+      margin-top: 0.75rem;
+    }
+
+    h2 {
+      font-size: 1.05rem;
+      color: var(--blue-light);
+      border-left: 3px solid var(--blue);
+      padding-left: 0.6rem;
+      margin: 2rem 0 1rem;
+    }
+
+    .summary-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.25rem;
+      font-size: 0.9rem;
+      color: var(--text);
+      margin-bottom: 1.5rem;
+    }
+
+    /* 調査対象カード */
+    .source-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+    .source-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      font-size: 0.85rem;
+    }
+    .source-card .sc-label {
+      font-size: 0.7rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.25rem;
+    }
+    .source-card .sc-name { font-weight: 600; color: var(--text); }
+    .tag {
+      display: inline-block;
+      font-size: 0.68rem;
+      padding: 1px 7px;
+      border-radius: 99px;
+      font-weight: 600;
+      margin-top: 0.3rem;
+    }
+    .tag-cloud { background: rgba(88,166,255,0.12); color: var(--blue); border: 1px solid rgba(88,166,255,0.25); }
+    .tag-oss { background: rgba(63,185,80,0.12); color: var(--green); border: 1px solid rgba(63,185,80,0.25); }
+
+    /* 比較テーブル */
+    .table-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 1.5rem; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.84rem; }
+    th { background: var(--surface2); color: var(--muted); padding: 0.6rem 0.9rem; text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap; font-weight: 600; }
+    td { padding: 0.55rem 0.9rem; border-bottom: 1px solid rgba(48,54,61,0.5); }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255,255,255,0.015); }
+    .good { color: var(--green); }
+    .warn { color: var(--orange); }
+    .bad { color: var(--red); }
+    .center { text-align: center; }
+
+    /* 主要発見 callout */
+    .callout {
+      background: rgba(88,166,255,0.06);
+      border: 1px solid rgba(88,166,255,0.2);
+      border-left: 3px solid var(--blue);
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 1.25rem;
+      font-size: 0.9rem;
+    }
+    .callout .callout-title { font-weight: 700; color: var(--blue-light); margin-bottom: 0.5rem; }
+    .callout ul { padding-left: 1.25rem; }
+    .callout li { margin: 0.25rem 0; color: var(--text); }
+
+    /* 生成ファイル */
+    .file-list { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.5rem; }
+    .file-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 0.6rem 1rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.82rem;
+      color: var(--green);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .file-item .fi-label { color: var(--muted); font-family: sans-serif; font-size: 0.75rem; }
+
+    footer {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.78rem;
+      margin-top: 2.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+    }
+
+    @media (max-width: 600px) {
+      header h1 { font-size: 1.3rem; }
+      .source-grid { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="task-type">research</div>
+    <h1>TTS 比較リサーチ</h1>
+    <div class="date">2026-04-04 | Fish Audio 含む音声合成サービス・OSSモデルの横断調査</div>
+    <p class="tear-comment">「調べてみたら、なんかいろんな方向性があって面白かったよ」</p>
+  </header>
+
+  <div class="summary-box">
+    Fish Audio を起点に、クラウド系7サービス・OSS系5モデルを横断調査。
+    AGYプロジェクト（ティア・リクのキャラクターボイス生成）での活用可否・導入難度・コストを整理し、
+    OSSベースの改修案（ファインチューニング・ピッチシフター・OpenAI互換API）もまとめた。
+  </div>
+
+  <h2>🔍 調査対象</h2>
+  <div class="source-grid">
+    <div class="source-card"><div class="sc-label">推奨</div><div class="sc-name">Fish Audio</div><span class="tag tag-cloud">Cloud</span></div>
+    <div class="source-card"><div class="sc-label">Cloud</div><div class="sc-name">ElevenLabs</div><span class="tag tag-cloud">Cloud</span></div>
+    <div class="source-card"><div class="sc-label">低遅延</div><div class="sc-name">Cartesia</div><span class="tag tag-cloud">Cloud</span></div>
+    <div class="source-card"><div class="sc-label">Cloud</div><div class="sc-name">Google TTS</div><span class="tag tag-cloud">Cloud</span></div>
+    <div class="source-card"><div class="sc-label">Cloud</div><div class="sc-name">Amazon Polly</div><span class="tag tag-cloud">Cloud</span></div>
+    <div class="source-card"><div class="sc-label">Cloud</div><div class="sc-name">Azure TTS</div><span class="tag tag-cloud">Cloud</span></div>
+    <div class="source-card"><div class="sc-label">推奨</div><div class="sc-name">Fish Speech</div><span class="tag tag-oss">OSS</span></div>
+    <div class="source-card"><div class="sc-label">推奨</div><div class="sc-name">Chatterbox</div><span class="tag tag-oss">OSS</span></div>
+    <div class="source-card"><div class="sc-label">軽量</div><div class="sc-name">Kokoro-82M</div><span class="tag tag-oss">OSS</span></div>
+    <div class="source-card"><div class="sc-label">非商用</div><div class="sc-name">XTTS-v2</div><span class="tag tag-oss">OSS</span></div>
+    <div class="source-card"><div class="sc-label">研究</div><div class="sc-name">StyleTTS2</div><span class="tag tag-oss">OSS</span></div>
+  </div>
+
+  <h2>📊 主な比較結果</h2>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>サービス</th><th>声クローン</th><th>コスト</th><th>商用</th><th>ローカル</th><th>AGY適性</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Fish Audio</strong></td><td class="good">◎ 15秒</td><td>$$</td><td class="good">✅</td><td class="good">✅</td><td class="center good">◎</td></tr>
+        <tr><td>ElevenLabs</td><td class="good">◎</td><td class="bad">$$$$</td><td class="good">✅</td><td class="bad">❌</td><td class="center warn">△ 高コスト</td></tr>
+        <tr><td>Cartesia</td><td class="good">◎ 15秒</td><td>$$</td><td class="good">✅</td><td class="bad">❌</td><td class="center good">○</td></tr>
+        <tr><td><strong>Fish Speech</strong></td><td class="good">◎ 10〜30秒</td><td class="good">無料</td><td class="good">✅</td><td class="good">✅</td><td class="center good">◎</td></tr>
+        <tr><td>Kokoro-82M</td><td class="warn">△</td><td class="good">無料</td><td class="good">✅</td><td class="good">✅</td><td class="center">○</td></tr>
+        <tr><td>XTTS-v2</td><td class="good">◎ 6秒</td><td class="good">無料</td><td class="bad">❌非商用</td><td class="good">✅</td><td class="center warn">△</td></tr>
+        <tr><td><strong>Chatterbox</strong></td><td class="good">◎</td><td class="good">無料</td><td class="good">✅</td><td class="good">✅</td><td class="center good">◎</td></tr>
+        <tr><td>PlayHT</td><td>—</td><td>—</td><td class="bad">❌廃止</td><td class="bad">❌</td><td class="center bad">× API停止済み</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>💡 主要な発見</h2>
+  <div class="callout">
+    <div class="callout-title">AGYプロジェクトへの示唆</div>
+    <ul>
+      <li>Fish Audio は今すぐ使える最善策。<code>pip install fish-audio-sdk</code>、無料200分/月</li>
+      <li>Fish Speech（OSS版）は Apache 2.0 で商用可。完全ローカル運用が可能</li>
+      <li>Chatterbox は OpenAI互換API として建てられ、エージェントとの統合が容易</li>
+      <li>XTTS-v2 は非商用限定なのでプロダクション展開には使えない点に注意</li>
+      <li>PlayHT は 2025年12月末で API 停止（Meta 買収）— 代替を検討済みのものは除外可</li>
+      <li>OSS改修として「Kokoro + ピッチシフター」でティア/リク用ボイスを1モデルから生成するアプローチが最も低コスト</li>
+    </ul>
+  </div>
+
+  <h2>📁 生成ファイル</h2>
+  <div class="file-list">
+    <div class="file-item">
+      <span>Contents/tts-comparison-2026-04-04.md</span>
+      <span class="fi-label">比較レポート（Markdown）</span>
+    </div>
+    <div class="file-item">
+      <span>Contents/tts-comparison-2026-04-04.html</span>
+      <span class="fi-label">比較レポート（HTML、ダークテーマ）</span>
+    </div>
+  </div>
+
+  <footer>generated by ティア / Claude Code Sonnet 4.6 — 2026-04-04</footer>
+</div>
+</body>
+</html>

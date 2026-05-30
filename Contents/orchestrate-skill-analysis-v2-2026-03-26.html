@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>orchestrate スキル弱点分析 v2（Claude + Codex） — 2026-03-26</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface2: #1c2128;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --blue: #58a6ff;
+      --blue-light: #79c0ff;
+      --purple: #d2a8ff;
+      --green: #3fb950;
+      --orange: #d29922;
+      --red: #f85149;
+      --teal: #56d364;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 15px;
+      line-height: 1.65;
+    }
+    .header {
+      background: linear-gradient(135deg, #2b1c05, #1a0c2a, #0c2d6b);
+      padding: 48px 40px 40px;
+      text-align: center;
+    }
+    .header .badge {
+      display: inline-block;
+      background: rgba(88,166,255,0.15);
+      color: var(--blue-light);
+      border: 1px solid rgba(88,166,255,0.3);
+      border-radius: 20px;
+      padding: 4px 14px;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    .header h1 { font-size: 26px; font-weight: 700; margin-bottom: 8px; }
+    .header .date { color: var(--muted); font-size: 13px; margin-bottom: 20px; }
+    .tear-comment {
+      display: inline-block;
+      background: rgba(210,168,255,0.1);
+      border-left: 3px solid var(--purple);
+      color: var(--purple);
+      padding: 10px 18px;
+      border-radius: 0 8px 8px 0;
+      font-style: italic;
+      font-size: 14px;
+      max-width: 620px;
+    }
+    .container { max-width: 900px; margin: 0 auto; padding: 40px 24px; }
+    .summary-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 24px;
+      margin-bottom: 28px;
+    }
+    .summary-card p { color: var(--muted); font-size: 14px; line-height: 1.7; }
+    .summary-card strong { color: var(--text); }
+    .agents-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 32px;
+      flex-wrap: wrap;
+    }
+    .agent-chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-size: 13px;
+    }
+    .agent-chip .dot { width: 8px; height: 8px; border-radius: 50%; }
+    .dot-claude { background: var(--purple); }
+    .dot-codex { background: var(--teal); }
+    .criteria-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px 24px;
+      margin-bottom: 32px;
+    }
+    .criteria-box h3 { font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; }
+    .criteria-row { display: flex; gap: 12px; flex-wrap: wrap; }
+    .criteria-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 6px 12px;
+    }
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 36px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+      text-align: center;
+    }
+    .stat-card .num { font-size: 32px; font-weight: 700; margin-bottom: 4px; }
+    .stat-card .label { font-size: 12px; color: var(--muted); }
+    h2 {
+      font-size: 17px;
+      font-weight: 600;
+      border-left: 3px solid var(--blue);
+      padding-left: 12px;
+      margin-bottom: 20px;
+    }
+    .section { margin-bottom: 40px; }
+    .issue-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+    .card-header {
+      background: var(--surface2);
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .priority-badge {
+      display: inline-flex;
+      align-items: center;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 3px 10px;
+      border-radius: 12px;
+    }
+    .priority-high { background: rgba(248,81,73,0.15); color: var(--red); border: 1px solid rgba(248,81,73,0.3); }
+    .priority-mid  { background: rgba(210,153,34,0.15); color: var(--orange); border: 1px solid rgba(210,153,34,0.3); }
+    .priority-low  { background: rgba(63,185,80,0.15); color: var(--green); border: 1px solid rgba(63,185,80,0.3); }
+    .source-badge {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 10px;
+    }
+    .src-claude { background: rgba(210,168,255,0.12); color: var(--purple); border: 1px solid rgba(210,168,255,0.25); }
+    .src-codex  { background: rgba(86,211,100,0.12); color: var(--teal); border: 1px solid rgba(86,211,100,0.25); }
+    .src-both   { background: rgba(88,166,255,0.12); color: var(--blue-light); border: 1px solid rgba(88,166,255,0.25); }
+    .card-title { font-size: 15px; font-weight: 600; }
+    .card-body { padding: 18px 20px; }
+    .problem { color: var(--muted); font-size: 14px; margin-bottom: 12px; line-height: 1.7; }
+    .codex-note {
+      background: rgba(86,211,100,0.07);
+      border: 1px solid rgba(86,211,100,0.2);
+      border-radius: 6px;
+      padding: 10px 14px;
+      font-size: 13px;
+      color: var(--teal);
+      margin-bottom: 12px;
+      line-height: 1.6;
+    }
+    .codex-note .label { font-weight: 700; margin-bottom: 4px; }
+    .arrow { color: var(--blue); font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+    .fix {
+      background: rgba(88,166,255,0.07);
+      border: 1px solid rgba(88,166,255,0.2);
+      border-radius: 6px;
+      padding: 10px 14px;
+      font-size: 13px;
+      color: var(--blue-light);
+      line-height: 1.6;
+    }
+    .fix code {
+      background: #090d12;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-family: 'SFMono-Regular', Consolas, monospace;
+      font-size: 12px;
+      color: var(--teal);
+    }
+    .callout {
+      background: rgba(88,166,255,0.07);
+      border: 1px solid rgba(88,166,255,0.25);
+      border-radius: 8px;
+      padding: 18px 22px;
+      margin-bottom: 36px;
+    }
+    .callout p { font-size: 14px; color: var(--blue-light); line-height: 1.7; }
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 20px 24px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    @media (max-width: 600px) {
+      .header { padding: 32px 20px; }
+      .header h1 { font-size: 20px; }
+      .summary-grid { grid-template-columns: 1fr; }
+      .agents-row { flex-direction: column; }
+      .container { padding: 24px 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="badge">Analysis v2 — 2026-03-26</div>
+  <h1>orchestrate スキル弱点分析</h1>
+  <div class="date">分析対象: <code>.claude/skills/orchestrate/SKILL.md</code> &nbsp;|&nbsp; Claude + Codex 協調分析</div>
+  <p class="tear-comment">「二人で見たら、さっきより深いところまで見えてきた。なんか、思ってたより穴が多かったよ……」</p>
+</div>
+
+<div class="container">
+
+  <div class="summary-card">
+    <p><strong>タスク概要</strong><br>
+    orchestrate スキル定義（SKILL.md）を Claude（意味・設計視点）と Codex CLI（構造・フロー視点）の2エージェントで分析。曖昧な指示・抜けている分岐・誤ルーティングしやすい箇所を洗い出し、優先度付きの改善案にまとめた。</p>
+  </div>
+
+  <div class="agents-row">
+    <div class="agent-chip"><span class="dot dot-claude"></span><strong>Claude</strong> — 設計整合性・意味的曖昧さの分析</div>
+    <div class="agent-chip"><span class="dot dot-codex"></span><strong>Codex CLI</strong> (gpt-5.4) — フロー構造・依存関係・ループリスクの分析</div>
+  </div>
+
+  <div class="criteria-box">
+    <h3>優先度の判定基準</h3>
+    <div class="criteria-row">
+      <div class="criteria-item"><span style="color:var(--red)">●</span> 高 — 誤動作・無限ループに直結</div>
+      <div class="criteria-item"><span style="color:var(--orange)">●</span> 中 — 判断ブレ・誤ルーティングが起きやすい</div>
+      <div class="criteria-item"><span style="color:var(--green)">●</span> 低 — 利便性・トレーサビリティの問題</div>
+    </div>
+  </div>
+
+  <div class="summary-grid">
+    <div class="stat-card"><div class="num" style="color:var(--red)">3</div><div class="label">高優先度</div></div>
+    <div class="stat-card"><div class="num" style="color:var(--orange)">4</div><div class="label">中優先度</div></div>
+    <div class="stat-card"><div class="num" style="color:var(--green)">3</div><div class="label">低優先度</div></div>
+  </div>
+
+  <!-- 高優先度 -->
+  <div class="section">
+    <h2>🔴 高優先度</h2>
+
+    <div class="issue-card">
+      <div class="card-header">
+        <span class="priority-badge priority-high">HIGH</span>
+        <span class="source-badge src-both">Claude + Codex</span>
+        <span class="card-title">① 再試行ループに停止条件がない</span>
+      </div>
+      <div class="card-body">
+        <p class="problem">STEP 4「問題あり → 再依頼」に上限回数・打ち切り条件・エスカレーション先がない。品質基準を満たせない場合、同じエージェントへの再依頼が無限に繰り返される。</p>
+        <div class="codex-note"><div class="label">Codex 補足</div>注意事項の「Codex/Gemini に振った後、さらに再委譲しない」は<em>下位エージェントからの再委譲</em>を禁じているだけで、Claude が同一タスクを再投入するループは防いでいない。統制対象がずれている。</div>
+        <p class="arrow">→ 改善案</p>
+        <div class="fix">
+          STEP 4 に以下を追記する：<br>
+          • 再依頼は最大2回まで<br>
+          • 3回目も問題あり → Discord に報告して止まる（CLAUDE.md の「同じエラーが3回で止まる」ルールに合わせる）<br>
+          注意事項のループ防止文を「Claude からの再投入も含む」に修正する
+        </div>
+      </div>
+    </div>
+
+    <div class="issue-card">
+      <div class="card-header">
+        <span class="priority-badge priority-high">HIGH</span>
+        <span class="source-badge src-claude">Claude</span>
+        <span class="card-title">② トリガー条件が曖昧すぎる</span>
+      </div>
+      <div class="card-body">
+        <p class="problem">「複数ステップにわたる複雑なタスク」「明らかに専門作業が含まれる」はほぼあらゆるタスクに当てはまり、Claude が自分でやるべき場面との境界がない。意図しない orchestrate 起動が頻発する。</p>
+        <p class="arrow">→ 改善案</p>
+        <div class="fix">「Codex/Gemini を呼ぶ明確な理由（①実行環境の分離が必要、②外部Webリサーチが必要、③並列化による高速化が有効）のどれかに当てはまる場合のみ起動」と否定条件も合わせて明記する。</div>
+      </div>
+    </div>
+
+    <div class="issue-card">
+      <div class="card-header">
+        <span class="priority-badge priority-high">HIGH</span>
+        <span class="source-badge src-codex">Codex</span>
+        <span class="card-title">③ ルーティング競合時の優先ルールがない</span>
+      </div>
+      <div class="card-body">
+        <p class="problem">ルーティング判定表は Codex / Gemini / Claude 自身の三択に見えるが、優先順位と競合解決ルールがない。「技術情報の収集を含む実装タスク」のように Gemini と Codex の両方に該当するケースで判断が止まる。</p>
+        <div class="codex-note"><div class="label">Codex 補足</div>典型パターン（A/B/C）は例示として有用だが、「いずれのパターンにも当てはまらない場合のデフォルト分岐」が未定義。</div>
+        <p class="arrow">→ 改善案</p>
+        <div class="fix">
+          競合解決ルールを追記する：<br>
+          • 調査結果が実装の入力になる → 順序必須（Gemini → Codex）<br>
+          • 独立したタスク → 並行<br>
+          • どちらにも当てはまらない → Claude が自身で判断し実施<br>
+          「デフォルト: Claude が自分でやる」を明記する
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 中優先度 -->
+  <div class="section">
+    <h2>🟡 中優先度</h2>
+
+    <div class="issue-card">
+      <div class="card-header">
+        <span class="priority-badge priority-mid">MID</span>
+        <span class="source-badge src-codex">Codex</span>
+        <span class="card-title">④ 途中失敗時の戻り先・終端状態が未定義</span>
+      </div>
+      <div class="card-body">
+        <p class="problem">STEP 2 でタスクを振り出した後、失敗した場合に STEP 1 へ戻るのか STEP 2 で再ルーティングするのかが不明。また STEP 5 は「完了」しか想定しておらず、「部分成功」「一部失敗」「保留」の終端状態がない。</p>
+        <p class="arrow">→ 改善案</p>
+        <div class="fix">STEP 4 に終端状態を3種追加する：<code>完了</code> / <code>部分成功（未解決タスクあり）</code> / <code>失敗（Discord に報告）</code>。失敗時は STEP 2 で別エージェントへ再ルーティングするか、Claude が自分で実施するかを選択する。</div>
+      </div>
+    </div>
+
+    <div class="issue-card">
+      <div class="card-header">
+        <span class="priority-badge priority-mid">MID</span>
+        <span class="source-badge src-both">Claude + Codex</span>
+        <span class="card-title">⑤ Sandbox 昇格条件が未定義</span>
+      </div>
+      <div class="card-body">
+        <p class="problem">Sandbox の選択肢（<code>read-only</code> / <code>workspace-write</code> / <code>danger-full-access</code>）は列挙されているが、「どの条件で上げるか」「ユーザー承認が必要な境界はどこか」が書かれていない。</p>
+        <p class="arrow">→ 改善案</p>
+        <div class="fix">
+          使用条件を明記する：<br>
+          • <code>read-only</code> → 読み取り・確認のみ（デフォルト）<br>
+          • <code>workspace-write</code> → agy/ 以下にファイルを生成・変更する場合<br>
+          • <code>danger-full-access</code> → システム設定・外部サービスに触れる場合（必ずユーザー確認）
+        </div>
+      </div>
+    </div>
+
+    <div class="issue-card">
+      <div class="card-header">
+        <span class="priority-badge priority-mid">MID</span>
+        <span class="source-badge src-codex">Codex</span>
+        <span class="card-title">⑥ エージェント間の入出力契約が弱い</span>
+      </div>
+      <div class="card-body">
+        <p class="problem">STEP 1 でタスク分解はするが、どの粒度・形式で次工程へ渡すかが未定義。「Gemini の調査結果」から「Claude の設計」への受け渡しが「要約なのか比較表なのか推奨案なのか」が不明で、毎回暗黙の判断に頼っている。</p>
+        <p class="arrow">→ 改善案</p>
+        <div class="fix">STEP 1 の出力フォーマットを定義する：タスクID・担当エージェント・期待する出力形式（要約 / 比較表 / コード / ファイルパス）の3点セットを書く。次工程はこれを受け取る形で接続する。</div>
+      </div>
+    </div>
+
+    <div class="issue-card">
+      <div class="card-header">
+        <span class="priority-badge priority-mid">MID</span>
+        <span class="source-badge src-claude">Claude</span>
+        <span class="card-title">⑦ 「Claude 自身でやる」条件が Gemini ルートと矛盾</span>
+      </div>
+      <div class="card-body">
+        <p class="problem">「設計・アーキテクチャ決定は Claude がやる」とある一方、パターンAでは「Gemini 調査 → Claude 設計」の流れ。「設計は Gemini を使わずに全部 Claude がやる」と「Gemini の調査を受けて Claude が決定する」が混在し、読む人によって解釈が変わる。</p>
+        <p class="arrow">→ 改善案</p>
+        <div class="fix">「Gemini の調査結果をインプットとして、最終的な設計判断は必ず Claude が行う」と明記し矛盾を解消する。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 低優先度 -->
+  <div class="section">
+    <h2>🟢 低優先度</h2>
+
+    <div class="issue-card">
+      <div class="card-header">
+        <span class="priority-badge priority-low">LOW</span>
+        <span class="source-badge src-both">Claude + Codex</span>
+        <span class="card-title">⑧ .ai-consults/ のファイル命名・追跡ルールがない</span>
+      </div>
+      <div class="card-body">
+        <p class="problem">STEP 3 で「.ai-consults/ のファイルを Read して確認」とあるが、命名規則・タスクIDとの対応がなく、どの出力がどの入力に対する結果か追跡できない。</p>
+        <p class="arrow">→ 改善案</p>
+        <div class="fix"><code>{YYYY-MM-DD}-{agent}-{task-slug}.md</code> の命名規則を追記する。STEP 1 で発行したタスクIDをファイル名に含めると入出力の対応が追えるようになる。</div>
+      </div>
+    </div>
+
+    <div class="issue-card">
+      <div class="card-header">
+        <span class="priority-badge priority-low">LOW</span>
+        <span class="source-badge src-both">Claude + Codex</span>
+        <span class="card-title">⑨ 「大きなタスク」の定義がない</span>
+      </div>
+      <div class="card-body">
+        <p class="problem">注意事項に「大きなタスクは確認ファースト」とあるが「大きい」の定義がなく、毎回確認して進行が止まるか、逆に確認なしで進めるかが判断者依存になる。</p>
+        <p class="arrow">→ 改善案</p>
+        <div class="fix">「3ステップ以上 or Codex に <code>workspace-write</code> 以上が必要な場合は、実行前にユーザーに分解計画を見せる」を目安として追記する。</div>
+      </div>
+    </div>
+
+    <div class="issue-card">
+      <div class="card-header">
+        <span class="priority-badge priority-low">LOW</span>
+        <span class="source-badge src-claude">Claude</span>
+        <span class="card-title">⑩ ルーティングキーワードが日本語専用</span>
+      </div>
+      <div class="card-body">
+        <p class="problem">ルーティング判定表のキーワードがすべて日本語。英語表記や混在した指示が来るとマッチしない。</p>
+        <p class="arrow">→ 改善案</p>
+        <div class="fix">キーワード一致ではなく「タスクの性質（調査 / 実行 / 設計）はどれか」を意味的に判断する記述に切り替える。キーワード表はあくまで例示として残す。</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout">
+    <p>
+      <strong style="color:var(--blue)">全体の傾向（Claude + Codex 共通見解）</strong><br>
+      「何をするかは書いてあるが、<em>失敗したらどうするか・何を渡すか・いつ止まるか</em>が抜けている」パターンが一貫して見られる。
+      高優先度の①〜③を先に修正するだけで、無限ループ・誤ルーティング・競合時の停止という最も実害の大きい問題が解消できる。
+    </p>
+  </div>
+
+</div>
+
+<footer>
+  Claude Code Sonnet 4.6 + Codex CLI gpt-5.4 — generated by ティア — 2026-03-26
+</footer>
+
+</body>
+</html>

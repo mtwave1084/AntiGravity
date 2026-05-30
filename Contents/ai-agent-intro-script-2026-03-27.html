@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AIエージェント入門動画 台本 — タスクレポート v2</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface2: #1c2128;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --blue: #58a6ff;
+      --blue-light: #79c0ff;
+      --purple: #d2a8ff;
+      --green: #3fb950;
+      --orange: #d29922;
+      --red: #f85149;
+      --teal: #56d364;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 15px;
+      line-height: 1.7;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #1a0c2a, #0c2d6b, #0a2417);
+      padding: 48px 32px 40px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .header .badge-row {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-block;
+      border-radius: 20px;
+      padding: 4px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .badge-content {
+      background: rgba(210, 168, 255, 0.15);
+      color: var(--purple);
+      border: 1px solid rgba(210, 168, 255, 0.3);
+    }
+
+    .badge-updated {
+      background: rgba(63, 185, 80, 0.12);
+      color: var(--teal);
+      border: 1px solid rgba(63, 185, 80, 0.3);
+    }
+
+    .header h1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+
+    .header .date {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 20px;
+    }
+
+    .tear-comment {
+      display: inline-block;
+      background: rgba(88, 166, 255, 0.08);
+      border: 1px solid rgba(88, 166, 255, 0.2);
+      border-radius: 12px;
+      padding: 10px 20px;
+      color: var(--blue-light);
+      font-size: 14px;
+      font-style: italic;
+      max-width: 540px;
+    }
+
+    .container {
+      max-width: 880px;
+      margin: 0 auto;
+      padding: 40px 24px 60px;
+    }
+
+    section { margin-bottom: 40px; }
+
+    h2 {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text);
+      border-left: 3px solid var(--blue);
+      padding-left: 12px;
+      margin-bottom: 20px;
+    }
+
+    .summary-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px 24px;
+      line-height: 1.8;
+    }
+
+    .summary-card p { margin-bottom: 8px; }
+    .summary-card p:last-child { margin-bottom: 0; }
+
+    /* 変更ログ */
+    .changelog {
+      background: rgba(63, 185, 80, 0.06);
+      border: 1px solid rgba(63, 185, 80, 0.2);
+      border-left: 4px solid var(--green);
+      border-radius: 8px;
+      padding: 16px 20px;
+    }
+
+    .changelog-title {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--green);
+      margin-bottom: 10px;
+    }
+
+    .changelog ul { padding-left: 18px; }
+    .changelog li {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.7;
+      margin-bottom: 4px;
+    }
+    .changelog strong { color: var(--text); }
+
+    /* 構成テーブル */
+    .structure-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .structure-table th {
+      background: var(--surface2);
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 10px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .structure-table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    .structure-table tr:last-child td { border-bottom: none; }
+
+    .time-badge {
+      display: inline-block;
+      background: rgba(88, 166, 255, 0.1);
+      color: var(--blue);
+      border: 1px solid rgba(88, 166, 255, 0.25);
+      border-radius: 6px;
+      padding: 2px 8px;
+      font-size: 12px;
+      font-family: 'SF Mono', Consolas, monospace;
+      white-space: nowrap;
+    }
+
+    /* 事例カード */
+    .case-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    .case-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 18px;
+    }
+
+    .case-card .case-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--blue-light);
+      margin-bottom: 6px;
+    }
+
+    .case-card .case-tag {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-bottom: 8px;
+    }
+
+    .tag-confirmed { background: rgba(63, 185, 80, 0.15); color: var(--green); }
+    .tag-verify { background: rgba(210, 146, 34, 0.15); color: var(--orange); }
+
+    .case-card .case-desc {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    /* プレビューグリッド */
+    .preview-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    .preview-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px 20px;
+    }
+
+    .preview-card .part-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .preview-card .part-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--blue-light);
+      margin-bottom: 8px;
+    }
+
+    .preview-card .part-desc {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .preview-card.highlight { border-color: rgba(210, 168, 255, 0.3); }
+    .preview-card.highlight .part-title { color: var(--purple); }
+
+    /* callout */
+    .callout {
+      border-radius: 8px;
+      padding: 16px 20px;
+    }
+
+    .callout.blue {
+      background: rgba(88, 166, 255, 0.06);
+      border: 1px solid rgba(88, 166, 255, 0.2);
+      border-left: 4px solid var(--blue);
+    }
+
+    .callout.purple {
+      background: rgba(210, 168, 255, 0.06);
+      border: 1px solid rgba(210, 168, 255, 0.2);
+      border-left: 4px solid var(--purple);
+    }
+
+    .callout.orange {
+      background: rgba(210, 146, 34, 0.06);
+      border: 1px solid rgba(210, 146, 34, 0.2);
+      border-left: 4px solid var(--orange);
+    }
+
+    .callout-title {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 8px;
+    }
+
+    .callout.blue .callout-title { color: var(--blue); }
+    .callout.purple .callout-title { color: var(--purple); }
+    .callout.orange .callout-title { color: var(--orange); }
+
+    .callout p, .callout li {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .callout ul { padding-left: 18px; }
+    .callout li { margin-bottom: 4px; }
+    .callout strong { color: var(--text); }
+
+    /* ファイルパス */
+    .filepath-block {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #090d12;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 18px;
+      font-family: 'SF Mono', Consolas, monospace;
+      font-size: 13px;
+      color: var(--teal);
+      margin-bottom: 10px;
+    }
+
+    .filepath-block .note {
+      margin-left: auto;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* stats */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 16px;
+      text-align: center;
+    }
+
+    .stat-card .stat-value {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--blue-light);
+      margin-bottom: 4px;
+    }
+
+    .stat-card .stat-label {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    /* gemini badge */
+    .gemini-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(86, 211, 100, 0.1);
+      border: 1px solid rgba(86, 211, 100, 0.25);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 12px;
+      color: var(--teal);
+      font-weight: 600;
+    }
+
+    footer {
+      text-align: center;
+      padding: 24px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    @media (max-width: 600px) {
+      .header { padding: 32px 20px 28px; }
+      .header h1 { font-size: 20px; }
+      .preview-grid, .case-grid { grid-template-columns: 1fr; }
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+      .container { padding: 24px 16px 40px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="badge-row">
+    <span class="badge badge-content">content</span>
+    <span class="badge badge-updated">updated 2026-03-27</span>
+    <span class="gemini-badge">✦ Gemini協同リサーチ</span>
+  </div>
+  <h1>AIエージェント入門動画 台本</h1>
+  <p class="date">2026-03-27 &nbsp;|&nbsp; task-report v2</p>
+  <p class="tear-comment">「うん、情報の鮮度って大事だよね。古いままだとちょっと申し訳ないな……って思ってた」</p>
+</div>
+
+<div class="container">
+
+  <!-- 変更ログ -->
+  <section>
+    <h2>🔄 今回の更新（v1→v2）</h2>
+    <div class="changelog">
+      <div class="changelog-title">FBを受けての改善点</div>
+      <ul>
+        <li><strong>事例③を刷新：</strong> EY書類審査（2024年11月）→ H&Mカスタマーサポート（2026年現在稼働中）に差し替え</li>
+        <li><strong>まとめのフレーズを修正：</strong>「2025年はAIエージェント元年」→「2025年にブレイクスルー、2026年は社会実装フェーズ」</li>
+        <li><strong>Geminiとの協同リサーチ：</strong> 2025〜2026年の最新事例を調査して反映</li>
+        <li><strong>情報ソース注記を追加：</strong> 要一次ソース確認が必要な数字をスタッフ向けに明記</li>
+        <li><strong>mdファイルも添付：</strong> 出先からも確認できるように両ファイルを送信</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- スタッツ -->
+  <section>
+    <h2>📊 スペック</h2>
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-value">~5分</div>
+        <div class="stat-label">想定尺</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">3,200字</div>
+        <div class="stat-label">台本文字数</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">5パート</div>
+        <div class="stat-label">構成</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value">2026年</div>
+        <div class="stat-label">情報鮮度</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 構成 -->
+  <section>
+    <h2>🎬 動画構成</h2>
+    <table class="structure-table">
+      <thead>
+        <tr>
+          <th>時間</th>
+          <th>パート</th>
+          <th>内容</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="time-badge">0:00〜0:30</span></td>
+          <td>フック</td>
+          <td>「聞く時代から、働いてもらう時代へ」——問いかけで引き込む</td>
+        </tr>
+        <tr>
+          <td><span class="time-badge">0:30〜1:30</span></td>
+          <td>比較で理解</td>
+          <td>普通のAI（一問一答）vs AIエージェント（自律実行）の違いを旅行計画の例で説明</td>
+        </tr>
+        <tr>
+          <td><span class="time-badge">1:30〜3:00</span></td>
+          <td>事例紹介</td>
+          <td>Amazon Rufus・Devin・H&M CS——2025〜2026年稼働中の3事例</td>
+        </tr>
+        <tr>
+          <td><span class="time-badge">3:00〜4:30</span></td>
+          <td>つまずきポイント先回り</td>
+          <td>「暴走しない？」「ノーコードで使える？」「RPAと違う？」——3大疑問を解消</td>
+        </tr>
+        <tr>
+          <td><span class="time-badge">4:30〜5:00</span></td>
+          <td>まとめ</td>
+          <td>一言定義 + 「2025年ブレイクスルー→2026年社会実装」の現在地 + 次回予告</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- 事例（鮮度チェック付き） -->
+  <section>
+    <h2>📋 採用事例と信頼度</h2>
+    <div class="case-grid">
+      <div class="case-card">
+        <div class="case-name">Amazon Rufus</div>
+        <span class="case-tag tag-confirmed">一次ソースあり</span>
+        <div class="case-desc">会話型ショッピング支援。2025年から本格展開。「子供の誕生日に何がいい？」で対話しながら提案。</div>
+      </div>
+      <div class="case-card">
+        <div class="case-name">Devin（Cognition AI）</div>
+        <span class="case-tag tag-confirmed">一次ソースあり</span>
+        <div class="case-desc">「バグ直して」→ 読む・直す・テスト・PR提出まで自律実行。日本のIT企業でも全社導入事例あり。</div>
+      </div>
+      <div class="case-card">
+        <div class="case-name">H&M カスタマーサポート</div>
+        <span class="case-tag tag-verify">数字は要確認</span>
+        <div class="case-desc">返品・サイズ・在庫の問い合わせ70%以上をAIが完結。Gemini調査結果のため一次ソース確認推奨。</div>
+      </div>
+    </div>
+    <br>
+    <div class="callout orange">
+      <div class="callout-title">差し替えた事例について</div>
+      <p>v1で使っていたEY書類審査（2024年11月・50,000件）は数字のインパクトは大きいが日付が古かった。新鮮さを優先してH&M事例に差し替え。EYは「規模感の参考」として制作メモに残した。</p>
+    </div>
+  </section>
+
+  <!-- コンテンツプレビュー -->
+  <section>
+    <h2>✍️ 台本プレビュー（主要フレーズ）</h2>
+    <div class="preview-grid">
+      <div class="preview-card">
+        <div class="part-label">PART 1 — フック</div>
+        <div class="part-title">「ChatGPTって便利だよね」って言ってる時代、もう終わりかけてます。</div>
+        <div class="part-desc">問いかけから始め、「AIエージェント」というワードに興味を持たせる導入。</div>
+      </div>
+      <div class="preview-card highlight">
+        <div class="part-label">PART 2 — 核心定義</div>
+        <div class="part-title">「賢い相談相手」から「実際に動いてくれる部下」になった</div>
+        <div class="part-desc">旅行計画の例で「生成AI vs エージェント」の違いを直感的に説明。</div>
+      </div>
+      <div class="preview-card">
+        <div class="part-label">PART 4 — 疑問解消</div>
+        <div class="part-title">「自律的 = 新入社員に任せるイメージ」</div>
+        <div class="part-desc">暴走・ノーコード・RPAとの違いの3疑問をアナロジーで解消。</div>
+      </div>
+      <div class="preview-card highlight">
+        <div class="part-label">PART 5 — まとめ（更新）</div>
+        <div class="part-title">「2025年にブレイクスルー、2026年は社会実装フェーズ」</div>
+        <div class="part-desc">「2025年はAIエージェント元年」という古いフレーズから、現在進行形の表現に修正。</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 保存先 -->
+  <section>
+    <h2>💾 保存先（今回は両ファイル添付）</h2>
+    <div class="filepath-block">
+      <span>📄</span>
+      Contents/AIエージェント入門動画_台本.md
+      <span class="note">本文 Markdown / 編集可能</span>
+    </div>
+    <div class="filepath-block">
+      <span>🌐</span>
+      Contents/ai-agent-intro-script-2026-03-27.html
+      <span class="note">このレポート</span>
+    </div>
+  </section>
+
+  <!-- 次のステップ -->
+  <section>
+    <h2>💡 次のステップ</h2>
+    <div class="callout purple">
+      <div class="callout-title">次回動画への繋ぎ</div>
+      <p>台本ラストに「次の動画ではノーコードでAIエージェントを試せるツールを紹介」を入れてあります。次回はZapier / Make / n8nあたりを実演する構成が自然につながります。</p>
+    </div>
+    <br>
+    <div class="callout blue">
+      <div class="callout-title">H&M数字の一次ソース確認</div>
+      <p>「70%以上をAIが完結」という数字はGemini調査結果のため、公開前に一次ソースを確認することを推奨します。確認できない場合は「多くの問い合わせを」など表現をぼかす対応でOK。</p>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  generated by ティア / Claude Code Sonnet 4.6 — 2026-03-27 &nbsp;|&nbsp; Gemini CLI 協同リサーチ
+</footer>
+
+</body>
+</html>

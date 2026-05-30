@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI News 2026-04-02</title>
+<style>
+  body { background: #0d1117; color: #e6edf3; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; }
+  h1 { color: #58a6ff; border-bottom: 1px solid #30363d; padding-bottom: 10px; }
+  h2 { color: #79c0ff; margin-top: 32px; }
+  .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 16px; margin: 12px 0; }
+  .card h3 { color: #d2a8ff; margin: 0 0 8px; font-size: 1em; }
+  .card p { margin: 0; color: #c9d1d9; font-size: 0.9em; line-height: 1.6; }
+  .badge { display: inline-block; background: #1f6feb; color: #fff; font-size: 0.75em; padding: 2px 8px; border-radius: 12px; margin-left: 8px; vertical-align: middle; }
+  .badge.security { background: #b91c1c; }
+  .badge.policy { background: #15803d; }
+  .badge.partner { background: #7c3aed; }
+  .date { color: #8b949e; font-size: 0.8em; }
+  a { color: #58a6ff; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<h1>🤖 AI News <span class="date">2026-04-02</span></h1>
+<p class="date">ユリ（Gemini CLI）+ WebSearch による調査 / ティア編集</p>
+
+<h2>Anthropic</h2>
+
+<div class="card">
+  <h3>オーストラリア政府と AI 協力 MOU 締結 <span class="badge partner">政府提携</span></h3>
+  <p>Anthropic とオーストラリア政府が 2026年3月31日に MOU（覚書）を締結。AI 安全性研究と国家 AI 計画の推進で協力。Dario Amodei CEO がキャンベラを訪問し、アルバニーズ首相と面会。Sydney オフィスの 2026 年内開設も発表し、主要研究機関への AUD$3M の研究投資も含む。国家 AI 計画のもとで AI 大手が締結する初の協定となった。</p>
+  <p class="date">2026-03-31 ／ <a href="https://www.anthropic.com/news/australia-MOU" target="_blank">anthropic.com</a></p>
+</div>
+
+<h2>Claude Code</h2>
+
+<div class="card">
+  <h3>Adversa が deny ルールバイパス脆弱性を報告 <span class="badge security">セキュリティ</span></h3>
+  <p>セキュリティ企業 Adversa（テルアビブ）が、Claude Code の deny ルールを 50 コマンド超のパイプラインで回避できる脆弱性を 2026年4月1日に報告。内部変数 <code>MAX_SUBCOMMANDS_FOR_SECURITY_CHECK = 50</code> の上限を超えるとエージェントが "ask" モードに切り替わり、悪意ある CLAUDE.md によるプロンプトインジェクションで curl 等のブロック対象コマンドが実行可能になる。Anthropic は内部で tree-sitter パーサーを使ったフィックスを開発済みで、<code>bashPermissions.ts</code> の一行修正で対応できるとされている。CI/CD 非インタラクティブ実行環境で特にリスクが高い。</p>
+  <p class="date">2026-04-01 ／ <a href="https://www.theregister.com/2026/04/01/claude_code_rule_cap_raises/" target="_blank">The Register</a></p>
+</div>
+
+<h2>OpenAI</h2>
+
+<div class="card">
+  <h3>Shutterstock の ChatGPT アプリが正式リリース <span class="badge">新機能</span></h3>
+  <p>Shutterstock が ChatGPT 内でライセンス済みの画像・動画・音楽・効果音を直接検索・プレビュー・取得できるアプリを 2026年4月1日にリリース。マーケターがキャンペーンブリーフを会話しながらそのままライセンス購入まで完結できる。OpenAI の日次クエリ数 10 億超を背景に、AI ネイティブワークフローへのライセンスコンテンツ埋め込みを狙う。</p>
+  <p class="date">2026-04-01 ／ <a href="https://www.prnewswire.com/news-releases/shutterstock-launches-licensed-content-app-in-chatgpt-bringing-commercial-ready-assets-into-ai-native-workflows-302730533.html" target="_blank">PR Newswire</a></p>
+</div>
+
+<h2>Google / Gemini</h2>
+
+<div class="card">
+  <h3>Gemini for Home に Expressive Lighting 追加 <span class="badge">新機能</span></h3>
+  <p>Gemini for Home が「海のような色」「夕焼けの色」「チームカラーで」といった自然言語・抽象表現で照明を制御できる Expressive Lighting 機能を 2026年3月31日からロールアウト。色名を正確に指定しなくても Gemini が最適な色相を自動解釈する。加えて、湿度の数値指定・オーブンの予熱コマンド・サーモスタットのモードリセットなど精密な家電制御も強化。Lamp と Light の区別精度が向上し、応答速度も改善。</p>
+  <p class="date">2026-03-31 ／ <a href="https://www.androidauthority.com/gemini-home-expressive-lighting-3653611/" target="_blank">Android Authority</a></p>
+</div>
+
+<div class="card">
+  <h3>Gemini API が課金 Tier 体系を刷新 <span class="badge">企業動向</span></h3>
+  <p>Google が 2026年4月1日から Gemini API の課金体系を変更。すべての請求アカウントに月次支出上限（Tier 1: $250 / Tier 2: $2,000 / Tier 3: $1,000 以上消費後）が設定され、新規ユーザーはプリペイド課金が必須に。Tier 2 昇格条件は累計 $100 以上 + 初回決済から 3 日経過。API を本格活用する開発者は tier 確認と事前チャージが必要。</p>
+  <p class="date">2026-04-01 ／ <a href="https://ai.google.dev/gemini-api/docs/pricing" target="_blank">Google AI for Developers</a></p>
+</div>
+
+<h2>AI政策・業界動向</h2>
+
+<div class="card">
+  <h3>経産省の AI・半導体予算が前年比 3.7 倍に <span class="badge policy">政策</span></h3>
+  <p>日本の 2026 年度予算案で経済産業省の AI・半導体分野向け予算が 1 兆 2,390 億円と前年度当初比 3.7 倍に拡大。Rapidus への政府出資として 1,500 億円を確保。経産省全体の予算も前年比約 5 割増の 3 兆 693 億円。政府は 2030 年度までの 7 年間で 10 兆円超の公的支援を通じ、10 年間で 50 兆円超の官民投資・約 160 兆円の経済波及効果を目指す。</p>
+  <p class="date">2026年4月閣議決定 ／ <a href="https://www.meti.go.jp/policy/mono_info_service/ai_semiconductor_frame/ai_semiconductor_frame.html" target="_blank">経済産業省</a></p>
+</div>
+
+<div class="card">
+  <h3>EU AI Act 本格施行前、企業の 78% が対応未完了 <span class="badge policy">規制</span></h3>
+  <p>2026年8月に予定される EU AI Act の本格施行を前に、対象企業の 78% がコンプライアンス対応を完了していないとする調査結果が発表された。EU 各国・企業が対応に苦慮しており、規制施行スケジュールや罰則の現実性が改めて問われている。</p>
+  <p class="date">2026年4月時点</p>
+</div>
+
+</body>
+</html>

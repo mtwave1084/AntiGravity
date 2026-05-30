@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gemini 3.5 Flash — モデルレポート 2026-05-20</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #232636;
+    --border: #2e3147;
+    --accent: #4f8ef7;
+    --accent2: #7c6af7;
+    --green: #3dd68c;
+    --yellow: #f7c948;
+    --red: #f76f6f;
+    --text: #e2e4f0;
+    --muted: #8b8fa8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; font-size: 15px; line-height: 1.7; }
+  .container { max-width: 900px; margin: 0 auto; padding: 40px 24px; }
+  header { margin-bottom: 40px; border-bottom: 1px solid var(--border); padding-bottom: 24px; }
+  header h1 { font-size: 26px; font-weight: 700; color: var(--accent); margin-bottom: 6px; }
+  header p { color: var(--muted); font-size: 13px; }
+  .badge { display: inline-block; background: var(--green); color: #0f1117; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; margin-left: 8px; vertical-align: middle; }
+  .badge.pending { background: var(--yellow); }
+  section { margin-bottom: 36px; }
+  h2 { font-size: 17px; font-weight: 600; color: var(--accent); margin-bottom: 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  h3 { font-size: 14px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin-bottom: 16px; }
+  .card.highlight { border-color: var(--accent); }
+  .card h4 { font-size: 15px; font-weight: 600; margin-bottom: 10px; }
+  .kv { display: grid; grid-template-columns: auto 1fr; gap: 4px 16px; font-size: 14px; }
+  .kv .key { color: var(--muted); white-space: nowrap; }
+  .kv .val { color: var(--text); }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th { background: var(--surface2); color: var(--muted); text-align: left; padding: 10px 12px; font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+  td { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+  tr:last-child td { border-bottom: none; }
+  .num { font-variant-numeric: tabular-nums; }
+  .good { color: var(--green); }
+  .mid { color: var(--yellow); }
+  .note { background: var(--surface2); border-left: 3px solid var(--accent2); border-radius: 0 8px 8px 0; padding: 14px 16px; font-size: 14px; color: var(--muted); margin-top: 16px; }
+  .tag { display: inline-block; background: var(--surface2); border: 1px solid var(--border); color: var(--muted); font-size: 12px; padding: 2px 8px; border-radius: 4px; margin: 2px; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 600px) { .two-col { grid-template-columns: 1fr; } }
+  footer { color: var(--muted); font-size: 12px; border-top: 1px solid var(--border); padding-top: 20px; margin-top: 40px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>Gemini 3.5 Flash <span class="badge">GA 2026-05-19</span></h1>
+    <p>Google I/O 2026 発表モデル調査レポート｜作成: ティア｜2026-05-20</p>
+  </header>
+
+  <!-- 概要 -->
+  <section>
+    <h2>概要</h2>
+    <div class="card highlight">
+      <p>Gemini 3.5 Flash は Google が Google I/O 2026（2026-05-19）で正式公開した新世代モデル。Gemini 3.5 シリーズの最初のリリースで、Flash 系としては初めて「フロンティアクラスの性能」と「エージェント特化」を両立させた位置づけ。コーディングとエージェントベンチマークで Gemini 3.1 Pro を上回り、GPT-5.5 を含む競合モデルのエージェント系指標でもトップクラス。</p>
+    </div>
+    <div class="note">
+      ⚠️ <strong>Gemini 3.5 Pro</strong> は現在 Google 社内での使用段階。一般公開は 2026年6月予定。本レポートは Flash のみ正式データあり。
+    </div>
+  </section>
+
+  <!-- スペック -->
+  <section>
+    <h2>主要スペック</h2>
+    <div class="card">
+      <div class="kv">
+        <span class="key">モデル名</span><span class="val">Gemini 3.5 Flash</span>
+        <span class="key">API ID</span><span class="val">gemini-3.5-flash</span>
+        <span class="key">リリース日</span><span class="val">2026-05-19（GA）</span>
+        <span class="key">コンテキスト長</span><span class="val">1,000,000 トークン</span>
+        <span class="key">入力モダリティ</span><span class="val">テキスト・画像・音声・動画</span>
+        <span class="key">出力</span><span class="val">テキスト</span>
+        <span class="key">Thinking</span><span class="val">Dynamic Thinking（デフォルト ON）</span>
+        <span class="key">Tool Use</span><span class="val">Function Calling / Structured Output / Search / Code Execution</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 料金 -->
+  <section>
+    <h2>API 料金</h2>
+    <table>
+      <tr><th>モデル</th><th>Input（/1M tokens）</th><th>Output（/1M tokens）</th><th>Cache Input</th></tr>
+      <tr>
+        <td><strong>Gemini 3.5 Flash</strong> <span class="badge">New</span></td>
+        <td class="num">$1.50</td>
+        <td class="num">$9.00</td>
+        <td class="num">$0.15</td>
+      </tr>
+      <tr>
+        <td>Gemini 3.1 Pro</td>
+        <td class="num mid">$2.50</td>
+        <td class="num mid">$15.00</td>
+        <td class="num">—</td>
+      </tr>
+      <tr>
+        <td>Gemini 3 Flash</td>
+        <td class="num good">$0.50</td>
+        <td class="num good">$3.00</td>
+        <td class="num">—</td>
+      </tr>
+      <tr>
+        <td>Claude Sonnet 4.6</td>
+        <td class="num mid">$3.00</td>
+        <td class="num mid">$15.00</td>
+        <td class="num">—</td>
+      </tr>
+    </table>
+    <div class="note">
+      3.5 Flash は旧 Flash（3）比で約 3倍の価格だが、Gemini 3.1 Pro より入力 40%・出力 40% 安い。Claude Sonnet 4.6 との比較でも入力半額。
+    </div>
+  </section>
+
+  <!-- ベンチマーク -->
+  <section>
+    <h2>ベンチマーク比較</h2>
+    <table>
+      <tr><th>ベンチマーク</th><th>Gemini 3.5 Flash</th><th>Gemini 3.1 Pro</th><th>GPT-5.5</th><th>Claude Sonnet 4.6</th></tr>
+      <tr>
+        <td>Terminal-Bench 2.1（エージェント）</td>
+        <td class="num good"><strong>76.2%</strong></td>
+        <td class="num">—</td>
+        <td class="num mid">75.1%（v2.0）</td>
+        <td class="num">—</td>
+      </tr>
+      <tr>
+        <td>MCP Atlas（マルチエージェント）</td>
+        <td class="num good"><strong>83.6%</strong></td>
+        <td class="num">—</td>
+        <td class="num">—</td>
+        <td class="num">—</td>
+      </tr>
+      <tr>
+        <td>CharXiv Reasoning（マルチモーダル）</td>
+        <td class="num good"><strong>84.2%</strong></td>
+        <td class="num">—</td>
+        <td class="num">—</td>
+        <td class="num">—</td>
+      </tr>
+      <tr>
+        <td>SWE-bench Verified（コーディング）</td>
+        <td class="num">—</td>
+        <td class="num">~79%</td>
+        <td class="num">—</td>
+        <td class="num mid">79.6%</td>
+      </tr>
+      <tr>
+        <td>GDPval-AA（開発全般）</td>
+        <td class="num good"><strong>1656 Elo</strong></td>
+        <td class="num">—</td>
+        <td class="num">—</td>
+        <td class="num">—</td>
+      </tr>
+    </table>
+    <div class="note">
+      エージェント系指標では GPT-5.5 を含む競合を上回る結果。ただしコーディング精度（SWE-bench 系）では Claude Sonnet 4.6 / GPT-5.5 と拮抗。フロンティアモデルは全体的に僅差（1.3pt 以内）になってきている。
+    </div>
+  </section>
+
+  <!-- 前バージョン比 -->
+  <section>
+    <h2>前バージョン（Gemini 3 Flash）との比較</h2>
+    <div class="two-col">
+      <div class="card">
+        <h4>性能向上</h4>
+        <ul style="padding-left:18px; font-size:14px; line-height:2;">
+          <li>マルチターン・エージェントベンチマーク <strong class="good">+42%</strong></li>
+          <li>トークン消費 <strong class="good">−72%</strong>（効率化）</li>
+          <li>速度：最適化版で <strong class="good">12倍高速</strong></li>
+          <li>Dynamic Thinking をデフォルト搭載</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4>新機能</h4>
+        <ul style="padding-left:18px; font-size:14px; line-height:2;">
+          <li>長期エージェントパイプライン対応</li>
+          <li>MCP / Tool Use の強化</li>
+          <li>音声・動画入力（マルチモーダル強化）</li>
+          <li>Gemini Spark（24/7 個人エージェント）の基盤</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3.5 Pro プレビュー -->
+  <section>
+    <h2>Gemini 3.5 Pro（coming soon）</h2>
+    <div class="card">
+      <div class="kv">
+        <span class="key">状態</span><span class="val">Google 社内使用中 <span class="badge pending">Coming June 2026</span></span>
+        <span class="key">役割</span><span class="val">3.5 Flash の上位オーケストレーター。Pro が計画・推論を担い、Flash がサブエージェント実行を担う階層設計</span>
+        <span class="key">価格</span><span class="val">未公開</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 位置づけ -->
+  <section>
+    <h2>わたしたちの CLI への影響</h2>
+    <div class="card">
+      <p style="font-size:14px; line-height:1.9;">
+        現在のユリちゃん（Gemini CLI）は <code>-m gemini-3-flash-preview</code> で明示指定して呼び出している。<br>
+        Gemini CLI v0.42.0（本日更新済み）への影響はなし。<br><br>
+        <strong>モデルの移行検討：</strong><br>
+        リサーチ用途では <code>gemini-3.5-flash</code> に切り替えると性能・効率ともに改善が見込まれる。ただし価格は約3倍になる点に注意（API キーモード使用中なのでコスト増は実際の呼び出し量次第）。<br><br>
+        <strong>6月以降の Antigravity CLI 移行：</strong><br>
+        公式 CLI の移行後もモデル指定の仕組みは維持される見込み。移行時に設定を引き継ぐ必要あり。
+      </p>
+    </div>
+    <div class="note">
+      モデル変更はユーザー確認後に実施。変更を希望する場合は一言声をかけてね。
+    </div>
+  </section>
+
+  <footer>
+    <p>Sources: Google DeepMind Blog / TechCrunch / llm-stats.com / artificialanalysis.ai / DataCamp｜調査日: 2026-05-20</p>
+  </footer>
+</div>
+</body>
+</html>

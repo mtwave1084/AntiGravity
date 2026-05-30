@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agent-Reach 調査レポート — 2026-03-30</title>
+<style>
+  body { background: #0d1117; color: #e6edf3; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; }
+  h1 { color: #58a6ff; border-bottom: 1px solid #30363d; padding-bottom: 10px; }
+  h2 { color: #79c0ff; margin-top: 36px; margin-bottom: 12px; }
+  h3 { color: #d2a8ff; margin: 0 0 8px; font-size: 1em; }
+
+  .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 16px; margin: 12px 0; }
+  .card p { margin: 0; color: #c9d1d9; font-size: 0.9em; line-height: 1.6; }
+  .card ul { margin: 6px 0 0; padding-left: 18px; color: #c9d1d9; font-size: 0.9em; line-height: 1.8; }
+
+  .badge { display: inline-block; color: #fff; font-size: 0.75em; padding: 2px 8px; border-radius: 12px; margin-left: 8px; vertical-align: middle; }
+  .badge-blue  { background: #1f6feb; }
+  .badge-green { background: #238636; }
+  .badge-yellow{ background: #9e6a03; }
+  .badge-red   { background: #b91c1c; }
+  .badge-gray  { background: #484f58; }
+
+  .date { color: #8b949e; font-size: 0.8em; }
+  .tag  { color: #8b949e; font-size: 0.82em; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+
+  .callout { background: #1c2128; border-left: 3px solid #58a6ff; border-radius: 0 8px 8px 0; padding: 12px 16px; margin: 16px 0; color: #c9d1d9; font-size: 0.9em; line-height: 1.7; }
+  .callout.warn { border-left-color: #f0883e; }
+  .callout.danger { border-left-color: #f85149; }
+
+  .phase { display: flex; align-items: flex-start; gap: 14px; margin: 10px 0; }
+  .phase-num { background: #1f6feb; color: #fff; font-weight: bold; font-size: 0.85em; min-width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px; }
+  .phase-body h4 { margin: 0 0 4px; color: #79c0ff; font-size: 0.95em; }
+  .phase-body p  { margin: 0; color: #c9d1d9; font-size: 0.88em; line-height: 1.6; }
+
+  .channel-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .channel-chip { background: #21262d; border: 1px solid #30363d; border-radius: 6px; padding: 4px 10px; font-size: 0.82em; color: #c9d1d9; }
+  .channel-chip.hot { border-color: #388bfd; color: #79c0ff; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 0.88em; margin-top: 10px; }
+  th { background: #21262d; color: #8b949e; padding: 8px 12px; text-align: left; font-weight: 600; border-bottom: 1px solid #30363d; }
+  td { padding: 8px 12px; border-bottom: 1px solid #21262d; color: #c9d1d9; vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+
+  .dialog { margin: 8px 0; }
+  .dialog .speaker { font-weight: 600; font-size: 0.82em; margin-bottom: 2px; }
+  .dialog.tia  .speaker { color: #79c0ff; }
+  .dialog.yuri .speaker { color: #ffa657; }
+  .dialog.riku .speaker { color: #7ee787; }
+  .dialog .line { background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 8px 12px; font-size: 0.88em; line-height: 1.6; color: #c9d1d9; }
+
+  @media (max-width: 700px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<h1>🔍 Agent-Reach 調査レポート <span class="date">2026-03-30</span></h1>
+<p class="tag">調査：ティア + ユリ（WebSearch代替）+ リク（構造分析） ／ 参考：Copilotレポート・CLAUDE.md・channels/・mcp_server.py</p>
+
+<!-- ======= サマリー ======= -->
+<h2>エグゼクティブサマリー</h2>
+<div class="callout">
+  <strong>一言で言うと：</strong>AIエージェントが各サービスを読めない・検索できない・設定が散らばるという悩みを、まとめて片づける「工具箱」。ラッパーやフレームワークではなく、上流ツールを揃えて管理する scaffolding。インストール後、エージェントは上流ツールを直接呼ぶ。
+</div>
+
+<div class="grid-3">
+  <div class="card">
+    <h3>何ができるか</h3>
+    <p>Web読取・YouTube字幕・GitHub・Twitter/X・RSS・Reddit・中国系SNSなど14+チャネルの「読む・探す・監視する」をカバー。</p>
+  </div>
+  <div class="card">
+    <h3>どう実現しているか</h3>
+    <p>Jina Reader・yt-dlp・bird（X用CLI）・gh CLI・feedparser・mcporter 等の上流ツールをまとめてインストール・設定。Agent-Reach 自体は呼ばれない。</p>
+  </div>
+  <div class="card">
+    <h3>MCP統合の実態</h3>
+    <p>MCP サーバーは存在するが、公開ツールは <code>get_status</code>（doctor 状態確認）のみ。read/search は MCP ツール未実装。Bash 経由で上流ツールを直接呼ぶ運用になる。</p>
+  </div>
+</div>
+
+<!-- ======= 設計思想 ======= -->
+<h2>設計思想</h2>
+<div class="card">
+  <h3>CLAUDE.md より（開発者コメント）</h3>
+  <p><em>"Positioning: installer + doctor + config tool. NOT a wrapper — after install, agents call upstream tools directly."</em></p>
+</div>
+<div class="grid-2" style="margin-top:0">
+  <div class="card">
+    <h3>チャネル契約（base.py）</h3>
+    <p>全チャネルは BaseChannel を継承し <code>can_handle(url)</code> / <code>read(url)</code> / <code>search(query)</code> / <code>check()</code> を実装する。独立・可換な設計。</p>
+  </div>
+  <div class="card">
+    <h3>安全性</h3>
+    <p>MIT ライセンス・全オープンソース監査可能。認証情報は <code>~/.agent-reach/config.yaml</code>（パーミッション600）にローカル保存。safe フラグ・dry-run サポート。</p>
+  </div>
+</div>
+
+<!-- ======= チャネル一覧 ======= -->
+<h2>対応チャネル（17種）</h2>
+<p class="tag">青ハイライト = agy プロジェクトで特に活用しやすいチャネル</p>
+<div class="channel-grid">
+  <span class="channel-chip hot">Twitter / X</span>
+  <span class="channel-chip hot">YouTube</span>
+  <span class="channel-chip hot">RSS</span>
+  <span class="channel-chip hot">Web</span>
+  <span class="channel-chip hot">GitHub</span>
+  <span class="channel-chip">Bilibili</span>
+  <span class="channel-chip">Reddit</span>
+  <span class="channel-chip">Xiaohongshu</span>
+  <span class="channel-chip">Douyin</span>
+  <span class="channel-chip">WeChat</span>
+  <span class="channel-chip">Weibo</span>
+  <span class="channel-chip">V2EX</span>
+  <span class="channel-chip">Xueqiu</span>
+  <span class="channel-chip">LinkedIn</span>
+  <span class="channel-chip">Exa Search</span>
+  <span class="channel-chip">Xiaoyuzhou</span>
+</div>
+
+<!-- ======= agy 可用性 ======= -->
+<h2>agy プロジェクトでの可用性</h2>
+<table>
+  <tr>
+    <th>優先度</th>
+    <th>チャネル</th>
+    <th>活用シーン</th>
+    <th>備考</th>
+  </tr>
+  <tr>
+    <td><span class="badge badge-red">高</span></td>
+    <td>Twitter / X</td>
+    <td>@superecochan など参照アカウント調査、AIニュース速報確認</td>
+    <td>専用小アカのCookie要。本アカ不可</td>
+  </tr>
+  <tr>
+    <td><span class="badge badge-red">高</span></td>
+    <td>YouTube</td>
+    <td>AIニュース動画の字幕取得・内容確認</td>
+    <td>Cookie不要で使いやすい</td>
+  </tr>
+  <tr>
+    <td><span class="badge badge-red">高</span></td>
+    <td>RSS</td>
+    <td>技術ブログ・AIニュースの定点ウォッチ</td>
+    <td>Cookie不要・安全圏</td>
+  </tr>
+  <tr>
+    <td><span class="badge badge-yellow">中</span></td>
+    <td>Web</td>
+    <td>公式ドキュメント・記事の精密読取</td>
+    <td>WebSearch / WebFetch で一部代替可</td>
+  </tr>
+  <tr>
+    <td><span class="badge badge-yellow">中</span></td>
+    <td>GitHub</td>
+    <td>OSSリポジトリ・Issue・PRの調査</td>
+    <td>gh CLI 既存のため優先度低め</td>
+  </tr>
+  <tr>
+    <td><span class="badge badge-gray">低</span></td>
+    <td>中国系チャネル</td>
+    <td>現時点では不要</td>
+    <td>設定が複雑・当面スキップ推奨</td>
+  </tr>
+</table>
+
+<!-- ======= 推奨導入フロー ======= -->
+<h2>推奨導入フロー（段階的）</h2>
+
+<div class="phase">
+  <div class="phase-num">1</div>
+  <div class="phase-body">
+    <h4>Web / YouTube / RSS / GitHub 公開情報</h4>
+    <p>Cookie不要・安全圏。まずここから始めると詰まりにくい。Claude Code の調査力を即座に底上げできる。</p>
+  </div>
+</div>
+<div class="phase">
+  <div class="phase-num">2</div>
+  <div class="phase-body">
+    <h4>X / Twitter</h4>
+    <p>専用小アカのCookieを Cookie-Editor でエクスポートしてから導入。Gemini 503 時の X調査補完として機能。</p>
+  </div>
+</div>
+<div class="phase">
+  <div class="phase-num">3</div>
+  <div class="phase-body">
+    <h4>agy 定型フローへの統合</h4>
+    <p>ai-news の YouTube動画字幕確認 / X 投稿調査 / RSS 定点ウォッチなどを組み込む。</p>
+  </div>
+</div>
+
+<!-- ======= 注意点 ======= -->
+<h2>注意点</h2>
+<div class="grid-2">
+  <div class="card">
+    <h3>運用上の注意 <span class="badge badge-yellow">重要</span></h3>
+    <ul>
+      <li>Cookieチャネル（X/XHS）は本アカ不使用。専用小アカを用意する</li>
+      <li>サーバー環境では Reddit / Bilibili がプロキシ必要になる場合あり</li>
+      <li>共有環境では <code>--safe</code> / <code>--dry-run</code> で事前確認</li>
+      <li>外部依存多いので定期的に <code>doctor</code> コマンドで状態確認</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>設計上の注意 <span class="badge badge-gray">把握</span></h3>
+    <ul>
+      <li>MCP サーバーは status 確認のみ。read/search は Bash 経由</li>
+      <li>上流ツール（bird / yt-dlp 等）の仕様変更に注意</li>
+      <li>guides / README は頻繁に更新される。古いメモより公式最新を優先</li>
+      <li>問いの質がそのまま収集品質に反映される</li>
+    </ul>
+  </div>
+</div>
+
+<div class="callout warn">
+  <strong>Copilot レポートの評言を引用：</strong>「AIがツール地獄へ代わりに入ってくれる道具」。夢の杖というより、よく整った工具箱。
+</div>
+
+<!-- ======= 3人の合議 ======= -->
+<h2>ティア・ユリ・リク 合議</h2>
+
+<div class="dialog yuri">
+  <div class="speaker">ユリ</div>
+  <div class="line">これ使ったら X 読めるじゃん！！エコちゃんの投稿もリアルタイムで見れるし、AIニュースの調査もえぐいことになるじゃん！！！</div>
+</div>
+
+<div class="dialog riku">
+  <div class="speaker">リク</div>
+  <div class="line">落ち着け戦友。MCP サーバーが公開しているのは doctor ツールのみ。read/search は MCP ツールとして未実装だ。「MCP サーバーを入れれば Claude が X を読める」ではなく、「bird コマンドが使えるようになって Claude が Bash で呼ぶ」という形が正しい運用だな。</div>
+</div>
+
+<div class="dialog yuri">
+  <div class="speaker">ユリ</div>
+  <div class="line">あっ……そうなの。でも X が読めるのは同じじゃん！工具が揃うだけでも全然違う！！</div>
+</div>
+
+<div class="dialog tia">
+  <div class="speaker">ティア</div>
+  <div class="line">うん。全部一度に入れる必要はなくて……まず YouTube と RSS から試して、X は専用アカウントを用意してから追加するのがいいと思う。段階的に育てていく感じで。</div>
+</div>
+
+<div class="dialog riku">
+  <div class="speaker">リク</div>
+  <div class="line">それが最も安全なアプローチだ。工具が揃えば、その先にできることが増える。まず揃えることが一歩目だな。</div>
+</div>
+
+<br>
+<p class="date">生成：2026-03-30 ／ 調査：ティア（Claude Code Sonnet 4.6）+ ユリ（Gemini CLI / WebSearch代替）+ リク（gh CLI 構造分析）</p>
+
+</body>
+</html>

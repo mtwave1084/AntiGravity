@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI News 2026-04-01</title>
+<style>
+  body { background: #0d1117; color: #e6edf3; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; }
+  h1 { color: #58a6ff; border-bottom: 1px solid #30363d; padding-bottom: 10px; }
+  h2 { color: #79c0ff; margin-top: 32px; }
+  .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 16px; margin: 12px 0; }
+  .card h3 { color: #d2a8ff; margin: 0 0 8px; font-size: 1em; }
+  .card p { margin: 0; color: #c9d1d9; font-size: 0.9em; line-height: 1.6; }
+  .badge { display: inline-block; background: #1f6feb; color: #fff; font-size: 0.75em; padding: 2px 8px; border-radius: 12px; margin-left: 8px; vertical-align: middle; }
+  .badge.red { background: #da3633; }
+  .badge.green { background: #238636; }
+  .badge.purple { background: #8957e5; }
+  .badge.orange { background: #d29922; }
+  .date { color: #8b949e; font-size: 0.8em; }
+  .highlight { background: #1c2128; border: 1px solid #f0883e55; border-left: 3px solid #f0883e; }
+</style>
+</head>
+<body>
+<h1>🤖 AI News <span class="date">2026-04-01</span></h1>
+<p class="date">Gemini CLI 503 のため WebSearch + agent-reach で補完収集。</p>
+
+<h2>🔴 Claude Code</h2>
+
+<div class="card highlight">
+  <h3>Claude Code ソースコード漏洩 — npm .map ファイルから51万行が流出 <span class="badge red">セキュリティ</span></h3>
+  <p>2026-03-31、npm レジストリの <code>@anthropic-ai/claude-code@2.1.88</code> に 59.8MB の JavaScript ソースマップファイルが誤って同梱されていたことを Solayer Labs のエンジニアが発見。TypeScript 換算で約 512,000 行の内部コードが数時間で GitHub にミラーリングされ数千人に解析された。</p>
+  <p style="margin-top:8px;">漏洩で判明した未公開機能：</p>
+  <ul style="color:#c9d1d9; font-size:0.9em; line-height:1.8; margin:8px 0 0 16px;">
+    <li><strong style="color:#d2a8ff;">KAIROS</strong> — 常時起動型アシスタント。タイピングを待たず、ログを監視して自律的に行動する</li>
+    <li><strong style="color:#d2a8ff;">BUDDY</strong> — 固有の人格を持つ相棒 AI。名前で呼びかけると応答する</li>
+    <li><strong style="color:#d2a8ff;">ULTRAPLAN</strong> — 30分間のリモートプランニングセッション</li>
+    <li><strong style="color:#d2a8ff;">エージェントスウォーム</strong> / coordinator モード</li>
+  </ul>
+  <p style="margin-top:8px;">コード内に 4月1〜7日をティーザー期間、5月を本格ローンチとするスケジュールが記載されていた。</p>
+  <p class="date" style="margin-top:8px;">2026-03-31 | VentureBeat / The Register / Fortune / Gizmodo</p>
+</div>
+
+<div class="card">
+  <h3>Claude Code チーム Webinar 予告 — "What We Shipped" <span class="badge">イベント</span></h3>
+  <p>Anthropic が 4月7日 12:00 PT に Claude Code チームによるウェビナーを開催予定。最近の機能追加・ワークフロー Tips の紹介とライブ Q&A を実施する。</p>
+  <p class="date">2026-04-07 開催予定</p>
+</div>
+
+<h2>🟣 Google / Gemini</h2>
+
+<div class="card">
+  <h3>Veo 3.1 Lite リリース — 動画生成コスト 50% 以下に <span class="badge green">新モデル</span></h3>
+  <p>Google が動画生成モデル Veo 3.1 Lite を開発者向けにリリース。Veo 3.1 Fast と同等の速度を維持しつつ、コストを 50% 以下に削減。テキスト→動画・画像→動画に対応し、横長 (16:9) / 縦長 (9:16) の両フォーミングと 720p/1080p 解像度をサポート。</p>
+  <p style="margin-top:6px;">4月7日には Veo 3.1 Fast の値下げも予定されており、動画生成 API 全体のコスト低下が続く。</p>
+  <p class="date">2026-03-31 | Google Blog</p>
+</div>
+
+<div class="card">
+  <h3>Gemini 3 Deep Think アップグレード — 科学・工学特化の推論強化 <span class="badge purple">新機能</span></h3>
+  <p>Google が Gemini 3 Deep Think の大型アップグレードを発表 (2026-03-26)。科学者・研究者と共同開発した科学・工学特化の推論モード。</p>
+  <p style="margin-top:6px;">主なベンチマーク：ARC-AGI-2 <strong>84.6%</strong>（従来比大幅向上）、物理・化学オリンピック金メダル相当のスコアを達成。数学論文の論理的欠陥を人間の査読をすり抜けたものまで発見したケースも報告されている。</p>
+  <p style="margin-top:6px;">Gemini AI Ultra サブスクリプション加入者および Gemini API の早期アクセスプログラム参加者から利用可能。</p>
+  <p class="date">2026-03-26 | Google Blog / Bloomberg / 9to5Google</p>
+</div>
+
+<h2>🟢 OpenAI</h2>
+
+<div class="card">
+  <h3>OpenAI、Amazon・NVIDIA等から $1,220億ドル調達 — 企業価値 $8,520億ドルへ <span class="badge green">資金調達</span></h3>
+  <p>2026-03-31、OpenAI が Amazon、NVIDIA などを含む投資家から総額 1,220億ドルの資金調達ラウンドを完了。企業価値は 8,520億ドルに達した。2026年内 IPO 観測をさらに補強する規模の調達となっている。</p>
+  <p class="date">2026-03-31 | The Guardian</p>
+</div>
+
+<h2>⚖️ AI 政策・業界動向</h2>
+
+<div class="card">
+  <h3>トランプ政権 DOT、Google Gemini で法規制の草案作成を開始 <span class="badge orange">政策</span></h3>
+  <p>トランプ政権の米国運輸省 (DOT) が Google Gemini AI を使った規制起草システムを構築中。通常数年かかる行政規制をアイデアから完成草案まで 30日以内で仕上げることを目標とする。ProPublica の独自取材で判明。</p>
+  <p style="margin-top:6px;">AI を政府の法規制プロセスに直接組み込む動きが進んでおり、民主主義的プロセスへの影響を懸念する声も上がっている。</p>
+  <p class="date">2026-03月末〜4月 | ProPublica</p>
+</div>
+
+<div class="card">
+  <h3>Gemini、STOC 2026 で理論計算機科学者へのフィードバック自動化 <span class="badge">研究</span></h3>
+  <p>Google Research が理論計算機科学の最高峰国際会議 STOC 2026 において、Gemini を用いた論文フィードバックの自動化を実施。査読補助ツールとして学術コミュニティへの実用展開が始まっている。</p>
+  <p class="date">2026-03〜04 | Google Research Blog</p>
+</div>
+
+<div class="card">
+  <h3>日本 AI事業者ガイドライン第1.2版 公表 — AIエージェント・物理AIのリスクを追加 <span class="badge orange">政策</span></h3>
+  <p>総務省・経済産業省が「AI事業者ガイドライン第1.2版」を公表 (2026-03-31)。AIエージェントの自律行動や物理 AI（ロボット等）に特有のリスクとガバナンスの要件を新たに追加。エージェントが自律的に締結した契約等の法的責任所在については引き続き検討中とされている。</p>
+  <p class="date">2026-03-31 | 総務省・経済産業省</p>
+</div>
+
+<h2>🎨 画像・動画生成</h2>
+
+<div class="card">
+  <h3>Adobe Firefly カスタムモデル機能を拡充 <span class="badge green">新機能</span></h3>
+  <p>Adobe が Firefly のカスタムモデル機能を拡充。ユーザー独自の画像で学習させたスタイルモデルをキャラクター・イラスト・写真の 3スタイルで作成・再利用できるようになった。</p>
+  <p style="margin-top:6px;">Adobe, Google, OpenAI, Runway, Kling など 30 以上のパートナーモデルを Firefly プラットフォームで横断利用できる統合環境も整備。</p>
+  <p class="date">2026-03-19 | Adobe Blog</p>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ユニコ式 Claude Code × Remotion Skills 調査レポート</title>
+<style>
+  * { box-sizing: border-box; }
+  body { background: #0d1117; color: #e6edf3; font-family: 'Segoe UI', 'Hiragino Sans', sans-serif; margin: 0; padding: 20px; line-height: 1.7; }
+  h1 { color: #58a6ff; border-bottom: 2px solid #30363d; padding-bottom: 12px; font-size: 1.4em; }
+  h2 { color: #79c0ff; margin-top: 40px; border-left: 4px solid #1f6feb; padding-left: 12px; font-size: 1.1em; }
+  h3 { color: #d2a8ff; font-size: 1em; margin-top: 24px; }
+  .meta { color: #8b949e; font-size: 0.85em; margin-bottom: 24px; }
+  .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 16px; margin: 12px 0; }
+  .card p { margin: 0 0 8px; color: #c9d1d9; font-size: 0.9em; }
+  .card p:last-child { margin-bottom: 0; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.88em; }
+  th { background: #1f2937; color: #79c0ff; padding: 8px 12px; text-align: left; border: 1px solid #30363d; }
+  td { padding: 8px 12px; border: 1px solid #30363d; color: #c9d1d9; vertical-align: top; }
+  tr:nth-child(even) td { background: #161b22; }
+  code, pre { font-family: 'Consolas', 'Courier New', monospace; }
+  pre { background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 14px; overflow-x: auto; font-size: 0.85em; color: #79c0ff; }
+  .badge { display: inline-block; font-size: 0.75em; padding: 2px 8px; border-radius: 12px; margin-left: 6px; vertical-align: middle; }
+  .badge.blue { background: #1f6feb; color: #fff; }
+  .badge.green { background: #238636; color: #fff; }
+  .badge.orange { background: #9e6a03; color: #fff; }
+  .badge.red { background: #b91c1c; color: #fff; }
+  .badge.purple { background: #6e40c9; color: #fff; }
+  .highlight { background: #1f2937; border: 1px solid #58a6ff; border-radius: 8px; padding: 16px; margin: 16px 0; }
+  .highlight p { color: #c9d1d9; margin: 6px 0; font-size: 0.92em; }
+  .highlight strong { color: #58a6ff; }
+  .section-label { font-size: 0.78em; color: #8b949e; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+  .flow-step { display: flex; align-items: flex-start; gap: 12px; margin: 8px 0; }
+  .flow-num { background: #1f6feb; color: #fff; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 0.8em; flex-shrink: 0; margin-top: 2px; }
+  .flow-content { color: #c9d1d9; font-size: 0.9em; }
+  .step-box { background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 12px 16px; margin: 8px 0; }
+  .step-box .step-title { color: #d2a8ff; font-weight: bold; margin-bottom: 4px; font-size: 0.92em; }
+  .step-box .step-sub { color: #8b949e; font-size: 0.82em; }
+  .finding { background: #1a2535; border: 1px solid #58a6ff; border-radius: 8px; padding: 16px; margin: 16px 0; }
+  .finding h4 { color: #58a6ff; margin: 0 0 8px; font-size: 1em; }
+  .finding p { color: #c9d1d9; margin: 4px 0; font-size: 0.9em; }
+  .warn { background: #1c1a00; border: 1px solid #9e6a03; border-radius: 6px; padding: 12px 14px; margin: 8px 0; color: #d29922; font-size: 0.88em; }
+  .ok { background: #0a1a0f; border: 1px solid #238636; border-radius: 6px; padding: 12px 14px; margin: 8px 0; color: #56d364; font-size: 0.88em; }
+  a { color: #58a6ff; }
+</style>
+</head>
+<body>
+
+<h1>ユニコ式 Claude Code × Remotion Skills 調査レポート</h1>
+<p class="meta">
+  日時：2026-04-03 ／
+  調査者：ティア ／
+  対象：ユニコ Brain記事 + <code>.claude/</code> 構造全体
+</p>
+
+<!-- ==================== SECTION 1 ==================== -->
+<h2>1. Brain記事の設計思想（セールス構造分析）</h2>
+
+<h3>セールスフロー</h3>
+<div class="card">
+  <div class="flow-step"><div class="flow-num">1</div><div class="flow-content"><strong>問題提起</strong> — 動画生成AIだけでは差別化できない時代。台本〜編集の全自動が必要</div></div>
+  <div class="flow-step"><div class="flow-num">2</div><div class="flow-content"><strong>著者実績</strong> — 動画編集歴15年・Xフォロワー4万超・スクール生934人・月100万達成受講生</div></div>
+  <div class="flow-step"><div class="flow-num">3</div><div class="flow-content"><strong>解決策提示</strong> — AIエージェントが台本・ナレーション・字幕・画像・編集を全自動化</div></div>
+  <div class="flow-step"><div class="flow-num">4</div><div class="flow-content"><strong>機能一覧</strong> — 全10機能 + スタイル30種 + サポート体制（生放送・電話）</div></div>
+  <div class="flow-step"><div class="flow-num">5</div><div class="flow-content"><strong>第三者の声</strong> — YouTubeプロ「ミカ」監修コメント（月100万超チャンネル実績）</div></div>
+  <div class="flow-step"><div class="flow-num">6</div><div class="flow-content"><strong>FAQ</strong> — プログラミング不要・PC必須・費用目安でハードル除去</div></div>
+  <div class="flow-step"><div class="flow-num">7</div><div class="flow-content"><strong>価格・CTA</strong> — 段階値上げ形式 + 5大特典の強調</div></div>
+</div>
+
+<h3>ユニコスタイルの特徴</h3>
+<table>
+  <tr><th>要素</th><th>内容</th></tr>
+  <tr><td>熱量</td><td>「！！」多用。「もう〜はいりません」「全部任せろ」系の断言フレーズ</td></tr>
+  <tr><td>共感</td><td>「面倒くさいですよね？動画編集歴15年の僕ですら面倒で仕方ない」</td></tr>
+  <tr><td>転換フレーズ</td><td>「だけど違います」「だから開発したんです」「もう違います」</td></tr>
+  <tr><td>実績数字</td><td>4.7万インプ、300ブックマーク、銀の盾10万人、月100万達成</td></tr>
+  <tr><td>特典体制</td><td>5大特典（コミュニティ・生放送サポート5時間・動画添削・スタイル追加）</td></tr>
+  <tr><td>サポート強調</td><td>「絶対に挫折させない」「全員の導入が終わるまで続ける」</td></tr>
+</table>
+
+<!-- ==================== SECTION 2 ==================== -->
+<h2>2. <code>.claude/</code> ディレクトリ構造</h2>
+
+<pre>
+.claude/
+├── CLAUDE.md               ← 総合ルートルール（全設定の起点）
+├── agents/                 ← 5エージェント定義
+│   ├── audio-quality-reviewer/
+│   ├── image-consistency-checker/
+│   ├── simple-manga-video/
+│   ├── video-list-viewer/
+│   └── video-numbering/
+├── rules/                  ← 19ルール（品質保証・ワークフロー・UI・音声）
+├── skills/                 ← 10スキル（動画制作の全工程をカバー）
+├── resources/
+│   ├── bgm/default-bgm.mp3        ← ジャズループBGM
+│   ├── style-catalog.md/html       ← 30スタイルカタログUI
+│   └── style-samples/style-XX.jpg  ← 30枚サムネイル
+├── templates/              ← HTMLテンプレート4種（preview/subtitle-review/fix-check/completion）
+├── scaffold/               ← Remotionプロジェクト骨格（自動セットアップ用）
+├── setup.sh                ← 初回セットアップスクリプト
+└── .env.example            ← APIキーテンプレート（フリーモデルID3つ同梱）
+</pre>
+
+<!-- ==================== SECTION 3 ==================== -->
+<h2>3. 設計哲学：Self-contained 原則</h2>
+
+<div class="highlight">
+  <p><strong>最重要原則：「.claudeフォルダだけを渡せば、受け取った人が同じ動画制作挙動を再現できる」</strong></p>
+  <p>ユニコの <code>.claude/</code> は「AIエージェントの設定集」を超えて、<strong>ZIPで配布可能なワンパッケージ製品</strong>として設計されている。Brain という販売形態（購入→ダウンロード→即使用）に最適化した構造。</p>
+</div>
+
+<h3>Self-contained の実装方法</h3>
+<table>
+  <tr><th>要素</th><th>方法</th></tr>
+  <tr><td>BGM</td><td><code>resources/bgm/</code>に同梱。setup.sh が自動コピー</td></tr>
+  <tr><td>スタイル資料</td><td><code>resources/style-catalog.*</code> + 30枚サンプル同梱</td></tr>
+  <tr><td>プロジェクト骨格</td><td><code>scaffold/</code> に Remotion テンプレート全体を同梱</td></tr>
+  <tr><td>APIキー管理</td><td><code>.env.example</code> にフリーモデルID同梱、実キーは <code>skills-demo/.env</code> のみ</td></tr>
+  <tr><td>セキュリティ</td><td>配布前チェック（シークレット検索・個人情報・ファイル数確認）を distribute-zip スキルに内包</td></tr>
+</table>
+
+<!-- ==================== SECTION 4 ==================== -->
+<h2>4. スキル詳細（10スキル）</h2>
+
+<table>
+  <tr><th>スキル名</th><th>役割</th><th>API/ツール</th></tr>
+  <tr><td><code>simple-manga-video</code> <span class="badge blue">メイン</span></td><td>動画制作 4ステップ確認フロー</td><td>Fish Audio + fal.ai</td></tr>
+  <tr><td><code>fish-audio-tts</code></td><td>日本語音声生成・ジェットカット・速度変換</td><td>Fish Audio API</td></tr>
+  <tr><td><code>gemini-image</code></td><td>2K画像生成（30スタイルカタログ）</td><td>fal.ai → Gemini 3 Pro Image</td></tr>
+  <tr><td><code>remotion-script-gen</code></td><td>台本生成</td><td>Claude</td></tr>
+  <tr><td><code>distribute-zip</code></td><td>配布用ZIP作成（セキュリティチェック付き）</td><td>bash/grep</td></tr>
+  <tr><td><code>lipsync</code></td><td>リップシンク動画生成</td><td>外部API</td></tr>
+  <tr><td><code>video-translator</code></td><td>翻訳動画生成</td><td>Claude + TTS</td></tr>
+  <tr><td><code>youtube-thumbnail</code></td><td>YouTubeサムネイル生成</td><td>fal.ai</td></tr>
+  <tr><td><code>seo-title</code></td><td>SEOタイトル5案生成</td><td>Claude</td></tr>
+  <tr><td><code>manga-bubble</code></td><td>マンガふきだし挿入</td><td>Canvas/SVG</td></tr>
+</table>
+
+<h3>simple-manga-video の4ステップ確認フロー</h3>
+<div class="step-box"><div class="step-title">STEP 1 🎨 スタイル選択 + 素材生成</div><div class="step-sub">HTML確認: style-catalog.html（30スタイルから番号選択）→ TTS音声 + 画像生成</div></div>
+<div class="step-box"><div class="step-title">STEP 2 👀 レンダリング前確認</div><div class="step-sub">HTML確認: preview-[動画名].html（速度切替ボタン 1x/1.5x/2x 付き）</div></div>
+<div class="step-box"><div class="step-title">STEP 2.5 🔧 修正確認（修正があった場合のみ）</div><div class="step-sub">HTML確認: fix-check-[動画名].html（修正前後 diff + 音声再生 + OK/NG）</div></div>
+<div class="step-box"><div class="step-title">STEP 3 📝 字幕レビュー（レンダリング前必須）</div><div class="step-sub">HTML確認: subtitle-review-[動画名].html（BGM付き最終確認）</div></div>
+<div class="step-box"><div class="step-title">STEP 4 🎬 レンダリング + 完成動画</div><div class="step-sub">HTML確認: completion-[動画名].html（SEOタイトル5案 + ダウンロードボタン）</div></div>
+
+<div class="card" style="margin-top:12px;">
+  <p><strong>設計ポイント：</strong>各ステップでHTMLを生成してユーザー確認を挟む。STEPスキップは絶対禁止。全自動でありながら「人間が確認する箇所」を明確に定義した設計。</p>
+</div>
+
+<!-- ==================== SECTION 5 ==================== -->
+<h2>5. ルール設計の分類（19ルール）</h2>
+
+<table>
+  <tr><th>カテゴリ</th><th>ルール</th><th>内容</th></tr>
+  <tr><td>品質保証</td><td>audio-validation, frame-validation, audio-processing</td><td>音声フレーム数計算・二重変換防止</td></tr>
+  <tr><td>品質保証</td><td>scene-order, pronunciation-patterns</td><td>シーン順序・多義読み漢字誤読パターン集</td></tr>
+  <tr><td>ワークフロー</td><td>parallel-production</td><td>複数動画並列（素材のみ並列、確認は1本ずつ）</td></tr>
+  <tr><td>ワークフロー</td><td>subtitle-writing, subtitle-formatting</td><td>読み文字 vs 字幕テロップの分離ルール</td></tr>
+  <tr><td>配布設計</td><td>self-contained, user-extensions</td><td>.claudeフォルダ完結原則・ユーザーアレンジガイド</td></tr>
+  <tr><td>UI/出力</td><td>html-naming, html-open, video-html</td><td>確認HTML命名・自動オープン・完成動画必須要素</td></tr>
+  <tr><td>コンテンツ</td><td>simple-manga, shorts-video, translated-videos</td><td>各動画タイプ別ルール</td></tr>
+  <tr><td>スタイル管理</td><td>image-generation, style-tuning, component-api</td><td>3定数体制・スタイル調整・コンポーネント設定</td></tr>
+</table>
+
+<!-- ==================== SECTION 6 ==================== -->
+<h2>6. AGYプロジェクトへの可用性</h2>
+
+<h3>そのまま活用できるもの ✅</h3>
+<table>
+  <tr><th>要素</th><th>AGYでの活用方法</th></tr>
+  <tr><td>Remotion動画制作フロー</td><td><code>remotion-project/</code> に同設計思想を適用可能。ステップ確認HTML方式は動画品質向上に直結</td></tr>
+  <tr><td><strong>fal.ai 画像生成</strong> <span class="badge purple">重要</span></td><td><code>fal-ai/gemini-3-pro-image-preview</code> = Nanobanana Pro の正式モデルID。AGYでも fal.ai 経由で即利用可能</td></tr>
+  <tr><td>30スタイルカタログ</td><td>そのままコピーしてカタログUI化可能。日本カルチャー特化の良質なスタイル集</td></tr>
+  <tr><td>Fish Audio TTS 設計</td><td>漢字そのまま渡す・ジェットカット・速度変換の手順は AGY 動画制作にそのまま適用</td></tr>
+  <tr><td>distribute-zip 設計</td><td>AGYでコンテンツを配布する際のセキュリティチェックパターンとして参照</td></tr>
+</table>
+
+<h3>設計思想として参考にすべきもの 📚</h3>
+<table>
+  <tr><th>要素</th><th>AGYへの示唆</th></tr>
+  <tr><td>Self-contained 設計</td><td>AGYの <code>.claude/</code> も「skills-demo相当を自動セットアップする」設計にできる</td></tr>
+  <tr><td>読み文字 vs 字幕テロップの分離</td><td>AGY動画制作時の基本ルールとして採用すべき重要な区別</td></tr>
+  <tr><td>HTMLステップ確認フロー</td><td>AGYではDiscordに確認HTMLを添付してCTAする方式に転用可能</td></tr>
+  <tr><td>BGM内包設計</td><td><code>remotion-project/public/bgm/</code> に共通BGMを置き、全動画で参照する設計</td></tr>
+</table>
+
+<h3>AGY固有の注意が必要なもの ⚠️</h3>
+<div class="warn">
+  <strong>fal.ai APIコスト：</strong>$0.15/image〜（解像度で変動）。積極利用する場合は月次費用を試算すること
+</div>
+<div class="warn">
+  <strong>Fish Audio ボイスクローニング：</strong>自分の声を使う場合は Fish Audio に別途音声データを登録が必要
+</div>
+<div class="warn">
+  <strong>Remotion音声処理：</strong><code>playbackRate</code> 使用禁止 → 事前 ffmpeg 変換必須。忘れると音声途切れが発生
+</div>
+<div class="warn">
+  <strong>APIキー管理：</strong>Fish Audio + fal.ai の2つが必要。<code>.env</code> は <code>.claude/</code> に絶対に含めない
+</div>
+
+<!-- ==================== SECTION 7 ==================== -->
+<h2>7. 運用上の注意事項</h2>
+
+<h3>音声関連（重要度：高）</h3>
+<table>
+  <tr><th>#</th><th>ルール</th></tr>
+  <tr><td>1</td><td>Remotionの音声速度変更は <code>playbackRate</code> 禁止 → 事前に ffmpeg で変換</td></tr>
+  <tr><td>2</td><td>速度設定を変えた場合は全音声を削除して全件再生成（<code>fs.existsSync</code> でスキップされるため部分再生成は二重変換を起こす）</td></tr>
+  <tr><td>3</td><td>音声パスは <code>public/audio/</code> — <code>out/audio/</code> を変換しても無効</td></tr>
+  <tr><td>4</td><td>フレーム数計算 = <code>Math.ceil(変換後秒数 × 30) + 5</code></td></tr>
+</table>
+
+<h3>画像生成関連</h3>
+<table>
+  <tr><th>#</th><th>ルール</th></tr>
+  <tr><td>1</td><td>デフォルトのアスペクト比は 9:16（縦）。横動画の場合のみ 16:9 に変更</td></tr>
+  <tr><td>2</td><td>スタイルカタログのプロンプトをそのまま使わない → STYLE + CHAR + シーンプロンプトの3定数体制が必須</td></tr>
+  <tr><td>3</td><td>fal.ai 残高切れは Forbidden エラーで検出できる</td></tr>
+</table>
+
+<h3>設定ファイル関連</h3>
+<table>
+  <tr><th>#</th><th>ルール</th></tr>
+  <tr><td>1</td><td>settings.json の <code>defaultMode</code> に <code>"ask"</code> は無効値 → Claude Code 起動エラーになる</td></tr>
+  <tr><td>2</td><td>個人ボイスID (<code>FISH_AUDIO_REFERENCE_ID</code>) は <code>.claude/</code> に書かない — ZIP配布に含まれるため</td></tr>
+</table>
+
+<h3>配布前チェック（distribute-zip 実行時）</h3>
+<div class="ok">6項目チェック：① シークレット検索 ② サンプル画像30枚確認 ③ BGM確認 ④ APIキー実値なし確認 ⑤ 個人情報検索 ⑥ HTMLテンプレート4種確認</div>
+
+<!-- ==================== SECTION 8 ==================== -->
+<h2>8. Brain記事スタイルの参照ポイント（AGY記事執筆向け）</h2>
+
+<table>
+  <tr><th>ポイント</th><th>ユニコの例</th><th>AGYへの応用</th></tr>
+  <tr><td>断言フレーズ</td><td>「もう動画編集者はいりません！」</td><td>「もうツールの比較で時間を使わなくていい！」</td></tr>
+  <tr><td>失敗体験から入る</td><td>「AI動画バブルで稼いだが今は通用しない」</td><td>「Claude Codeを入れても使いこなせなかった時期があった」</td></tr>
+  <tr><td>第三者の声</td><td>YouTubeプロ「ミカ」の監修コメント</td><td>スクール生・コミュニティメンバーの声</td></tr>
+  <tr><td>サポート体制</td><td>生放送5時間・電話サポート</td><td>Discord常駐・月次振り返り生放送</td></tr>
+  <tr><td>アレンジ可能を強調</td><td>「好きにアレンジできる」</td><td>「自分用にカスタマイズできる構造」</td></tr>
+</table>
+
+<!-- ==================== SECTION 9（特筆発見） ==================== -->
+<h2>9. 特筆すべき発見</h2>
+
+<div class="finding">
+  <h4>🔍 Nanobanana Pro = <code>fal-ai/gemini-3-pro-image-preview</code> via fal.ai</h4>
+  <p>ユニコの CLAUDE.md に画像生成のモデルIDが明記されていた：</p>
+  <pre>モデル: fal-ai/gemini-3-pro-image-preview
+プロバイダー: fal.ai（2026年2月1日より）
+コスト: $0.15/image〜
+解像度: 2K（デフォルト）</pre>
+  <p>ソリスが「Nanobanana Pro」と呼んでいた画像生成エンジンの実体は <strong>fal.ai 経由の <code>fal-ai/gemini-3-pro-image-preview</code></strong>。</p>
+  <p>ユリ（Gemini CLI）は直接呼び出せないが、AGYに fal.ai 統合を追加すれば <strong>Claude Code（ティア）から直接呼び出せる。</strong></p>
+  <p>fal.ai の <a href="https://fal.ai/dashboard/keys" target="_blank">API キー取得</a> → <code>skills-demo/.env</code> の <code>FAL_KEY</code> を設定するだけで利用開始可能。</p>
+</div>
+
+<p style="color:#8b949e; font-size:0.82em; margin-top:40px;">レポート生成：ティア ／ 2026-04-03</p>
+
+</body>
+</html>

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI News 2026-04-25</title>
+<style>
+  body { background: #0d1117; color: #e6edf3; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; }
+  h1 { color: #58a6ff; border-bottom: 1px solid #30363d; padding-bottom: 10px; }
+  h2 { color: #79c0ff; margin-top: 32px; }
+  .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 16px; margin: 12px 0; }
+  .card h3 { color: #d2a8ff; margin: 0 0 8px; font-size: 1em; }
+  .card p { margin: 0; color: #c9d1d9; font-size: 0.9em; line-height: 1.6; }
+  .badge { display: inline-block; background: #1f6feb; color: #fff; font-size: 0.75em; padding: 2px 8px; border-radius: 12px; margin-left: 8px; vertical-align: middle; }
+  .badge.warning { background: #b08800; }
+  .badge.green { background: #238636; }
+  .date { color: #8b949e; font-size: 0.8em; }
+</style>
+</head>
+<body>
+<h1>🤖 AI News <span class="date">2026-04-25</span></h1>
+
+<h2>OpenAI</h2>
+
+<div class="card">
+  <h3>GPT-5.5 バイオセキュリティ Bug Bounty — 脱獄成功に $25,000 の報奨金 <span class="badge">安全</span></h3>
+  <p>OpenAI が GPT-5.5 を対象としたバイオセキュリティ Bug Bounty プログラムを発表。バイオセーフティの5問チャレンジを突破する「ユニバーサル脱獄」を初めて実証した研究者に最大 $25,000 を贈与する。申請受付は 2026年4月23日〜6月22日、テスト期間は 4月28日〜7月27日。参加は招待制または審査制で NDA が必須。GPT-5.5 のシステムカード評価を補完し、デュアルユース生物リスクへの対策を強化するための取り組み。</p>
+  <p class="date">2026-04-23 | Source: OpenAI公式, Notebookcheck, GBHackers</p>
+</div>
+
+<h2>Anthropic</h2>
+
+<div class="card">
+  <h3>Google が Anthropic に最大 $400億投資 — Amazon の $250億に続く大型出資 <span class="badge green">企業動向</span></h3>
+  <p>Google（Alphabet）が Anthropic に最大 400億ドルを投資する計画を明らかにした。初回 100億ドルは評価額 3,800億ドル前提で実行され、残り 300億ドルはマイルストーン達成に応じた条件付き。Amazon が最大 250億ドルの投資を発表した直後のタイミング。また、Anthropic は Google Cloud の Ironwood TPU に最大100万ユニットを導入することを合わせて表明し、Google との関係がインフラレベルでも深化している。</p>
+  <p class="date">2026-04-24 | Source: CNBC, Axios, Fortune</p>
+</div>
+
+<div class="card">
+  <h3>NEC × Anthropic 戦略的提携 — 日本初グローバルパートナー、3万人従業員にClaude展開 <span class="badge green">企業動向</span></h3>
+  <p>NEC と Anthropic が戦略的協業を発表。NEC は Anthropic の日本初グローバルパートナーとなり、世界のグループ従業員約3万人に Claude（Opus 4.7 を含む）および Claude Code を導入する。第一フェーズとして金融・製造・地方自治体向けの業界特化型セキュアAI ソリューションを共同開発。デスクトップ向け AI エージェント「Claude Cowork」も NEC のコンサル・AI ツール・セキュリティを束ねた BluStellar Scenario プログラムに組み込まれる。</p>
+  <p class="date">2026-04-23 | Source: NEC公式プレスリリース, Anthropic公式, Cybernews</p>
+</div>
+
+<h2>Claude Code</h2>
+
+<div class="card">
+  <h3>v2.1.116 で品質低下バグ3件を修正 — 全サブスクライバーの使用制限もリセット <span class="badge">アップデート</span></h3>
+  <p>Anthropic が過去1ヶ月にわたる Claude Code の品質低下問題に関するポストモーテムを公開。原因は3つの製品変更の複合: ①3月4日に UI レイテンシ対策として推論レベルをデフォルト「high」→「medium」に変更（Sonnet/Opus 4.6 の知性低下）、②3月26日に長時間アイドルセッションの古い思考ブロックを刈り込む最適化に入ったバグ（毎ターン発火し続けセッション全体を劣化）、③4月16日に冗長性削減プロンプトを追加（コーディング品質に悪影響）。すべて v2.1.116（4月20日）で修正済み。あわせて全サブスクライバーの使用制限が 4月23日付でリセットされた。</p>
+  <p class="date">2026-04-23 | Source: Anthropic Engineering Blog, VentureBeat, Techmeme</p>
+</div>
+
+<h2>Google / Gemini</h2>
+
+<div class="card">
+  <h3>Gemini Notebooks + NotebookLM 統合 — プロジェクトスペースでチャット・ファイル・カスタム指示を管理 <span class="badge">新機能</span></h3>
+  <p>Gemini アプリに「Notebooks」機能が追加され、NotebookLM と自動同期するプロジェクトスペースが利用可能になった。チャット履歴・ドキュメント・カスタム指示を1つのノートブックにまとめ、Gemini はそれらをコンテキストとして参照して回答できる。NotebookLM のビデオオーバービュー・インフォグラフィック生成機能もノートブック内から直接使えるように。Google AI Ultra/Pro/Plus ユーザー向けに Web から先行展開中で、モバイル・無料プランへも順次拡大予定。</p>
+  <p class="date">2026-04-24（広範展開）| Source: Google公式ブログ, gHacks, XDA Developers</p>
+</div>
+
+<div class="card">
+  <h3>Google Ironwood TPU（第7世代）発表 — Anthropic が最大100万ユニット導入予定 <span class="badge">ハード</span></h3>
+  <p>Google が第7世代 TPU「Ironwood」を発表。1チップあたり 4.6 PetaFLOPS を実現し、9,216チップのスーパーポッド構成では 42.5 ExaFLOPS のコンピュート能力を提供。前世代 Trillium の約3倍の演算性能を持つ。Anthropic が Google Cloud 上で最大100万ユニットの Ironwood 導入にコミットしており、Google の最大顧客の一つとなることが明らかになった。AI 推論・学習インフラとして 2027年以降の本格稼働を見込む。</p>
+  <p class="date">2026-04-23 | Source: Fortune, Google Cloud公式</p>
+</div>
+
+</body>
+</html>

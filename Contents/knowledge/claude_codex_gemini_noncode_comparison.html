@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Claude Code / Codex CLI / Gemini CLI 比較（CLI操作・クリエイティブ・ゲーム企画）</title>
+  <style>
+    :root{
+      --bg:#0b1220; --bg2:#121b2f; --card:rgba(255,255,255,.06); --line:rgba(255,255,255,.12);
+      --text:#eaf1ff; --muted:#b9c6e5; --acc1:#8ea6ff; --acc2:#67e8f9; --ok:#22c55e; --warn:#f59e0b; --mid:#94a3b8;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;background:radial-gradient(circle at top right,#16203a 0%,#0b1220 45%),linear-gradient(180deg,#0b1220,#0b1220);color:var(--text);line-height:1.75}
+    .wrap{max-width:1200px;margin:auto;padding:28px 18px 56px}
+    .hero,.card{background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:24px;box-shadow:0 18px 48px rgba(0,0,0,.25)}
+    .hero{padding:28px;background:linear-gradient(135deg,rgba(142,166,255,.18),rgba(103,232,249,.10))}
+    .hero h1{font-size:clamp(30px,5vw,52px);line-height:1.08;margin:10px 0 16px}
+    .lead{font-size:18px;color:#dce6ff;max-width:1000px}
+    .pill{display:inline-block;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.07);padding:7px 12px;border-radius:999px;font-size:12px;color:#dce6ff;margin:0 8px 8px 0}
+    .grid{display:grid;gap:16px}
+    .g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+    .g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .section{margin-top:22px}
+    .card{padding:22px}
+    h2{font-size:28px;margin:28px 0 12px}
+    h3{font-size:20px;margin:0 0 8px}
+    p{margin:8px 0}
+    .muted{color:var(--muted)}
+    .score{display:inline-block;padding:5px 10px;border-radius:999px;font-weight:800;font-size:12px;letter-spacing:.02em}
+    .a{background:rgba(34,197,94,.15);color:#c5f7d6;border:1px solid rgba(34,197,94,.25)}
+    .b{background:rgba(245,158,11,.15);color:#ffe6b0;border:1px solid rgba(245,158,11,.25)}
+    .c{background:rgba(148,163,184,.16);color:#dbe7ff;border:1px solid rgba(148,163,184,.2)}
+    table{width:100%;border-collapse:collapse;border-radius:18px;overflow:hidden;background:rgba(255,255,255,.03)}
+    th,td{padding:12px 12px;vertical-align:top;border-bottom:1px solid var(--line)}
+    th{text-align:left;background:rgba(255,255,255,.06);font-size:14px}
+    tr:last-child td{border-bottom:none}
+    ul{margin:10px 0 0 0;padding-left:18px}
+    li{margin:7px 0}
+    pre{white-space:pre-wrap;background:#0a1324;border:1px solid rgba(255,255,255,.08);padding:16px;border-radius:18px;overflow:auto;color:#d7e5ff}
+    code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+    .tagline{font-size:14px;color:#c8d5f6}
+    .mini{font-size:13px;color:var(--muted)}
+    .domain{border-left:4px solid var(--acc2);padding-left:12px;margin-bottom:8px}
+    .ribbon{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#d8e6ff}
+    a{color:#b8d8ff;text-decoration:none}
+    a:hover{text-decoration:underline}
+    @media (max-width:980px){.g3,.g2{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <section class="hero">
+    <div class="pill">2026-03-24 時点</div>
+    <div class="pill">公式情報 + ユーザー観測ベース</div>
+    <div class="pill">HTMLレポート</div>
+    <h1>Claude Code / Codex CLI / Gemini CLI 比較<br>— CLI操作・クリエイティブ制作・ゲーム企画/設計 編 —</h1>
+    <p class="lead">前回の「コーディング中心の比較」と同じ切り口で、今回は <strong>① CLIによる環境構築やPC操作</strong>、<strong>② クリエイティブ制作（作曲の企画、動画企画、構成づくり）</strong>、<strong>③ ゲーム企画から設計</strong> に広げて比較した版です。<br>
+    結論だけ先に言うと、<strong>司令塔はやはり Claude Code</strong>、<strong>CLIで安全に動かす実行係は Codex CLI</strong>、<strong>リサーチとネタ出し・構成化は Gemini CLI</strong> がいちばん自然です。</p>
+    <p class="tagline">※ 作業適性は公式が断言しているわけではないため、<strong>公式機能</strong>と<strong>コミュニティの使用感</strong>を分けて評価しています。</p>
+  </section>
+
+  <section class="section">
+    <h2>1. 先に結論</h2>
+    <div class="grid g3">
+      <div class="card">
+        <div class="ribbon">Claude Code</div>
+        <h3>全体司令塔に最適</h3>
+        <p><span class="score a">総合 A+</span></p>
+        <ul>
+          <li><strong>hooks / skills / subagents / agent teams / worktree / Chrome連携</strong>があるので、「考えて振る」役がしやすい。</li>
+          <li>特に<strong>複数の作業を並行で回す設計</strong>、<strong>長いタスクの構造化</strong>、<strong>最終統合</strong>が得意。</li>
+          <li>コミュニティでも「CLI体験が最も完成されている」「一般アシスタント寄りの使い方でも扱いやすい」という声がある。</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="ribbon">Codex CLI</div>
+        <h3>安全実行・検証担当に最適</h3>
+        <p><span class="score a">総合 A</span></p>
+        <ul>
+          <li><strong>OSレベル sandbox</strong>、<strong>approval</strong>、<strong>codex exec</strong>、<strong>JSONL 出力</strong>が強い。</li>
+          <li>「環境構築」「CLI操作」「バッチ」「再現テスト」「ログ解析」みたいな、<strong>失敗コストの高い実行仕事</strong>に向く。</li>
+          <li>スクリーンショットや設計画像も扱えるので、UI仕様の実装や差分確認にも相性がよい。</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="ribbon">Gemini CLI</div>
+        <h3>リサーチ・アイデア展開に最適</h3>
+        <p><span class="score a">総合 A-</span></p>
+        <ul>
+          <li><strong>Web search / fetch</strong>、<strong>deep research 系の思想</strong>、<strong>GEMINI.md</strong>、<strong>hooks / custom commands</strong>が強い。</li>
+          <li>公式でも <strong>content generation / deep research / task management</strong> を打ち出している。</li>
+          <li>「企画の叩き台」「比較調査」「競合分析」「大量情報の要約」ではかなり頼れる。</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>2. ドメイン別の比較</h2>
+    <div class="card">
+      <div class="domain"><h3>2-1. CLIによる環境構築やPCの操作</h3></div>
+      <table>
+        <thead><tr><th>ツール</th><th>評価</th><th>向いていること</th><th>ひとこと</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>Codex CLI</strong></td>
+            <td><span class="score a">A+</span></td>
+            <td>環境構築、パッケージ導入、再現テスト、ログ解析、CIバッチ、機械可読な結果収集</td>
+            <td>いわば<strong>「安全靴を履いた作業員」</strong>。read-only / workspace-write / danger-full-access と approval が明確なので、PC操作を任せるなら最有力。</td>
+          </tr>
+          <tr>
+            <td><strong>Claude Code</strong></td>
+            <td><span class="score a">A</span></td>
+            <td>複数ステップの手順化、ブラウザ操作込みのE2E、環境構築の全体設計、分担管理</td>
+            <td>Chrome連携で<strong>ページ操作・フォーム入力・データ抽出</strong>までできるので、「端末 + ブラウザ」の横断作業は強い。ただし安全面は Codex より運用設計に依る。</td>
+          </tr>
+          <tr>
+            <td><strong>Gemini CLI</strong></td>
+            <td><span class="score b">B+</span></td>
+            <td>手順の下調べ、外部情報の確認、シェルを使った補助作業、ドキュメント整理</td>
+            <td>環境構築そのものもできるが、真価は<strong>「調べながら進める」</strong>こと。PC操作の主役というより、横で資料を集める参謀。</td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="mini">推奨: <strong>Claude Code が手順を分解 → Codex CLI が安全に実行 → Gemini CLI が不足情報を調査</strong> の流れ。</p>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <div class="domain"><h3>2-2. クリエイティブの作成（作曲の企画、動画企画、構成・台本づくり）</h3></div>
+      <table>
+        <thead><tr><th>ツール</th><th>評価</th><th>向いていること</th><th>ひとこと</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>Gemini CLI</strong></td>
+            <td><span class="score a">A</span></td>
+            <td>企画の幅出し、競合比較、トレンド整理、長文要約、インプットの構造化、媒体別の案出し</td>
+            <td>公式でも<strong>content generation</strong> と <strong>deep research / task management</strong> を前面に出しており、動画企画・記事構成・世界観リサーチの叩き台づくりがうまい。</td>
+          </tr>
+          <tr>
+            <td><strong>Claude Code</strong></td>
+            <td><span class="score a">A-</span></td>
+            <td>企画を一つの筋にまとめる、長い制作工程の分解、複数案の比較、実制作タスクへの落とし込み</td>
+            <td>「ネタをばらまく」より、<strong>「一本の企画に仕立てる」</strong>のが得意。クリエイティブのPMっぽい役回り。</td>
+          </tr>
+          <tr>
+            <td><strong>Codex CLI</strong></td>
+            <td><span class="score b">B</span></td>
+            <td>画像・モック・図からの実装寄り整理、プロトタイプ、補助スクリプト、資料整形</td>
+            <td>コード化・構造化は強いが、発想を広げるタイプではない。<strong>創作の本丸より、試作と検証の職人</strong>。</td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="mini">推奨: <strong>Gemini CLI で素材を集めて案を広げる → Claude Code で企画として束ねる → Codex CLI で補助ツールや試作を作る</strong> の流れ。</p>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <div class="domain"><h3>2-3. ゲームの企画から設計</h3></div>
+      <table>
+        <thead><tr><th>ツール</th><th>評価</th><th>向いていること</th><th>ひとこと</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>Claude Code</strong></td>
+            <td><span class="score a">A</span></td>
+            <td>ゲーム企画書の構成、ルール設計、状態遷移、サブシステム分解、仕様書の統合</td>
+            <td>複数の要素（世界観 / ループ / 戦闘 / UI / 進行）をつないで、<strong>一貫した設計書にする役</strong>として優秀。</td>
+          </tr>
+          <tr>
+            <td><strong>Gemini CLI</strong></td>
+            <td><span class="score a">A-</span></td>
+            <td>競合ゲームの調査、用語集や世界観資料の比較、遊びの幅出し、参考事例の収集</td>
+            <td>「何を参考にするか」「どこを差別化するか」を探す段階で強い。<strong>企画前半の探索機</strong>。</td>
+          </tr>
+          <tr>
+            <td><strong>Codex CLI</strong></td>
+            <td><span class="score b">B+</span></td>
+            <td>UIモックからの実装、ゲームループの試作、プロトタイプコード、ツールづくり</td>
+            <td>ゲームデザインそのものより、<strong>設計を動く試作に変える役</strong>で光る。</td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="mini">推奨: <strong>Gemini CLI で調査 → Claude Code でゲームデザイン文書化 → Codex CLI で試作</strong> がきれい。</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>3. なぜそう判断したか（機能面）</h2>
+    <div class="grid g3">
+      <div class="card">
+        <h3>Claude Code の強み</h3>
+        <ul>
+          <li>CLI / IDE / Desktop / Web で使える。</li>
+          <li><strong>skills / hooks / subagents / agent teams</strong> により、役割分担と自動化の材料が豊富。</li>
+          <li><strong>Chrome 連携</strong>で、Webアプリのテスト、フォーム入力、データ抽出、ログイン済みサイト操作まで可能。</li>
+          <li>「1つの作業」より「複数作業のオーケストレーション」に向く。</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Codex CLI の強み</h3>
+        <ul>
+          <li><strong>open source / Rust / local 実行</strong> で軽快。</li>
+          <li><strong>approval + sandbox</strong> が明確で、環境構築やPC操作の安全運用に向く。</li>
+          <li><strong>codex exec</strong> で headless / CI 向けに扱いやすい。</li>
+          <li>スクリーンショット・図・設計画像を入力でき、仕様から試作へ落としやすい。</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Gemini CLI の強み</h3>
+        <ul>
+          <li>公式で <strong>content generation / problem solving / deep research / task management</strong> を打ち出している。</li>
+          <li><strong>web search / web fetch / hooks / custom commands / GEMINI.md</strong> がある。</li>
+          <li>巨大文脈や情報探索に強く、企画前段のリサーチと要約が得意。</li>
+          <li>画像の内容理解やファイル操作の例もあり、資料集約にも使いやすい。</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>4. ユーザー観測ベースの補正</h2>
+    <div class="card">
+      <ul>
+        <li><strong>Claude Code</strong> はコミュニティで「CLI 体験が良い」「一般アシスタント寄りでも扱いやすい」「深い reasoning と整合性維持が強い」という評価が多い。</li>
+        <li><strong>Codex CLI</strong> は「賢い・精密・安全」「でもやや遅い」という評価が多く、速い全自動というより<strong>慎重な実務担当</strong>の印象。</li>
+        <li><strong>Gemini CLI</strong> は「大きい文脈」「調査」「コンテンツ寄りの作業」で好評。逆に、複雑な実装での agent としての完成度は Claude / Codex より一歩譲るという声がある。</li>
+      </ul>
+      <p class="mini">要するに、<strong>Claude = 司令塔</strong>、<strong>Codex = 安全実行の職人</strong>、<strong>Gemini = 情報戦と発想の参謀</strong>、という整理がいちばんしっくりきます。</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>5. 実装パターン（おすすめ）</h2>
+    <div class="grid g2">
+      <div class="card">
+        <h3>パターンA: Claude Code 司令塔 + 外部相談</h3>
+        <pre># Claude Code から呼ぶ想定
+# 1) CLI/PC操作系は Codex に投げる
+codex exec --sandbox read-only --ask-for-approval never   "この環境構築手順を検証して、危険ポイントと代替案を出して"
+
+# 2) 企画・調査系は Gemini に投げる
+gemini -p "この動画企画の競合パターンを3類型に分けて、差別化案も出して"
+
+# 3) Claude が最終統合
+# - 依頼要約
+# - 振り分け理由
+# - 各エージェントの出力統合
+# - 次アクション提示</pre>
+        <p class="mini">いちばん壊れにくいです。最初から hooks で全自動化するより、まずは wrapper script と custom command で回すのがおすすめ。</p>
+      </div>
+      <div class="card">
+        <h3>パターンB: ドメイン別ルーティング規則</h3>
+        <pre>if task in ["環境構築", "CLI操作", "PC設定", "再現テスト", "ログ解析"]:
+    primary = "Codex CLI"
+    support  = "Claude Code"
+
+elif task in ["動画企画", "作曲企画", "ネタ出し", "競合調査", "構成案"]:
+    primary = "Gemini CLI"
+    support  = "Claude Code"
+
+elif task in ["ゲーム企画", "仕様設計", "状態遷移", "設計書統合"]:
+    primary = "Claude Code"
+    support  = "Gemini CLI"
+
+if task requires "試作" or "自動検証":
+    add = "Codex CLI"</pre>
+        <p class="mini">これを <code>.claude/commands/route-task.md</code> にしておくと、毎回の判断が楽になります。</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>6. 実務での推奨分担</h2>
+    <div class="grid g3">
+      <div class="card">
+        <h3>CLI/PC操作</h3>
+        <p><strong>主担当:</strong> Codex CLI</p>
+        <p><strong>補佐:</strong> Claude Code</p>
+        <p class="muted">理由: 安全制御と CI 運用が強い。Claude は全体設計と Web 操作の橋渡し。</p>
+      </div>
+      <div class="card">
+        <h3>クリエイティブ制作</h3>
+        <p><strong>主担当:</strong> Gemini CLI</p>
+        <p><strong>補佐:</strong> Claude Code</p>
+        <p class="muted">理由: 調査・要約・叩き台づくりで Gemini が強く、Claude は企画に一本芯を通すのが得意。</p>
+      </div>
+      <div class="card">
+        <h3>ゲーム企画/設計</h3>
+        <p><strong>主担当:</strong> Claude Code</p>
+        <p><strong>補佐:</strong> Gemini CLI → 試作時に Codex CLI</p>
+        <p class="muted">理由: 設計の整合性は Claude、競合調査は Gemini、実装試作は Codex が自然。</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>7. 注意点</h2>
+    <div class="card">
+      <ul>
+        <li><strong>PC操作系は最初から全自動にしない</strong>。まず read-only / plan / approval ありで回す。</li>
+        <li><strong>creative 系は「案出し」と「決める」を分ける</strong>。Gemini で広げて、Claude で絞ると事故が減る。</li>
+        <li><strong>ゲーム企画は「世界観」「コアループ」「進行」「UI」「収益/難易度」を分割して扱う</strong>。Claude の subagents / teams 的な発想と相性がよい。</li>
+      </ul>
+      <p>雑に言うと、<strong>Gemini が風呂敷を広げ、Claude が風呂敷をたたみ、Codex がネジを締める</strong>、そんな分業です。</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>8. 参考ソース</h2>
+    <div class="card">
+      <h3>公式情報</h3>
+      <ol>
+        <li>[S1] Anthropic: Claude Code overview — <a href="https://code.claude.com/docs/en/overview">https://code.claude.com/docs/en/overview</a></li>
+        <li>[S2] Anthropic: Claude Code CLI reference — <a href="https://code.claude.com/docs/en/cli-reference">https://code.claude.com/docs/en/cli-reference</a></li>
+        <li>[S3] Anthropic: Claude Code Hooks — <a href="https://code.claude.com/docs/en/hooks">https://code.claude.com/docs/en/hooks</a></li>
+        <li>[S4] Anthropic: Claude Code Skills — <a href="https://code.claude.com/docs/en/skills">https://code.claude.com/docs/en/skills</a></li>
+        <li>[S5] Anthropic: Agent Teams — <a href="https://code.claude.com/docs/en/agent-teams">https://code.claude.com/docs/en/agent-teams</a></li>
+        <li>[S6] Anthropic: Chrome integration — <a href="https://code.claude.com/docs/en/chrome">https://code.claude.com/docs/en/chrome</a></li>
+        <li>[S7] OpenAI: Codex CLI — <a href="https://developers.openai.com/codex/cli">https://developers.openai.com/codex/cli</a></li>
+        <li>[S8] OpenAI: Codex CLI features — <a href="https://developers.openai.com/codex/cli/features">https://developers.openai.com/codex/cli/features</a></li>
+        <li>[S9] OpenAI: Approvals & security — <a href="https://developers.openai.com/codex/agent-approvals-security">https://developers.openai.com/codex/agent-approvals-security</a></li>
+        <li>[S10] OpenAI: Non-interactive mode — <a href="https://developers.openai.com/codex/noninteractive">https://developers.openai.com/codex/noninteractive</a></li>
+        <li>[S11] OpenAI: AGENTS.md — <a href="https://developers.openai.com/codex/guides/agents-md">https://developers.openai.com/codex/guides/agents-md</a></li>
+        <li>[S12] Google Cloud: Gemini CLI — <a href="https://docs.cloud.google.com/gemini/docs/codeassist/gemini-cli">https://docs.cloud.google.com/gemini/docs/codeassist/gemini-cli</a></li>
+        <li>[S13] Gemini CLI docs — <a href="https://geminicli.com/docs/">https://geminicli.com/docs/</a></li>
+        <li>[S14] Gemini CLI examples — <a href="https://geminicli.com/docs/get-started/examples/">https://geminicli.com/docs/get-started/examples/</a></li>
+        <li>[S15] Gemini CLI hooks — <a href="https://geminicli.com/docs/hooks/">https://geminicli.com/docs/hooks/</a></li>
+        <li>[S16] Gemini CLI custom commands (source docs) — <a href="https://github.com/google-gemini/gemini-cli/blob/main/docs/cli/custom-commands.md">https://github.com/google-gemini/gemini-cli/blob/main/docs/cli/custom-commands.md</a></li>
+        <li>[S17] Gemini Deep Research API docs — <a href="https://ai.google.dev/gemini-api/docs/deep-research">https://ai.google.dev/gemini-api/docs/deep-research</a></li>
+      </ol>
+
+      <h3>コミュニティ・比較記事</h3>
+      <ol>
+        <li>[C1] InventiveHQ: Gemini CLI vs Claude Code vs Codex — <a href="https://inventivehq.com/blog/gemini-vs-claude-vs-codex-comparison">https://inventivehq.com/blog/gemini-vs-claude-vs-codex-comparison</a></li>
+        <li>[C2] DEV Community: The AI Command Line War — <a href="https://dev.to/sivasai_nadella_941a8d122/the-ai-command-line-war-claude-code-vs-gemini-cli-vs-codex-cli-4fk5">https://dev.to/sivasai_nadella_941a8d122/the-ai-command-line-war-claude-code-vs-gemini-cli-vs-codex-cli-4fk5</a></li>
+        <li>[C3] Reddit: tried all three — <a href="https://www.reddit.com/r/ChatGPTCoding/comments/1pi4ojr/gemini_30_pro_has_been_out_for_long_enough_for/">https://www.reddit.com/r/ChatGPTCoding/comments/1pi4ojr/gemini_30_pro_has_been_out_for_long_enough_for/</a></li>
+        <li>[C4] DeployHQ comparison — <a href="https://www.deployhq.com/blog/comparing-claude-code-openai-codex-and-google-gemini-cli-which-ai-coding-assistant-is-right-for-your-deployment-workflow">https://www.deployhq.com/blog/comparing-claude-code-openai-codex-and-google-gemini-cli-which-ai-coding-assistant-is-right-for-your-deployment-workflow</a></li>
+        <li>[C5] Educative dev review — <a href="https://www.educative.io/blog/claude-code-vs-codex-vs-gemini-code-assist">https://www.educative.io/blog/claude-code-vs-codex-vs-gemini-code-assist</a></li>
+      </ol>
+      <p class="mini">注: [C1]〜[C5] は公式ベンチマークではなく、ユーザー使用感や第三者比較です。今回の「作業適性」はこれらも踏まえた実務寄りの判断です。</p>
+    </div>
+  </section>
+</div>
+</body>
+</html>

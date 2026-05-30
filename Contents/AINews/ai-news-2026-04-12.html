@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI News 2026-04-12</title>
+<style>
+  body { background: #0d1117; color: #e6edf3; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; }
+  h1 { color: #58a6ff; border-bottom: 1px solid #30363d; padding-bottom: 10px; }
+  h2 { color: #79c0ff; margin-top: 32px; }
+  .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 16px; margin: 12px 0; }
+  .card h3 { color: #d2a8ff; margin: 0 0 8px; font-size: 1em; }
+  .card p { margin: 0 0 6px; color: #c9d1d9; font-size: 0.9em; line-height: 1.6; }
+  .badge { display: inline-block; background: #1f6feb; color: #fff; font-size: 0.75em; padding: 2px 8px; border-radius: 12px; margin-left: 8px; vertical-align: middle; }
+  .badge.new { background: #238636; }
+  .badge.enterprise { background: #6e40c9; }
+  .badge.tool { background: #b08800; }
+  .date { color: #8b949e; font-size: 0.8em; }
+</style>
+</head>
+<body>
+<h1>🤖 AI News <span class="date">2026-04-12</span></h1>
+
+<h2>Anthropic / Claude</h2>
+
+<div class="card">
+  <h3>ant CLI — Claude APIをターミナルから直接操作するコマンドラインツール <span class="badge tool">新ツール</span></h3>
+  <p>AnthropicがClaude API向けの公式CLIツール「ant」をリリース。<code>curl</code>による手動JSON記述の代わりに、型付きフラグやパイプしたYAMLからリクエストを構築できる。<code>@path</code>参照でファイルをインライン展開でき、<code>--transform</code>クエリでレスポンスフィールドを抽出可能。</p>
+  <p>Claude Codeとのネイティブ統合に対応しており、APIリソースをYAMLファイルでバージョン管理できる。<code>go install</code>経由でインストール。</p>
+  <p class="date">2026-04月（GitHub: anthropics/anthropic-cli）</p>
+</div>
+
+<h2>Google / Gemini</h2>
+
+<div class="card">
+  <h3>Google AI Edge Eloquent — Gemmaベースの完全オフライン音声文字起こしアプリがiOSに登場 <span class="badge new">新アプリ</span></h3>
+  <p>Googleがプレスリリースなしに、Gemmaモデルを搭載したオフライン専用の音声文字起こしアプリ「AI Edge Eloquent」をiOS向けに静かにリリース（4/6〜）。音声はすべてデバイス上で処理され、サーバーに送信されない。</p>
+  <p>「um」「uh」などのフィラーワードを自動除去し、クリーンなテキストに変換。要点抽出・フォーマル変換・要約・展開など複数の変換モードを搭載。サブスク不要・使用量無制限で完全無料。Android版も準備中。Wispr Flowなどの競合サービスに正面から対抗。</p>
+  <p class="date">2026-04-06〜07（iOS App Store）</p>
+</div>
+
+<h2>OpenAI</h2>
+
+<div class="card">
+  <h3>エンタープライズが収益の40%超に — 週間ユーザー9億人・Frontier Alliances本格展開 <span class="badge enterprise">企業動向</span></h3>
+  <p>OpenAIがエンタープライズ戦略の現況を発表（4/8）。エンタープライズ部門は現在収益の40%超を占め、年末には消費者部門と同規模になる見通し。ChatGPTの週間アクティブユーザーは9億人に到達。</p>
+  <p>McKinsey・BCG・Accenture・Capgeminiら「Frontier Alliances」パートナー、ならびにAWS・Databricks・Snowflakeと連携したエンタープライズ向けフルスタック展開を加速。AWSとの共同開発中の「Stateful Runtime Environment」により、エージェントが会話をまたいでコンテキストを保持し、企業ツールと連携可能になる。</p>
+  <p class="date">2026-04-08</p>
+</div>
+
+<h2>AI業界動向 / 新モデル</h2>
+
+<div class="card">
+  <h3>MiniMax M2.7 — 自己のトレーニングワークフローを30〜50%自律実行する「自己進化型」モデル <span class="badge new">新モデル</span></h3>
+  <p>中国AI企業MiniMaxが、自社モデルの開発ワークフロー自体に参加する「自己進化」アプローチを採用したM2.7をリリース（3/18）。ログ読み取り・デバッグ・メトリクス分析を自律的にトリガーし、強化学習研究ワークフローの30〜50%を自力でこなせるとしている。</p>
+  <p>SWE-Proベンチマーク56.22%（Claude Opus 4.6クラスに迫る）、VIBE-Pro 55.6%、Terminal Bench 2 57.0%。オープンソースモデル中GDPval-AA ELO最高得点（1495）を達成。API価格は入力$0.30・出力$1.20/Mトークンとコスト競争力が高い。OpenRouter経由でも利用可能。</p>
+  <p class="date">2026-03-18（MiniMax Agent / MiniMax API Platform）</p>
+</div>
+
+<div class="card">
+  <h3>xAI Grok 4.20 Multi-Agent — 4エージェント協調アーキテクチャが正式公開、ハルシネーション65%削減 <span class="badge new">新機能</span></h3>
+  <p>xAIがGrok 4.20 Multi-Agentを正式リリース（3/31）。1つのモデル重みを共有しながら4つの役割を割り当てる独自アーキテクチャ：Captain（タスク分解・統合）・Harper（調査・ファクト確認）・Benjamin（数学・コード・論理）・4つ目エージェント（批評・検証）。内部でエージェントが議論を交わしてから最終回答を生成する。</p>
+  <p>ハルシネーション65%削減、2Mトークンコンテキストに対応。SuperGrokサブスク（約$30/月）またはX Premium+で利用可能。API価格は通常モデルが$3/$15/Mトークン、4エージェントモードは$10/$50/Mトークン。</p>
+  <p class="date">2026-03-31（xAI API / SuperGrok）</p>
+</div>
+
+</body>
+</html>

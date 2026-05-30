@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TTS 総合比較レポート 2026-04-04</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #222535;
+      --border: #2e3250;
+      --accent: #7c6cf8;
+      --accent2: #e879f9;
+      --green: #34d399;
+      --yellow: #fbbf24;
+      --red: #f87171;
+      --blue: #60a5fa;
+      --text: #e2e8f0;
+      --text-dim: #94a3b8;
+      --text-dimmer: #64748b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', 'Helvetica Neue', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      padding: 2rem 1rem;
+    }
+    .container { max-width: 1100px; margin: 0 auto; }
+
+    header {
+      text-align: center;
+      margin-bottom: 3rem;
+      padding: 2.5rem;
+      background: linear-gradient(135deg, #1a1d27 0%, #1e1b33 100%);
+      border-radius: 16px;
+      border: 1px solid var(--border);
+    }
+    header h1 {
+      font-size: 2rem;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.5rem;
+    }
+    header p { color: var(--text-dim); font-size: 0.95rem; }
+
+    .tag {
+      display: inline-block;
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 99px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .tag-cloud { background: rgba(96,165,250,0.15); color: var(--blue); border: 1px solid rgba(96,165,250,0.3); }
+    .tag-oss { background: rgba(52,211,153,0.15); color: var(--green); border: 1px solid rgba(52,211,153,0.3); }
+    .tag-top { background: rgba(124,108,248,0.2); color: var(--accent); border: 1px solid rgba(124,108,248,0.4); }
+
+    h2 {
+      font-size: 1.4rem;
+      color: var(--accent);
+      border-left: 3px solid var(--accent);
+      padding-left: 0.75rem;
+      margin: 2.5rem 0 1.25rem;
+    }
+    h3 {
+      font-size: 1.1rem;
+      color: var(--text);
+      margin: 2rem 0 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.25rem; margin-bottom: 1rem; }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      transition: border-color 0.2s;
+    }
+    .card:hover { border-color: var(--accent); }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 0.75rem;
+    }
+    .card-name {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .card-body { font-size: 0.88rem; color: var(--text-dim); }
+    .card-body .row {
+      display: flex;
+      gap: 0.5rem;
+      margin: 0.3rem 0;
+      align-items: baseline;
+    }
+    .card-body .label {
+      color: var(--text-dimmer);
+      min-width: 80px;
+      font-size: 0.8rem;
+    }
+    .card-body .val { color: var(--text); }
+
+    .highlight { color: var(--green); font-weight: 600; }
+    .warn { color: var(--yellow); }
+    .danger { color: var(--red); }
+
+    .stars { color: var(--yellow); letter-spacing: -1px; }
+
+    /* 比較テーブル */
+    .table-wrap { overflow-x: auto; margin: 1rem 0 2rem; border-radius: 12px; border: 1px solid var(--border); }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+    th {
+      background: var(--surface2);
+      color: var(--text-dim);
+      font-weight: 600;
+      text-align: left;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    td {
+      padding: 0.65rem 1rem;
+      border-bottom: 1px solid rgba(46,50,80,0.5);
+      color: var(--text);
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+    .center { text-align: center; }
+    .good { color: var(--green); }
+    .med { color: var(--yellow); }
+    .bad { color: var(--red); }
+
+    /* AGY推奨 */
+    .agy-section {
+      background: linear-gradient(135deg, rgba(124,108,248,0.08), rgba(232,121,249,0.05));
+      border: 1px solid rgba(124,108,248,0.3);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin: 1.5rem 0;
+    }
+    .agy-section h3 { color: var(--accent); margin-top: 0; }
+    .agy-item {
+      background: var(--surface);
+      border-radius: 8px;
+      padding: 1rem;
+      margin: 0.75rem 0;
+      border-left: 3px solid var(--accent);
+    }
+    .agy-item .title { font-weight: 700; color: var(--text); margin-bottom: 0.25rem; }
+    .agy-item .desc { font-size: 0.88rem; color: var(--text-dim); }
+
+    /* コードブロック */
+    .code-block {
+      background: #0d0f18;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      font-family: 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 0.82rem;
+      color: #a5f3fc;
+      overflow-x: auto;
+      margin: 0.75rem 0;
+      line-height: 1.6;
+    }
+    .code-block .comment { color: var(--text-dimmer); }
+    .code-block .kw { color: #c084fc; }
+    .code-block .str { color: #86efac; }
+    .code-block .fn { color: #60a5fa; }
+
+    /* おまけセクション */
+    .bonus { border: 1px solid rgba(251,191,36,0.3); border-radius: 12px; padding: 1.5rem; margin: 1.5rem 0; background: rgba(251,191,36,0.04); }
+    .bonus h3 { color: var(--yellow); margin-top: 0; }
+    .bonus-item { margin: 1rem 0; padding: 1rem; background: var(--surface); border-radius: 8px; }
+    .bonus-item .b-title { font-weight: 700; color: var(--text); margin-bottom: 0.5rem; }
+    .bonus-item .b-desc { font-size: 0.88rem; color: var(--text-dim); }
+    .difficulty { font-size: 0.78rem; margin-top: 0.4rem; }
+
+    .pill {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 99px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .pill-easy { background: rgba(52,211,153,0.15); color: var(--green); }
+    .pill-mid { background: rgba(251,191,36,0.15); color: var(--yellow); }
+    .pill-hard { background: rgba(248,113,113,0.15); color: var(--red); }
+
+    footer { text-align: center; color: var(--text-dimmer); font-size: 0.8rem; margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--border); }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <h1>TTS 総合比較レポート</h1>
+    <p>Fish Audio を起点に、クラウドサービス・OSSモデルを横断した音声合成比較 — 2026-04-04</p>
+    <p style="margin-top:0.5rem; font-size:0.8rem; color: var(--text-dimmer)">AGYプロジェクト（ティア・ユリ・リクのキャラクターボイス生成）での活用を念頭に作成</p>
+  </header>
+
+  <!-- ===== Cloud Services ===== -->
+  <h2>☁️ クラウドサービス系</h2>
+  <div class="cards">
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-name">Fish Audio <span class="tag tag-top">推奨</span></div>
+        <div class="tag tag-cloud">Cloud</div>
+      </div>
+      <div class="card-body">
+        <div class="row"><span class="label">品質</span><span class="stars">★★★★★</span></div>
+        <div class="row"><span class="label">ボイスクローン</span><span class="val highlight">◎ 15秒サンプル</span></div>
+        <div class="row"><span class="label">言語</span><span class="val">70言語 / 2M+ボイス</span></div>
+        <div class="row"><span class="label">レイテンシ</span><span class="val">サブ500ms（ストリーミング）</span></div>
+        <div class="row"><span class="label">価格</span><span class="val highlight">$15/百万バイト（約12h音声）</span></div>
+        <div class="row"><span class="label">無料枠</span><span class="val">200分/月</span></div>
+        <div class="row"><span class="label">SDK</span><span class="val">Python公式 (fish-audio-sdk)</span></div>
+        <div class="row"><span class="label">優位性</span><span class="val">TTS-Arena2 1位。ElevenLabs比 45〜70%安。OSS版(Fish Speech)でセルフホスト可</span></div>
+        <div class="row"><span class="label">注意点</span><span class="val warn">日本語は英中より若干劣る場合あり</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-name">ElevenLabs</div>
+        <div class="tag tag-cloud">Cloud</div>
+      </div>
+      <div class="card-body">
+        <div class="row"><span class="label">品質</span><span class="stars">★★★★★</span></div>
+        <div class="row"><span class="label">ボイスクローン</span><span class="val highlight">◎ Instant / Professional</span></div>
+        <div class="row"><span class="label">言語</span><span class="val">70言語</span></div>
+        <div class="row"><span class="label">レイテンシ</span><span class="val">Flash v2.5: ~75ms</span></div>
+        <div class="row"><span class="label">価格</span><span class="val warn">月額制（スケールで割高）</span></div>
+        <div class="row"><span class="label">優位性</span><span class="val">英語品質・感情制御・APIエコシステムが成熟</span></div>
+        <div class="row"><span class="label">注意点</span><span class="val danger">Fish Audioの2〜3倍以上のコスト</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-name">Cartesia (Sonic-3)</div>
+        <div class="tag tag-cloud">Cloud</div>
+      </div>
+      <div class="card-body">
+        <div class="row"><span class="label">品質</span><span class="stars">★★★★☆</span></div>
+        <div class="row"><span class="label">ボイスクローン</span><span class="val highlight">◎ 15秒</span></div>
+        <div class="row"><span class="label">言語</span><span class="val">40言語（インド系9言語含む）</span></div>
+        <div class="row"><span class="label">レイテンシ</span><span class="val highlight">TTFA ~40ms（業界最速クラス）</span></div>
+        <div class="row"><span class="label">価格</span><span class="val highlight">ElevenLabs の約1/5</span></div>
+        <div class="row"><span class="label">優位性</span><span class="val">会話AIエージェント・低遅延用途に最適</span></div>
+        <div class="row"><span class="label">注意点</span><span class="val warn">ボイスライブラリがやや少ない</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-name">Google Cloud TTS</div>
+        <div class="tag tag-cloud">Cloud</div>
+      </div>
+      <div class="card-body">
+        <div class="row"><span class="label">品質</span><span class="stars">★★★☆☆</span></div>
+        <div class="row"><span class="label">ボイスクローン</span><span class="val danger">❌ 非対応</span></div>
+        <div class="row"><span class="label">言語</span><span class="val">50+ / 380+ボイス</span></div>
+        <div class="row"><span class="label">価格</span><span class="val">$4/百万文字、無料100万文字/月</span></div>
+        <div class="row"><span class="label">優位性</span><span class="val">Google エコシステム統合、SSML充実</span></div>
+        <div class="row"><span class="label">注意点</span><span class="val warn">カスタマイズ性が低い</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-name">Amazon Polly</div>
+        <div class="tag tag-cloud">Cloud</div>
+      </div>
+      <div class="card-body">
+        <div class="row"><span class="label">品質</span><span class="stars">★★★☆☆</span></div>
+        <div class="row"><span class="label">ボイスクローン</span><span class="val danger">❌（エンタープライズのみ）</span></div>
+        <div class="row"><span class="label">言語</span><span class="val">40+言語</span></div>
+        <div class="row"><span class="label">価格</span><span class="val">標準$4 / Neural $16（百万文字）</span></div>
+        <div class="row"><span class="label">優位性</span><span class="val">AWS統合が容易</span></div>
+        <div class="row"><span class="label">注意点</span><span class="val warn">ボイスライブラリが古め</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-name">Azure TTS (Microsoft)</div>
+        <div class="tag tag-cloud">Cloud</div>
+      </div>
+      <div class="card-body">
+        <div class="row"><span class="label">品質</span><span class="stars">★★★★☆</span></div>
+        <div class="row"><span class="label">ボイスクローン</span><span class="val">◯（Custom Neural Voice）</span></div>
+        <div class="row"><span class="label">言語</span><span class="val">140+ / 400+ボイス（最多カバレッジ）</span></div>
+        <div class="row"><span class="label">価格</span><span class="val warn">$15/百万文字、無料50万文字/月</span></div>
+        <div class="row"><span class="label">優位性</span><span class="val">SSML最充実。多言語カバレッジNo.1</span></div>
+        <div class="row"><span class="label">注意点</span><span class="val warn">Fish Audioと同コスト帯だが機能は劣る</span></div>
+      </div>
+    </div>
+
+  </div><!-- /cards -->
+
+  <!-- ===== OSS ===== -->
+  <h2>🔧 OSS系（ローカル実行可能）</h2>
+  <div class="cards">
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-name">Fish Speech <span class="tag tag-top">推奨</span></div>
+        <div class="tag tag-oss">OSS</div>
+      </div>
+      <div class="card-body">
+        <div class="row"><span class="label">ライセンス</span><span class="val highlight">Apache 2.0（商用可）</span></div>
+        <div class="row"><span class="label">品質</span><span class="stars">★★★★☆</span></div>
+        <div class="row"><span class="label">ボイスクローン</span><span class="val highlight">◎ 10〜30秒</span></div>
+        <div class="row"><span class="label">言語</span><span class="val">80+言語</span></div>
+        <div class="row"><span class="label">要件</span><span class="val">NVIDIA GPU 推奨（RTX3060以上）</span></div>
+        <div class="row"><span class="label">難度</span><span class="val"><span class="pill pill-mid">★★★☆☆</span></span></div>
+        <div class="row"><span class="label">AGY適性</span><span class="val highlight">◎ 完全ローカルでキャラボイス生成可</span></div>
+        <div class="row"><span class="label">注意点</span><span class="val warn">GPU無しは生成が遅い</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-name">Chatterbox (Resemble AI) <span class="tag tag-top">推奨</span></div>
+        <div class="tag tag-oss">OSS</div>
+      </div>
+      <div class="card-body">
+        <div class="row"><span class="label">ライセンス</span><span class="val highlight">OSS（商用可）</span></div>
+        <div class="row"><span class="label">品質</span><span class="stars">★★★★☆</span></div>
+        <div class="row"><span class="label">選好率</span><span class="val highlight">63.75%（ElevenLabs比較）</span></div>
+        <div class="row"><span class="label">ボイスクローン</span><span class="val highlight">◎（ElevenLabs相当）</span></div>
+        <div class="row"><span class="label">パラメータ</span><span class="val">350M（Turbo版）</span></div>
+        <div class="row"><span class="label">難度</span><span class="val"><span class="pill pill-mid">★★★☆☆</span></span></div>
+        <div class="row"><span class="label">AGY適性</span><span class="val highlight">◎ OpenAI互換APIでエージェント統合容易</span></div>
+        <div class="row"><span class="label">注意点</span><span class="val warn">Turboは比較的新しく情報少</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-name">Kokoro-82M</div>
+        <div class="tag tag-oss">OSS</div>
+      </div>
+      <div class="card-body">
+        <div class="row"><span class="label">ライセンス</span><span class="val highlight">Apache 2.0（商用可）</span></div>
+        <div class="row"><span class="label">品質</span><span class="stars">★★★★☆</span></div>
+        <div class="row"><span class="label">速度</span><span class="val highlight">96倍リアルタイム（GPU）</span></div>
+        <div class="row"><span class="label">ボイスクローン</span><span class="val warn">△（単体では非対応）</span></div>
+        <div class="row"><span class="label">要件</span><span class="val highlight">CPU でも動作可</span></div>
+        <div class="row"><span class="label">難度</span><span class="val"><span class="pill pill-easy">★★☆☆☆</span></span></div>
+        <div class="row"><span class="label">AGY適性</span><span class="val">○ ナレーション・固定読み上げ向け</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-name">Coqui XTTS-v2</div>
+        <div class="tag tag-oss">OSS</div>
+      </div>
+      <div class="card-body">
+        <div class="row"><span class="label">ライセンス</span><span class="val danger">非商用限定（Coqui PML）</span></div>
+        <div class="row"><span class="label">品質</span><span class="stars">★★★★☆</span></div>
+        <div class="row"><span class="label">ボイスクローン</span><span class="val highlight">◎ 6秒（最短クラス）</span></div>
+        <div class="row"><span class="label">言語</span><span class="val">17言語</span></div>
+        <div class="row"><span class="label">難度</span><span class="val"><span class="pill pill-mid">★★★☆☆</span></span></div>
+        <div class="row"><span class="label">AGY適性</span><span class="val danger">△ 商用展開には使えない</span></div>
+        <div class="row"><span class="label">注意点</span><span class="val danger">商用利用不可が最大ネック</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-name">StyleTTS2</div>
+        <div class="tag tag-oss">OSS</div>
+      </div>
+      <div class="card-body">
+        <div class="row"><span class="label">ライセンス</span><span class="val highlight">MIT</span></div>
+        <div class="row"><span class="label">用途</span><span class="val">研究・カスタム開発向けアーキテクチャ</span></div>
+        <div class="row"><span class="label">位置づけ</span><span class="val">Kokoro の基盤。プロダクションはKokoro推奨</span></div>
+        <div class="row"><span class="label">AGY適性</span><span class="val warn">△（実験・改修用途）</span></div>
+      </div>
+    </div>
+
+  </div><!-- /oss cards -->
+
+  <!-- ===== 比較表 ===== -->
+  <h2>📊 比較サマリー</h2>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>サービス</th>
+          <th>種別</th>
+          <th>品質</th>
+          <th>声クローン</th>
+          <th>コスト</th>
+          <th>商用</th>
+          <th>ローカル</th>
+          <th>AGY適性</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Fish Audio</strong></td>
+          <td><span class="tag tag-cloud">Cloud</span></td>
+          <td class="center"><span class="stars">★★★★★</span></td>
+          <td class="center good">◎ 15秒</td>
+          <td class="center">$$</td>
+          <td class="center good">✅</td>
+          <td class="center good">✅ (Fish Speech)</td>
+          <td class="center good">◎</td>
+        </tr>
+        <tr>
+          <td><strong>ElevenLabs</strong></td>
+          <td><span class="tag tag-cloud">Cloud</span></td>
+          <td class="center"><span class="stars">★★★★★</span></td>
+          <td class="center good">◎</td>
+          <td class="center bad">$$$$</td>
+          <td class="center good">✅</td>
+          <td class="center bad">❌</td>
+          <td class="center med">△ 高コスト</td>
+        </tr>
+        <tr>
+          <td><strong>Cartesia</strong></td>
+          <td><span class="tag tag-cloud">Cloud</span></td>
+          <td class="center"><span class="stars">★★★★☆</span></td>
+          <td class="center good">◎ 15秒</td>
+          <td class="center">$$</td>
+          <td class="center good">✅</td>
+          <td class="center bad">❌</td>
+          <td class="center good">○ 低遅延用途</td>
+        </tr>
+        <tr>
+          <td>Google TTS</td>
+          <td><span class="tag tag-cloud">Cloud</span></td>
+          <td class="center"><span class="stars">★★★☆☆</span></td>
+          <td class="center bad">❌</td>
+          <td class="center">$$</td>
+          <td class="center good">✅</td>
+          <td class="center bad">❌</td>
+          <td class="center med">△</td>
+        </tr>
+        <tr>
+          <td><strong>Fish Speech</strong></td>
+          <td><span class="tag tag-oss">OSS</span></td>
+          <td class="center"><span class="stars">★★★★☆</span></td>
+          <td class="center good">◎ 10〜30秒</td>
+          <td class="center good">無料</td>
+          <td class="center good">✅</td>
+          <td class="center good">✅</td>
+          <td class="center good">◎</td>
+        </tr>
+        <tr>
+          <td><strong>Kokoro-82M</strong></td>
+          <td><span class="tag tag-oss">OSS</span></td>
+          <td class="center"><span class="stars">★★★★☆</span></td>
+          <td class="center med">△</td>
+          <td class="center good">無料</td>
+          <td class="center good">✅</td>
+          <td class="center good">✅</td>
+          <td class="center">○</td>
+        </tr>
+        <tr>
+          <td>XTTS-v2</td>
+          <td><span class="tag tag-oss">OSS</span></td>
+          <td class="center"><span class="stars">★★★★☆</span></td>
+          <td class="center good">◎ 6秒</td>
+          <td class="center good">無料</td>
+          <td class="center bad">❌非商用</td>
+          <td class="center good">✅</td>
+          <td class="center med">△</td>
+        </tr>
+        <tr>
+          <td><strong>Chatterbox</strong></td>
+          <td><span class="tag tag-oss">OSS</span></td>
+          <td class="center"><span class="stars">★★★★☆</span></td>
+          <td class="center good">◎</td>
+          <td class="center good">無料</td>
+          <td class="center good">✅</td>
+          <td class="center good">✅</td>
+          <td class="center good">◎</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ===== AGY推奨 ===== -->
+  <h2>🎤 AGYプロジェクトでの推奨活用方針</h2>
+  <div class="agy-section">
+    <div class="agy-item">
+      <div class="title">🚀 短期：ティア・リクのボイス生成 → Fish Audio API</div>
+      <div class="desc">
+        ソリスの声サンプル15秒を用意してクローン。ティアはピッチ高め、リクはそのままor低め。
+        <code>pip install fish-audio-sdk</code> で即利用開始。無料枠200分/月で試行十分。
+      </div>
+    </div>
+    <div class="agy-item">
+      <div class="title">🏗️ 中期：ローカル開発・コスト削減 → Fish Speech + Chatterbox</div>
+      <div class="desc">
+        Fish Speech でキャラクターボイス精度重視。Chatterbox + chatterbox-tts-api で OpenAI互換エンドポイントを建ててエージェント統合。
+      </div>
+    </div>
+    <div class="agy-item">
+      <div class="title">📖 補助：ナレーション・固定読み上げ → Kokoro-FastAPI</div>
+      <div class="desc">
+        Docker一発で起動。GPU なしでも動く。バッチ処理・コンテンツ読み上げに最適。
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== おまけ ===== -->
+  <h2>⭐ おまけ：OSSベースの改修アイデア</h2>
+  <div class="bonus">
+
+    <div class="bonus-item">
+      <div class="b-title">A. Fish Speech をファインチューニングしてキャラクターボイスを固定化</div>
+      <div class="b-desc">
+        毎回リファレンス音声を送る必要がなくなり、一貫した声質で高速生成可能になる。
+      </div>
+      <div class="code-block"><span class="comment"># フロー</span>
+<span class="comment"># 1. ソリスの声サンプル収集（30秒〜数分）</span>
+<span class="comment"># 2. Fish Speech fine-tuning スクリプトで話者適応</span>
+<span class="comment"># 3. チェックポイントをローカル保持</span>
+<span class="comment"># 4. reference_id 固定 → 常に同じ声で生成</span></div>
+      <div class="difficulty"><span class="pill pill-hard">難度 ★★★★☆</span> GPU + 数時間のトレーニング時間が必要</div>
+    </div>
+
+    <div class="bonus-item">
+      <div class="b-title">B. Kokoro + ピッチシフターで多キャラクター対応</div>
+      <div class="b-desc">
+        1モデルから librosa でピッチ変換してティア・リクなど複数キャラを生成。完全ローカル・無料。
+      </div>
+      <div class="code-block"><span class="kw">import</span> librosa
+<span class="kw">import</span> soundfile <span class="kw">as</span> sf
+
+y, sr = librosa.<span class="fn">load</span>(<span class="str">"kokoro_output.wav"</span>)
+<span class="comment"># ティア: +3半音（高め・可愛い系）</span>
+y_tear = librosa.effects.<span class="fn">pitch_shift</span>(y, sr=sr, n_steps=<span class="str">3</span>)
+<span class="comment"># リク: -2半音（低め・落ち着き系）</span>
+y_riku = librosa.effects.<span class="fn">pitch_shift</span>(y, sr=sr, n_steps=<span class="str">-2</span>)
+
+sf.<span class="fn">write</span>(<span class="str">"tear_voice.wav"</span>, y_tear, sr)
+sf.<span class="fn">write</span>(<span class="str">"riku_voice.wav"</span>, y_riku, sr)</div>
+      <div class="difficulty"><span class="pill pill-easy">難度 ★★☆☆☆</span> ライブラリインストールのみ</div>
+    </div>
+
+    <div class="bonus-item">
+      <div class="b-title">C. Chatterbox-TTS-API で OpenAI互換エージェント基盤を構築</div>
+      <div class="b-desc">
+        既存コードの base_url を変えるだけ。将来のモデル切り替えも容易。Discordボット・音声エージェントとの統合がシームレスになる。
+      </div>
+      <div class="code-block"><span class="comment"># Docker で起動（ポート8880）</span>
+docker run -p 8880:8880 travisvn/chatterbox-tts-api
+
+<span class="comment"># 既存 OpenAI SDK でそのまま呼べる</span>
+<span class="kw">from</span> openai <span class="kw">import</span> OpenAI
+client = <span class="fn">OpenAI</span>(base_url=<span class="str">"http://localhost:8880/v1"</span>, api_key=<span class="str">"not-needed"</span>)
+response = client.audio.speech.<span class="fn">create</span>(
+    model=<span class="str">"chatterbox"</span>,
+    voice=<span class="str">"tear"</span>,
+    input=<span class="str">"こんにちは！"</span>
+)</div>
+      <div class="difficulty"><span class="pill pill-easy">難度 ★★☆☆☆</span> Docker必須。OpenAI SDK があれば即統合</div>
+    </div>
+
+  </div>
+
+  <!-- リンク -->
+  <h2>🔗 参考リンク</h2>
+  <div style="display:flex; flex-wrap:wrap; gap:0.75rem; margin-bottom:2rem;">
+    <a href="https://fish.audio/" target="_blank" style="color:var(--accent); text-decoration:none; background:var(--surface); border:1px solid var(--border); padding:6px 14px; border-radius:8px; font-size:0.85rem;">Fish Audio 公式</a>
+    <a href="https://github.com/fishaudio/fish-speech" target="_blank" style="color:var(--accent); text-decoration:none; background:var(--surface); border:1px solid var(--border); padding:6px 14px; border-radius:8px; font-size:0.85rem;">Fish Speech GitHub</a>
+    <a href="https://pypi.org/project/fish-audio-sdk/" target="_blank" style="color:var(--accent); text-decoration:none; background:var(--surface); border:1px solid var(--border); padding:6px 14px; border-radius:8px; font-size:0.85rem;">fish-audio-sdk PyPI</a>
+    <a href="https://huggingface.co/hexgrad/Kokoro-82M" target="_blank" style="color:var(--accent); text-decoration:none; background:var(--surface); border:1px solid var(--border); padding:6px 14px; border-radius:8px; font-size:0.85rem;">Kokoro-82M HuggingFace</a>
+    <a href="https://github.com/remsky/Kokoro-FastAPI" target="_blank" style="color:var(--accent); text-decoration:none; background:var(--surface); border:1px solid var(--border); padding:6px 14px; border-radius:8px; font-size:0.85rem;">Kokoro-FastAPI GitHub</a>
+    <a href="https://github.com/travisvn/chatterbox-tts-api" target="_blank" style="color:var(--accent); text-decoration:none; background:var(--surface); border:1px solid var(--border); padding:6px 14px; border-radius:8px; font-size:0.85rem;">Chatterbox TTS API GitHub</a>
+    <a href="https://fish.audio/blog/text-to-speech-api-comparison-pricing-features" target="_blank" style="color:var(--accent); text-decoration:none; background:var(--surface); border:1px solid var(--border); padding:6px 14px; border-radius:8px; font-size:0.85rem;">Fish Audio API比較ブログ</a>
+  </div>
+
+  <footer>
+    <p>生成日: 2026-04-04 | AGYプロジェクト / ティア（Claude Code）</p>
+  </footer>
+
+</div>
+</body>
+</html>

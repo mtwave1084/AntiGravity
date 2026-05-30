@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI News 2026-04-26</title>
+<style>
+  body { background: #0d1117; color: #e6edf3; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; }
+  h1 { color: #58a6ff; border-bottom: 1px solid #30363d; padding-bottom: 10px; }
+  h2 { color: #79c0ff; margin-top: 32px; }
+  .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 16px; margin: 12px 0; }
+  .card h3 { color: #d2a8ff; margin: 0 0 8px; font-size: 1em; }
+  .card p { margin: 0; color: #c9d1d9; font-size: 0.9em; line-height: 1.6; }
+  .badge { display: inline-block; background: #1f6feb; color: #fff; font-size: 0.75em; padding: 2px 8px; border-radius: 12px; margin-left: 8px; vertical-align: middle; }
+  .badge.green { background: #238636; }
+  .badge.orange { background: #d29922; color: #0d1117; }
+  .badge.red { background: #b91c1c; }
+  .badge.purple { background: #6e40c9; }
+  .date { color: #8b949e; font-size: 0.8em; }
+  .source { color: #58a6ff; font-size: 0.8em; margin-top: 6px; }
+  .note { color: #8b949e; font-size: 0.8em; font-style: italic; margin-top: 4px; }
+</style>
+</head>
+<body>
+<h1>🤖 AI News <span class="date">2026-04-26</span></h1>
+<p class="date">Gemini + Codex + WebSearch + Playwright MCP で調査 · 重複除外済み</p>
+
+<h2>OpenAI</h2>
+
+<div class="card">
+  <h3>GPT-Image-2 正式リリース <span class="badge">新モデル</span></h3>
+  <p>OpenAIが2026年4月21日に「gpt-image-2」を公開。初の推論（thinking）機能内蔵型画像生成モデル。日本語を含む多言語テキストの文字精度は約99%に達し、最大4K（4096×4096）解像度と前モデル比2倍の生成速度を実現。リリース12時間以内にImage Arena全カテゴリで1位（+242点差）を獲得。ChatGPT Plus/Team/Enterprise向けに展開中、API提供も順次開始。</p>
+  <p class="date">2026-04-21</p>
+  <p class="source">一次ソース確認推奨 — openai.com/index/introducing-chatgpt-images-2-0/</p>
+</div>
+
+<h2>Anthropic</h2>
+
+<div class="card">
+  <h3>Amazon × Anthropic、最大5GW規模の計算資源提携に拡大 <span class="badge">企業動向</span></h3>
+  <p>Anthropicは4月20日、Amazonとの戦略的提携を大幅に拡大したと発表。Amazonが追加で$50億を即時投資（マイルストーン達成次第さらに最大$200億）、AnthropicはAWSのTrainium2〜4を中心に今後10年で$1000億超をコミットし、最大5GWの計算資源を確保。Claudeの学習・推論インフラをAWSに集約する大規模な長期契約。</p>
+  <p class="date">2026-04-20</p>
+  <p class="source">一次ソース確認推奨 — anthropic.com/news/anthropic-amazon-compute</p>
+</div>
+
+<div class="card">
+  <h3>2026年中間選挙向けセーフガードを更新 <span class="badge green">安全性</span></h3>
+  <p>Anthropicは4月24日、2026年米中間選挙に向けたClaudeの安全対策を詳報。Opus 4.7・Sonnet 4.6は政治的中立性評価で95〜96%を達成し、選挙関連プロンプトの99.8〜100%に適切に対応。初の「影響工作の自律実行テスト」を実施しほぼ全タスクを拒否。投票情報を尋ねたユーザーには非党派リソース「TurboVote」へ誘導するバナーを表示。</p>
+  <p class="date">2026-04-24</p>
+  <p class="source">一次ソース確認推奨 — anthropic.com/news/election-safeguards-update</p>
+</div>
+
+<h2>Google / Gemini</h2>
+
+<div class="card">
+  <h3>第8世代TPU「TPU 8t」「TPU 8i」発表 <span class="badge orange">ハード</span></h3>
+  <p>Google Cloud Next '26（4月22日）にて、学習・推論それぞれに特化した第8世代TPUを発表。学習用「TPU 8t」は1ポッドあたり9,600チップ・2ペタバイトの共有HBMを備え、Ironwood（第7世代）比で学習ドルあたり2.7倍の性能向上。推論用「TPU 8i」はBoardflyトポロジーを採用し、大規模MoEモデルの低遅延推論でIronwood比80%のコスト効率改善。両チップとも2026年後半より提供開始予定。</p>
+  <p class="date">2026-04-22</p>
+  <p class="source">一次ソース確認推奨 — cloud.google.com/blog/products/compute/tpu-8t-and-tpu-8i-technical-deep-dive</p>
+</div>
+
+<div class="card">
+  <h3>4月Gemini Drop — Lyria 3 ProがGeminiアプリに統合 <span class="badge">新機能</span></h3>
+  <p>Googleが4月25日に配信した月次アップデート「Gemini Drop」にて、音楽生成モデルLyria 3 ProがGeminiアプリに統合。Google AI Plus/Pro/Ultraユーザーはテキストプロンプトから最大3分の楽曲を生成可能に（イントロ・ヴァース・コーラス・ブリッジを指定できる）。同Dropでは他にGeminiアプリのMac版配布開始、Notebookとの連携強化なども含まれる。</p>
+  <p class="date">2026-04-25</p>
+  <p class="source">一次ソース確認推奨 — blog.google/innovation-and-ai/products/gemini-app/gemini-drop-april-2026/</p>
+</div>
+
+<h2>AI政策・規制</h2>
+
+<div class="card">
+  <h3>個人情報保護法 改正案が閣議決定 — AI学習目的の利用に同意不要 <span class="badge red">規制</span></h3>
+  <p>日本政府は4月7日、個人情報保護法改正案を閣議決定。AI開発・統計処理を目的とする個人データの利用について本人同意を原則不要とする緩和規定を盛り込んだ。一方で悪質な違反行為に対する「課徴金制度」を新設し、個人情報保護委員会が直接納付命令を出せるようにする。企業の規制緩和とガバナンス強化を同時に図る内容で、国会での成立・施行は今後見込まれる。</p>
+  <p class="date">2026-04-07</p>
+  <p class="source">一次ソース確認推奨 — ppc.go.jp/news/press/2026/260407/</p>
+</div>
+
+</body>
+</html>

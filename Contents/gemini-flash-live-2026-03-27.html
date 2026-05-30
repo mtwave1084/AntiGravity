@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gemini 3.1 Flash Live — 調査レポート</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #0d1117; color: #e6edf3; font-family: 'Segoe UI', sans-serif; padding: 24px; line-height: 1.6; }
+  h1 { color: #58a6ff; font-size: 1.6em; border-bottom: 1px solid #30363d; padding-bottom: 12px; margin-bottom: 24px; }
+  h2 { color: #79c0ff; font-size: 1.1em; margin: 32px 0 12px; }
+  h3 { color: #d2a8ff; font-size: 0.95em; margin-bottom: 6px; }
+  .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 16px; margin: 10px 0; }
+  .card p, .card li { color: #c9d1d9; font-size: 0.9em; }
+  .card ul { padding-left: 1.2em; }
+  .card li { margin: 4px 0; }
+  .badge { display: inline-block; font-size: 0.72em; padding: 2px 8px; border-radius: 12px; margin-left: 6px; vertical-align: middle; font-weight: 600; }
+  .badge-blue { background: #1f6feb; color: #fff; }
+  .badge-green { background: #238636; color: #fff; }
+  .badge-orange { background: #9a6700; color: #fff; }
+  .badge-red { background: #da3633; color: #fff; }
+  .badge-purple { background: #6e40c9; color: #fff; }
+  .date { color: #8b949e; font-size: 0.8em; }
+  .highlight { background: #1f3a5f; border-left: 3px solid #58a6ff; padding: 10px 14px; border-radius: 4px; margin: 10px 0; font-size: 0.88em; color: #b3d0f0; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.88em; margin: 10px 0; }
+  th { background: #21262d; color: #79c0ff; padding: 8px 12px; text-align: left; border: 1px solid #30363d; }
+  td { padding: 7px 12px; border: 1px solid #30363d; color: #c9d1d9; }
+  tr:nth-child(even) td { background: #161b22; }
+  code { background: #21262d; color: #f0883e; padding: 2px 6px; border-radius: 4px; font-size: 0.85em; font-family: 'Consolas', monospace; }
+  pre { background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 14px; overflow-x: auto; font-size: 0.82em; line-height: 1.5; color: #c9d1d9; font-family: 'Consolas', monospace; margin: 8px 0; }
+  .usecase { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .usecase-card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 14px; }
+  .usecase-card h4 { color: #d2a8ff; font-size: 0.88em; margin-bottom: 6px; }
+  .usecase-card p { color: #8b949e; font-size: 0.82em; }
+  .verdict { background: #1a2332; border: 1px solid #1f6feb; border-radius: 8px; padding: 16px; margin-top: 8px; }
+  .verdict h3 { color: #58a6ff; margin-bottom: 8px; }
+  .verdict p { color: #b3d0f0; font-size: 0.88em; }
+  a { color: #58a6ff; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  @media (max-width: 600px) { .usecase { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<h1>🎙️ Gemini 3.1 Flash Live — 調査レポート <span class="date">2026-03-27</span></h1>
+
+<!-- ========== 概要 ========== -->
+<h2>📌 概要</h2>
+<div class="card">
+  <h3>Gemini 3.1 Flash Live とは</h3>
+  <p>Google が2026年3月26日にプレビュー公開したリアルタイム音声対話専用モデル。テキストを介さず<strong>音声から直接音声を生成（Audio-to-Audio）</strong>することで超低遅延を実現。Gemini Live および Search Live に統合されている。</p>
+  <div class="highlight">
+    「これまでで最も高品質な音声・音声モデル」— Google 公式。会話の割り込み・自然なテンポ・背景ノイズ除去が最大の特徴。
+  </div>
+</div>
+
+<div class="card">
+  <h3>主な仕様</h3>
+  <table>
+    <tr><th>項目</th><th>内容</th></tr>
+    <tr><td>モデルID</td><td><code>gemini-3.1-flash-live-preview</code></td></tr>
+    <tr><td>コンテキストウィンドウ</td><td>入力 128K トークン / 出力 64K トークン</td></tr>
+    <tr><td>対応言語</td><td>90言語以上のリアルタイム対話</td></tr>
+    <tr><td>入力</td><td>音声（16ビットPCM 16kHz）・画像（JPEG 1FPS）・テキスト・動画</td></tr>
+    <tr><td>出力</td><td>音声（16ビットPCM 24kHz）・テキストトランスクリプト</td></tr>
+    <tr><td>接続プロトコル</td><td>WebSocket（双方向ストリーミング）</td></tr>
+    <tr><td>提供形態</td><td>プレビュー / Google AI Studio / Gemini Live API</td></tr>
+  </table>
+</div>
+
+<div class="card">
+  <h3>前モデル（Gemini 2.5 Flash Native Audio）からの改善点</h3>
+  <ul>
+    <li>応答遅延がさらに低下（体感的に自然な会話テンポ）</li>
+    <li>背景ノイズ・ピッチ・テンポなど音響的ニュアンスの認識精度向上</li>
+    <li>会話スレッド維持長が従来の <strong>2倍</strong></li>
+    <li>複雑なシステム指示への遵守率向上</li>
+    <li>全音声出力に <strong>SynthID 電子透かし</strong>（聞こえない形で埋め込み）</li>
+  </ul>
+</div>
+
+<!-- ========== API利用方法 ========== -->
+<h2>🛠️ APIの使い方</h2>
+<div class="card">
+  <h3>SDK セットアップ</h3>
+  <pre>pip install -U google-genai  # v1.56.0以降推奨</pre>
+
+  <h3 style="margin-top:12px;">基本的なリアルタイム音声対話（Live API）</h3>
+  <pre>import asyncio
+from google import genai
+from google.genai import types
+
+client = genai.Client(api_key="YOUR_API_KEY")
+
+async def main():
+    # Live API は WebSocket 接続
+    async with client.aio.live.connect(
+        model="gemini-3.1-flash-live-preview",
+        config={"response_modalities": ["AUDIO"]}
+    ) as session:
+        # 音声データ（16bit PCM 16kHz）を送信
+        await session.send(input=audio_bytes, end_of_turn=True)
+        # 音声レスポンスを受け取り（24kHz PCM）
+        async for response in session.receive():
+            if response.data:
+                play_audio(response.data)
+
+asyncio.run(main())</pre>
+  <div class="highlight">
+    Live API は通常の <code>generate_content</code> ではなく <code>client.aio.live.connect()</code> を使う。WebSocket 双方向ストリーミングが前提。
+  </div>
+</div>
+
+<!-- ========== 料金比較 ========== -->
+<h2>💰 API コスト比較</h2>
+<div class="card">
+  <h3>テキスト・音声モデル比較（1Mトークンあたり / プレビュー価格）</h3>
+  <table>
+    <tr>
+      <th>モデル</th>
+      <th>入力（テキスト）</th>
+      <th>入力（音声）</th>
+      <th>出力（テキスト）</th>
+      <th>出力（音声）</th>
+    </tr>
+    <tr>
+      <td><code>gemini-3.1-flash-live-preview</code> <span class="badge badge-blue">今回</span></td>
+      <td>$0.75</td>
+      <td>$3.00 / $0.005/分</td>
+      <td>$4.50</td>
+      <td>$12.00 / $0.018/分</td>
+    </tr>
+    <tr>
+      <td><code>gemini-3.1-pro-preview</code></td>
+      <td>$2.00（〜200K）</td>
+      <td>—</td>
+      <td>$12.00</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td><code>gemini-2.5-flash</code>（安定版）</td>
+      <td>$0.30</td>
+      <td>—</td>
+      <td>$2.50</td>
+      <td>—</td>
+    </tr>
+  </table>
+
+  <h3 style="margin-top:14px;">画像生成モデル比較（1画像あたり）</h3>
+  <table>
+    <tr>
+      <th>モデル</th>
+      <th>料金</th>
+      <th>解像度</th>
+      <th>備考</th>
+    </tr>
+    <tr>
+      <td>Imagen 4 Fast <span class="badge badge-green">Nano Banana 2相当</span></td>
+      <td>$0.02</td>
+      <td>標準</td>
+      <td>最速・最安</td>
+    </tr>
+    <tr>
+      <td>Imagen 4 Standard</td>
+      <td>$0.04</td>
+      <td>標準〜高</td>
+      <td>バランス型</td>
+    </tr>
+    <tr>
+      <td>Imagen 4 Ultra <span class="badge badge-purple">Nano Banana Pro相当</span></td>
+      <td>$0.06</td>
+      <td>最高品質</td>
+      <td>最高画質</td>
+    </tr>
+  </table>
+  <div class="highlight">
+    Flash Live はリアルタイム音声特化モデルなので、テキスト生成や画像生成とは用途が別。<br>
+    音声会話1分あたりのコスト目安：入力 $0.005 + 出力 $0.018 ≒ <strong>約$0.023/分（約3.5円/分）</strong>
+  </div>
+</div>
+
+<!-- ========== CLI対応 ========== -->
+<h2>💻 Gemini CLI から使えるか？</h2>
+<div class="card">
+  <p style="margin-bottom:10px;">
+    <span class="badge badge-orange">条件付き可</span>
+  </p>
+  <ul>
+    <li>Gemini CLI（ターミナルの <code>gemini</code> コマンド）は <strong>テキストモード</strong> が基本</li>
+    <li><code>gemini-3.1-pro-preview</code> や <code>gemini-3-flash-preview</code> は <code>-m</code> フラグで指定して <strong>使用可能</strong></li>
+    <li><code>gemini-3.1-flash-live-preview</code> は <strong>音声WebSocketモデル</strong> のため、テキストベースのCLIとは相性が悪い</li>
+    <li>音声入出力が必要なので、CLI から直接リアルタイム会話はできない</li>
+    <li>テキスト入力・テキスト出力に限れば Live API へのアクセス自体は API キーで可能</li>
+  </ul>
+  <div class="highlight">
+    ✅ テキスト調査・リサーチ → <code>gemini -m gemini-3.1-pro-preview -p "..."</code> で使える<br>
+    ❌ リアルタイム音声対話 → CLI ではなく Python/Node.js + WebSocket で実装が必要
+  </div>
+</div>
+
+<!-- ========== ユースケース ========== -->
+<h2>🎯 私たちで使えそうなユースケース</h2>
+<div class="usecase">
+  <div class="usecase-card">
+    <h4>🎵 楽曲・MV 制作のコメンタリー</h4>
+    <p>制作中の音楽やMV映像をリアルタイムで流しながら、Flash Liveに「今の部分どう思う？」と話しかける。音楽制作の壁打ち相手として。</p>
+  </div>
+  <div class="usecase-card">
+    <h4>🤖 Discord ボイスチャンネル統合（実験）</h4>
+    <p>Discord Bot にLive APIを組み込んでボイスチャンネルで会話できるティアを作る。WebSocket → Discord Audio の橋渡しで実装可能。</p>
+  </div>
+  <div class="usecase-card">
+    <h4>🎙️ 動画台本の読み合わせ</h4>
+    <p>ソリスとティアの対話形式台本を、実際に音声で読み合わせてリズム・テンポを確認。テキストより感覚的にチェックできる。</p>
+  </div>
+  <div class="usecase-card">
+    <h4>📸 カメラ映像リアルタイム解析</h4>
+    <p>カメラ映像（1FPS）を送りながら音声で質問。「今写ってる場所どこだと思う？」のような使い方。以前の桜写真解析の音声版。</p>
+  </div>
+  <div class="usecase-card">
+    <h4>🌐 多言語リアルタイム翻訳</h4>
+    <p>90言語対応。日本語で話しながら英語出力させるリアルタイム通訳。海外コラボや字幕自動生成のプロトタイプに。</p>
+  </div>
+  <div class="usecase-card">
+    <h4>🔬 実験的な AI 音声キャラクター</h4>
+    <p>ティアの音声版プロトタイプ。テキストベースの会話だけでなく、声で話すティアを試作する足がかりになる可能性。</p>
+  </div>
+</div>
+
+<!-- ========== 総評 ========== -->
+<h2>📋 総評と推奨アクション</h2>
+<div class="verdict">
+  <h3>まとめ</h3>
+  <p>Gemini 3.1 Flash Live は「音声でリアルタイムに話しかけてリアルタイムに返答が返ってくる」ことに特化したモデル。テキスト生成AIとは根本的に異なる使い方をする。</p>
+  <p style="margin-top:8px;">コストは <strong>音声通話として考えると$0.023/分（約3.5円/分）</strong> とそこまで高くない。Gemini 3.1 Pro のテキスト処理より特定用途では安い。</p>
+  <p style="margin-top:8px;"><strong>推奨アクション：</strong></p>
+  <ul style="color:#b3d0f0; font-size:0.88em; padding-left:1.2em; margin-top:6px;">
+    <li>まず Google AI Studio のプレイグラウンドで音声対話を試してみる（無料枠あり）</li>
+    <li>Discord ボイスbot との統合は Python + websockets ライブラリで実装可能</li>
+    <li>CLIから使うなら <code>gemini-3.1-pro-preview</code> が現実的（テキスト系タスク向け）</li>
+    <li>音声ティアの実験には有望だが、Discord オーディオ処理の実装コストは別途かかる</li>
+  </ul>
+</div>
+
+<p class="date" style="margin-top:24px; text-align:right;">調査: Gemini 3.1 Flash + WebFetch + WebSearch ／ 作成: ティア（2026-03-27）</p>
+
+</body>
+</html>

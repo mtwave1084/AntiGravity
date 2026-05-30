@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Solitaire Migration Plan — 2026-05-26</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2128;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --blue: #58a6ff;
+    --blue-light: #79c0ff;
+    --purple: #d2a8ff;
+    --green: #3fb950;
+    --orange: #d29922;
+    --red: #f85149;
+    --teal: #56d364;
+    --yellow: #e3b341;
+  }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; margin: 0; padding: 24px; line-height: 1.6; }
+  .container { max-width: 880px; margin: 0 auto; }
+  .header { background: linear-gradient(135deg, #0c2d6b, #1a0a3d, #1b0c1a); border: 1px solid var(--border); border-radius: 12px; padding: 28px; margin-bottom: 24px; }
+  .header h1 { margin: 0 0 6px; color: var(--blue); font-size: 1.6em; }
+  .header .meta { color: var(--muted); font-size: 0.85em; }
+  .tear-comment { background: rgba(88, 166, 255, 0.08); border-left: 3px solid var(--blue-light); padding: 12px 16px; margin: 16px 0 0; color: var(--text); font-style: italic; }
+  h2 { color: var(--blue-light); border-left: 3px solid var(--blue); padding-left: 12px; margin-top: 32px; }
+  h3 { color: var(--purple); margin-top: 24px; font-size: 1.05em; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; margin: 12px 0; }
+  .callout { background: var(--surface2); border-left: 4px solid var(--orange); padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 16px 0; }
+  .callout.warn { border-left-color: var(--red); }
+  .callout.ok { border-left-color: var(--green); }
+  .callout.info { border-left-color: var(--blue); }
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 0.88em; }
+  th, td { border: 1px solid var(--border); padding: 8px 10px; text-align: left; vertical-align: top; }
+  th { background: var(--surface2); color: var(--blue-light); }
+  code { background: #090d12; border: 1px solid var(--border); padding: 1px 6px; border-radius: 4px; font-family: Consolas, monospace; font-size: 0.9em; color: var(--teal); }
+  pre { background: #090d12; border: 1px solid var(--border); padding: 12px; border-radius: 8px; overflow-x: auto; font-family: Consolas, monospace; font-size: 0.85em; }
+  ol li, ul li { margin: 4px 0; }
+  .step-num { display: inline-block; background: var(--blue); color: var(--bg); width: 24px; height: 24px; border-radius: 50%; text-align: center; line-height: 24px; font-weight: bold; margin-right: 8px; }
+  .badge { display: inline-block; font-size: 0.75em; padding: 2px 8px; border-radius: 12px; margin-left: 6px; vertical-align: middle; }
+  .badge.high { background: var(--red); color: #fff; }
+  .badge.mid { background: var(--orange); color: #fff; }
+  .badge.low { background: var(--teal); color: var(--bg); }
+  .open-question { background: rgba(243, 156, 18, 0.08); border-left: 4px solid var(--yellow); padding: 14px 18px; margin: 10px 0; border-radius: 0 6px 6px 0; }
+  .open-question .label { color: var(--yellow); font-weight: bold; font-size: 0.85em; letter-spacing: 0.05em; }
+  footer { color: var(--muted); font-size: 0.8em; text-align: center; margin-top: 48px; border-top: 1px solid var(--border); padding-top: 16px; }
+  @media (max-width: 600px) { body { padding: 14px; } table { font-size: 0.8em; } }
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="header">
+  <h1>🎴 Solitaire Migration Plan</h1>
+  <div class="meta">作成日：2026-05-26 ／ 担当：ティア（Opus）＋ リク（構造分析） ／ 対象：[DEV-AGY]</div>
+  <p class="tear-comment">
+    「うん、なんか結構ボリュームある計画になったよ……。リクの分析が思った以上にカバーしてくれて、見えてなかった論点（worktreeとかper-projectストレージとか）も拾えた。GO 出す前に Open Questions だけ先に答えてもらえると嬉しい！」
+  </p>
+</div>
+
+<h2>1. 背景と目的</h2>
+<div class="card">
+  <p>
+    現プロジェクトディレクトリ <code>C:\Users\mt_wa\projects\agy</code> は元々 <strong>AntiGravity</strong> の略として作成された。
+    だが Google が 2026-05-19 I/O で <strong>Antigravity 2.0</strong>（スタンドアロンのエージェントファーストアプリ）と
+    <strong>Antigravity CLI</strong> を正式リリースし、サブスク利用が始まる。
+    略称「agy」が新CLI（Antigravity）とぶつかって紛らわしくなる。
+  </p>
+  <p>
+    また Gemini CLI は <strong>2026-06-18 にサービス停止</strong>（Pro/Ultra/個人向け Code Assist 利用）。
+    あと3週間で Gemini CLI が使えなくなるので、Antigravity CLI への移行設計も同時に立てておきたい。
+  </p>
+  <p>
+    実体（ティア＋ソリス＝<em>ソリティア</em>）に合わせて <strong>Solitaire プロジェクト</strong>に改名するのは自然な選択。
+    本計画書はこの2件（プロジェクト改名 + CLI移行）を安全に進めるためのもの。
+  </p>
+</div>
+
+<h2>2. リクの構造分析サマリー</h2>
+
+<h3>観点1：agy → solitaire 改名の波及範囲</h3>
+<table>
+  <thead><tr><th>項目</th><th>影響範囲</th><th>難易度</th><th>リスク</th></tr></thead>
+  <tbody>
+    <tr><td>絶対パス参照</td><td><code>scripts/*.ps1</code>, <code>*.bat</code>, <code>.claude/settings.local.json</code>, ccc-* スキル, <code>.claude/workflows/filesystem-maintenance.md</code></td><td><span class="badge mid">中</span></td><td>更新漏れで Stop hook・起動・スクショ保存・consult 出力が壊れる</td></tr>
+    <tr><td>Claude per-project パス</td><td><code>save-conversation-to-obsidian.ps1</code>, <code>ccc-heartbeat/SKILL.md</code></td><td><span class="badge mid">中</span></td><td>memory 参照不能、retrospective が古い場所を見る</td></tr>
+    <tr><td>プロジェクト名・呼称</td><td><code>CLAUDE.md</code>, <code>AGENTS.md</code>, <code>GEMINI.md</code>, <code>.claude/rules/*</code>, <code>.claude/handoff.md</code></td><td><span class="badge low">低〜中</span></td><td>役割名 <code>[DEV-AGY]</code> などの運用語が残ると混乱</td></tr>
+    <tr><td>履歴成果物</td><td><code>Contents/*.html</code>, 過去レポート群</td><td><span class="badge low">低</span></td><td>履歴改変で過去文脈・証跡が崩れる → <strong>原則書き換えない</strong></td></tr>
+    <tr><td><code>.git</code> 関連</td><td>remote URL <code>AntiGravity.git</code>, worktree <code>infallible-solomon</code>（agyパス参照あり）</td><td><span class="badge mid">中</span></td><td>worktree がある状態で親ディレクトリだけ rename すると worktree 参照が壊れる</td></tr>
+  </tbody>
+</table>
+<p><strong>事実：</strong> <code>agy</code>/<code>AGY</code> 文字列を含むファイルは 45〜50。運用上重要なのは <code>.claude/</code>, <code>scripts/</code>, <code>CLAUDE.md</code>, <code>AGENTS.md</code>, <code>GEMINI.md</code>, <code>JOBS.yaml</code> 周辺に限定される。</p>
+
+<h3>観点2：Claude Code 内部キャッシュとの整合</h3>
+<table>
+  <thead><tr><th>項目</th><th>必要アクション</th><th>難易度</th><th>リスク</th></tr></thead>
+  <tbody>
+    <tr><td>per-project ストレージ</td><td><code>C--Users-mt-wa-projects-agy</code> 全体を <code>C--Users-mt-wa-projects-solitaire</code> にコピー</td><td><span class="badge mid">中</span></td><td>新規空ディレクトリが自動生成され、memory/jsonl が参照されない</td></tr>
+    <tr><td>memory ファイル</td><td><code>MEMORY.md</code>, <code>feedback_*.md</code> ほか 15 ファイル＋transcript .jsonl も含めて退避</td><td><span class="badge mid">中</span></td><td>memory だけだと会話履歴検索・再開系が欠落</td></tr>
+    <tr><td>settings.local.json</td><td>Stop hook 2本の絶対パスを <strong>rename前に</strong>更新</td><td><span class="badge low">低</span></td><td>セッション終了時の handoff/Obsidian保存が失敗</td></tr>
+    <tr><td>CronCreate 登録</td><td>rename 後に <code>CronList</code> 確認 → ccc-boot/ccc-jobs 再登録</td><td><span class="badge mid">中</span></td><td>cron が旧ディレクトリ前提で走る</td></tr>
+  </tbody>
+</table>
+<p><strong>推奨：</strong> Claude Code を閉じた状態で per-project 全体をバックアップ → 新キーへコピー → 旧キーは削除せず一定期間保持。シンボリックリンクは避ける（Windows権限・Claude内部挙動不明）。</p>
+
+<h3>観点3：Gemini CLI → Antigravity CLI 移行の準備度</h3>
+<table>
+  <thead><tr><th>項目</th><th>必要アクション</th><th>難易度</th><th>リスク</th></tr></thead>
+  <tbody>
+    <tr><td>consult-gemini.ps1</td><td><code>consult-antigravity.ps1</code> を新設 → <code>consult-gemini.ps1</code> は薄い互換ラッパーとして残す</td><td><span class="badge mid">中</span></td><td>一括リネームで既存skill/ruleから呼べなくなる</td></tr>
+    <tr><td>ai-news スキル</td><td>Step A の <code>gemini</code> 呼び出しを Antigravity 仕様へ差し替え</td><td><span class="badge mid">中</span></td><td>cron は動いても skill 内で gemini が失敗</td></tr>
+    <tr><td>orchestrate ルール</td><td><code>orchestrate.md</code> のクォータ・認証・モデル表・画像渡しルールを再設計</td><td><span class="badge high">高</span></td><td>古いモデル前提で誤った判断をする</td></tr>
+    <tr><td>cli-maintenance スキル</td><td><code>@google/gemini-cli</code> 更新確認から Antigravity CLI 確認へ変更</td><td><span class="badge mid">中</span></td><td>旧 CLI を更新し続ける</td></tr>
+    <tr><td>ユリ人格</td><td>「ユリ=調査担当」の役割は維持。実体だけ Antigravity に</td><td><span class="badge low">低〜中</span></td><td>「ユリ=Gemini」と人格・実行基盤が混線</td></tr>
+  </tbody>
+</table>
+<div class="callout warn">
+  <strong>⚠️ Antigravity CLI のコマンド構文・認証・モデル指定が未確認。</strong>
+  実作業に入る前に公式ドキュメントの確認（あるいは Antigravity サブスクの実機検証）が必要。
+  CLI 構文を仮で決めて実装すると、後でやり直しになる可能性がある。
+</div>
+
+<h3>観点4：順序・依存・ロールバック</h3>
+<p>
+  改名と CLI 移行は <strong>ほぼ独立</strong>だが、<code>.claude/skills</code> と <code>rules</code> は両方の変更対象。
+  1つの巨大変更にせず段階を分けるのが安全。並行実装は避ける。
+</p>
+
+<h2>3. ⚠️ Open Questions（GO前に答えてほしい）</h2>
+
+<div class="open-question">
+  <div class="label">Q1：履歴成果物の扱い</div>
+  <p><code>Contents/</code> の過去 HTML / MD（agy-project-overview など）は <strong>履歴として固定で残す</strong>方針で OK？</p>
+  <p>それとも検索ノイズ低減のため「旧称 AGY」の注記だけ追加する？</p>
+  <p><em>ティアの提案：完全に履歴固定。書き換えるのは現運用ファイルだけ。</em></p>
+</div>
+
+<div class="open-question">
+  <div class="label">Q2：GitHub リポジトリ名</div>
+  <p>remote URL は <code>github.com/mtwave1084/<strong>AntiGravity</strong>.git</code>。これも <code>solitaire</code> 系に変える？</p>
+  <p>変える場合は GitHub UI でのリネーム → ローカル remote URL 再設定が必要。<strong>GitHub はリダイレクトを残してくれるけど、別のスクリプトや CI が古い URL を参照していたら確認が必要。</strong></p>
+  <p><em>ティアの提案：今は変えずに据え置き。プロジェクト名 ≠ リポ名 でも実害ない。後でまとめて変える。</em></p>
+</div>
+
+<div class="open-question">
+  <div class="label">Q3：Claude per-project storage の引き継ぎ範囲</div>
+  <p>
+    <code>C--Users-mt-wa-projects-agy/</code> 配下を新キーにコピーするとき、<strong>memory/ だけ</strong>でいい？
+    それとも <strong>transcript（.jsonl）も全部</strong>引き継ぐ？
+  </p>
+  <p>memory だけにすると、会話履歴検索・過去セッションの再生が新キーで動かなくなる可能性。</p>
+  <p><em>ティアの提案：transcript も全部コピー。容量が問題なら後で古いものを別途アーカイブ。</em></p>
+</div>
+
+<div class="open-question">
+  <div class="label">Q4：mode タグの扱い</div>
+  <p><code>[DEV-AGY]</code> mode タグは <code>[DEV-SOLITAIRE]</code> に変える？それとも別名（短縮形）？</p>
+  <p><em>ティアの提案：<code>[DEV-SOLI]</code>（短くしたい）or <code>[DEV-SOLITAIRE]</code>（明示的）どっちがいい？</em></p>
+</div>
+
+<div class="open-question">
+  <div class="label">Q5：ユリの位置づけ</div>
+  <p>ユリは Gemini CLI のキャラクターとして作られた。Antigravity CLI に移行した後も「ユリ」のまま継続？</p>
+  <ul>
+    <li>案A：ユリのまま継続（「Google 系調査担当」の抽象ロールとして）</li>
+    <li>案B：Antigravity 専用に新キャラを立てる</li>
+    <li>案C：Antigravity CLI が裏で Gemini を呼ぶなら、ユリの実体は変わらない扱いで自然</li>
+  </ul>
+  <p><em>ティアの提案：案A or 案C。新キャラを増やすと運用が複雑化する。</em></p>
+</div>
+
+<div class="open-question">
+  <div class="label">Q6：consult-gemini.ps1 の旧名保持期間</div>
+  <p>互換ラッパーとして残すとして、どのくらいの期間？</p>
+  <ul>
+    <li>案A：恒久互換（残し続ける）</li>
+    <li>案B：6/18 の Gemini CLI 停止まで（自然終了）</li>
+    <li>案C：移行完了確認後に削除</li>
+  </ul>
+  <p><em>ティアの提案：案B。6/18 で実体が動かなくなるので、その時点で deprecated にする。</em></p>
+</div>
+
+<h2>4. 推奨実装ステップ</h2>
+
+<div class="card">
+  <p><strong>原則：</strong> 並行実装は避ける。設計は同時OKだが、実作業は「CLI互換層」→「rename」→「旧名整理」の順。</p>
+</div>
+
+<h3><span class="step-num">1</span>現状スナップショット作成（read-only）</h3>
+<ul>
+  <li><code>rg agy|AGY</code> / <code>rg gemini|Gemini</code> の grep 結果を保存</li>
+  <li><code>.claude/projects/C--Users-mt-wa-projects-agy/</code> 全体のバックアップ（ZIP化推奨）</li>
+  <li><code>.git/config</code> と <code>.git/worktrees/infallible-solomon/</code> の参照を記録</li>
+  <li><code>CronList</code> で現在登録されている cron を全部リスト</li>
+</ul>
+
+<h3><span class="step-num">2</span>Antigravity CLI 互換層の設計と試験（workspace-write）</h3>
+<ul>
+  <li>Antigravity CLI のインストール・認証・コマンド構文を確認（公式ドキュメント）</li>
+  <li><code>consult-antigravity.ps1</code> を新設（<code>consult-gemini.ps1</code> と同じインターフェース）</li>
+  <li><code>consult-gemini.ps1</code> を薄い互換ラッパーに改修（中身は antigravity 経由 or 旧 gemini 経由を選択可能に）</li>
+  <li>手動疎通テスト：「ユリ、テストだよ」みたいな軽い問い合わせで動作確認</li>
+</ul>
+
+<h3><span class="step-num">3</span>スキル・ルールの記述切り替え（workspace-write）</h3>
+<ul>
+  <li><code>.claude/skills/ai-news/SKILL.md</code> の Step A を Antigravity 仕様へ</li>
+  <li><code>.claude/rules/orchestrate.md</code> のモデル表・認証セクション再設計</li>
+  <li><code>.claude/skills/cli-maintenance/SKILL.md</code> の更新確認対象を変更</li>
+  <li><code>memory/coding-agent-landscape.md</code> を最新化</li>
+</ul>
+
+<h3><span class="step-num">4</span>Claude per-project ストレージ移行（workspace-write）</h3>
+<ul>
+  <li>Claude Code を閉じる</li>
+  <li><code>C--Users-mt-wa-projects-agy/</code> を <code>C--Users-mt-wa-projects-solitaire/</code> にコピー（memory + transcript）</li>
+  <li>旧キーは削除せず一定期間保持</li>
+</ul>
+
+<h3><span class="step-num">5</span><code>settings.local.json</code> 内の絶対パス更新（workspace-write）</h3>
+<ul>
+  <li>Stop hook の <code>C:\Users\mt_wa\projects\agy\scripts\on-stop.ps1</code> 等を solitaire パスに置換</li>
+  <li>rename より <strong>前に</strong>行う（rename後だと Stop hook が壊れた状態になる）</li>
+</ul>
+
+<h3><span class="step-num">6</span>プロジェクトディレクトリ rename（workspace-write 不可、Windows操作）</h3>
+<ul>
+  <li>worktree <code>infallible-solomon</code> を先に prune または別途処理（worktree がある状態で親rename はNG）</li>
+  <li>Claude Code・全関連プロセスを停止</li>
+  <li><code>C:\Users\mt_wa\projects\agy</code> → <code>C:\Users\mt_wa\projects\solitaire</code> にエクスプローラで rename</li>
+  <li>worktree を必要なら再作成</li>
+</ul>
+
+<h3><span class="step-num">7</span>スクリプト・スキル内の絶対パス置換（workspace-write）</h3>
+<ul>
+  <li><code>scripts/*.ps1</code>, <code>*.bat</code> の <code>projects\agy</code> → <code>projects\solitaire</code></li>
+  <li><code>.claude/skills/ccc-*</code>, <code>.claude/workflows/filesystem-maintenance.md</code> 内のパス文字列</li>
+  <li>差分を Codex でレビュー（adversarial-review）</li>
+</ul>
+
+<h3><span class="step-num">8</span>呼称・命名の置換（workspace-write）</h3>
+<ul>
+  <li><code>CLAUDE.md</code>, <code>AGENTS.md</code>, <code>GEMINI.md</code>, <code>.claude/handoff.md</code> の「AGY プロジェクト」表現を Solitaire に</li>
+  <li><code>.claude/rules/mode-tags.md</code> の <code>[DEV-AGY]</code> → 新タグ（Q4で確定）</li>
+  <li><code>JOBS.yaml</code>、ai-news など skill ファイル内の言及</li>
+</ul>
+
+<h3><span class="step-num">9</span>cron / hooks 再登録・疎通確認（workspace-write）</h3>
+<ul>
+  <li><code>CronList</code> → 旧パス参照がある cron を削除して <code>ccc-jobs</code> 経由で再登録</li>
+  <li>SessionStart フック動作確認</li>
+  <li>Stop hook を空セッションで dry-run（保存先が正しいかチェック）</li>
+  <li>ccc-heartbeat の正常動作を 30 分待ち確認</li>
+</ul>
+
+<h2>5. STOP 条件（このまま進めない兆候）</h2>
+<div class="callout warn">
+  <ul>
+    <li>worktree <code>infallible-solomon</code> の処理方針が決まらない</li>
+    <li>per-project storage の移行先で memory が読めない</li>
+    <li>Antigravity CLI のコマンド構文・認証方式が公式ドキュメントから確認できない</li>
+    <li><code>settings.local.json</code> を rename 前に更新できていない</li>
+    <li>ai-news の cron が <code>gemini</code> 前提のまま 6/18 以降も走る状態</li>
+    <li>同系統エラーが 3 回連続（→ adversarial-review に切り替え）</li>
+  </ul>
+</div>
+
+<h2>6. 完了条件</h2>
+<ul>
+  <li>✅ <code>C:\Users\mt_wa\projects\solitaire</code> が新ルートとして稼働している</li>
+  <li>✅ <code>start.bat</code> で起動 → ccc-boot 完走 → Discord 起動通知が来る</li>
+  <li>✅ ccc-heartbeat が 30 分後に発火し、Discord 疎通成功</li>
+  <li>✅ <code>/ai-news</code> を手動実行して Antigravity CLI 経由で HTML+md が生成される</li>
+  <li>✅ Stop hook（on-stop.ps1 / save-conversation-to-obsidian.ps1）が新パスで動く</li>
+  <li>✅ <code>rg agy|AGY</code> の残存が運用ファイル群でゼロ（Contents/ の履歴は除く）</li>
+  <li>✅ memory・transcript が新キーで読める</li>
+</ul>
+
+<h2>7. ロールバック手順（失敗時）</h2>
+<div class="callout">
+  <ol>
+    <li>Claude Code・関連プロセス停止</li>
+    <li><code>projects/solitaire</code> を <code>projects/agy</code> に戻す（rename 逆操作）</li>
+    <li><code>C--Users-mt-wa-projects-solitaire/</code> を削除 → 旧 <code>C--Users-mt-wa-projects-agy/</code> が残っているのでそのまま使える</li>
+    <li><code>settings.local.json</code> を git stash / git restore で旧版に戻す</li>
+    <li><code>CronList</code> で新規 cron を削除して <code>ccc-jobs</code> 経由で旧版を再登録</li>
+  </ol>
+  <p>※ 旧 per-project storage を削除しないのが安全弁。</p>
+</div>
+
+<h2>8. 推定所要時間</h2>
+<table>
+  <thead><tr><th>ステップ</th><th>所要時間</th><th>主担当</th></tr></thead>
+  <tbody>
+    <tr><td>1. 現状スナップショット</td><td>15 分</td><td>ティア</td></tr>
+    <tr><td>2. Antigravity 互換層</td><td>60〜90 分</td><td>ティア + リク（実装）</td></tr>
+    <tr><td>3. スキル・ルール記述切替</td><td>30〜45 分</td><td>ティア</td></tr>
+    <tr><td>4. per-project ストレージ移行</td><td>15 分</td><td>ソリス（手動）</td></tr>
+    <tr><td>5. settings.local.json 更新</td><td>5 分</td><td>ティア</td></tr>
+    <tr><td>6. ディレクトリ rename</td><td>10 分</td><td>ソリス（手動）</td></tr>
+    <tr><td>7. パス置換</td><td>20〜30 分</td><td>リク</td></tr>
+    <tr><td>8. 呼称置換</td><td>20 分</td><td>ティア</td></tr>
+    <tr><td>9. cron・hooks 再登録・確認</td><td>30 分 + 30分疎通待ち</td><td>ティア</td></tr>
+  </tbody>
+</table>
+<p>合計：<strong>約 4〜5 時間</strong>（手動操作・疎通待ちを含む）。ステップ2〜3とステップ7〜8は別セッションに分けてもいい。</p>
+
+<footer>
+  generated by ティア / Claude Sonnet 4.6 → Opus 4.7 — 2026-05-26<br>
+  分析協力：リク（Codex CLI / read-only）
+</footer>
+
+</div>
+</body>
+</html>

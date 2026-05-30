@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claude Code feature-dev プラグイン解説</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #222635;
+      --border: #2e3147;
+      --accent: #7c6af7;
+      --accent2: #4fc3f7;
+      --accent3: #81c995;
+      --accent4: #ffb74d;
+      --accent5: #ef9a9a;
+      --text: #e2e4f0;
+      --text-muted: #8b90a8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      line-height: 1.7;
+      padding: 2rem 1rem;
+    }
+
+    .container { max-width: 900px; margin: 0 auto; }
+
+    header {
+      text-align: center;
+      padding: 3rem 0 2rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 3rem;
+    }
+
+    .badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #7c6af7, #4fc3f7);
+      color: white;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.25rem 0.75rem;
+      border-radius: 100px;
+      margin-bottom: 1rem;
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #a78bfa, #4fc3f7);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.75rem;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 1rem;
+    }
+
+    .meta {
+      margin-top: 1.5rem;
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .meta-item {
+      text-align: center;
+    }
+
+    .meta-item .value {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .meta-item .label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    h2 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--accent2);
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    h3 {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 0.75rem;
+    }
+
+    section { margin-bottom: 3rem; }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .card.accent-left {
+      border-left: 3px solid var(--accent);
+    }
+
+    .phase-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1rem;
+    }
+
+    .phase-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      position: relative;
+    }
+
+    .phase-num {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      font-size: 2.5rem;
+      font-weight: 900;
+      color: var(--border);
+      line-height: 1;
+    }
+
+    .phase-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--accent);
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+    }
+
+    .phase-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 0.5rem;
+    }
+
+    .phase-desc {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .phase-card:nth-child(1) { border-top: 3px solid #7c6af7; }
+    .phase-card:nth-child(2) { border-top: 3px solid #4fc3f7; }
+    .phase-card:nth-child(3) { border-top: 3px solid #f06292; }
+    .phase-card:nth-child(4) { border-top: 3px solid #ffb74d; }
+    .phase-card:nth-child(5) { border-top: 3px solid #81c995; }
+    .phase-card:nth-child(6) { border-top: 3px solid #ff8a65; }
+    .phase-card:nth-child(7) { border-top: 3px solid #ba68c8; }
+
+    .agent-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1rem;
+    }
+
+    .agent-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+
+    .agent-icon {
+      font-size: 1.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .agent-name {
+      font-family: 'Cascadia Code', 'Fira Code', monospace;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--accent2);
+      background: rgba(79, 195, 247, 0.1);
+      padding: 0.2rem 0.6rem;
+      border-radius: 6px;
+      display: inline-block;
+      margin-bottom: 0.75rem;
+    }
+
+    .tag-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-top: 0.75rem;
+    }
+
+    .tag {
+      font-size: 0.7rem;
+      padding: 0.15rem 0.5rem;
+      border-radius: 100px;
+      background: var(--surface2);
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+
+    .compare-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    .compare-table th {
+      background: var(--surface2);
+      padding: 0.75rem 1rem;
+      text-align: left;
+      font-weight: 600;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .compare-table th:first-child { border-radius: 8px 0 0 0; }
+    .compare-table th:last-child { border-radius: 0 8px 0 0; }
+
+    .compare-table td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    .compare-table tr:last-child td { border-bottom: none; }
+
+    .compare-table .aspect {
+      font-weight: 600;
+      color: var(--text);
+      width: 200px;
+    }
+
+    .compare-table .without {
+      color: var(--accent5);
+    }
+
+    .compare-table .with {
+      color: var(--accent3);
+    }
+
+    .philosophy-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+
+    .philosophy-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      text-align: center;
+    }
+
+    .philosophy-icon {
+      font-size: 1.75rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .philosophy-title {
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: var(--text);
+      margin-bottom: 0.4rem;
+    }
+
+    .philosophy-desc {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .use-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .use-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+    }
+
+    .use-card.yes { border-top: 3px solid var(--accent3); }
+    .use-card.no { border-top: 3px solid var(--accent5); }
+
+    .use-title {
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+      font-size: 0.9rem;
+    }
+
+    .use-card.yes .use-title { color: var(--accent3); }
+    .use-card.no .use-title { color: var(--accent5); }
+
+    .use-list {
+      list-style: none;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .use-list li {
+      padding: 0.25rem 0;
+      padding-left: 1.25rem;
+      position: relative;
+    }
+
+    .use-card.yes .use-list li::before { content: '✓'; position: absolute; left: 0; color: var(--accent3); }
+    .use-card.no .use-list li::before { content: '✗'; position: absolute; left: 0; color: var(--accent5); }
+
+    code {
+      font-family: 'Cascadia Code', 'Fira Code', monospace;
+      background: var(--surface2);
+      padding: 0.1rem 0.4rem;
+      border-radius: 4px;
+      font-size: 0.85em;
+      color: var(--accent2);
+    }
+
+    .quote-box {
+      background: var(--surface);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 12px 12px 0;
+      padding: 1.25rem 1.5rem;
+      margin: 1.5rem 0;
+      font-style: italic;
+      color: var(--text-muted);
+    }
+
+    footer {
+      text-align: center;
+      padding: 2rem 0;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      border-top: 1px solid var(--border);
+      margin-top: 3rem;
+    }
+
+    @media (max-width: 600px) {
+      h1 { font-size: 1.6rem; }
+      .use-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="badge">Anthropic Verified Plugin</div>
+    <h1>feature-dev プラグイン解説</h1>
+    <p class="subtitle">Claude Code 用公式プラグイン — 構造化機能開発ワークフロー</p>
+    <div class="meta">
+      <div class="meta-item">
+        <div class="value">131,475</div>
+        <div class="label">インストール数</div>
+      </div>
+      <div class="meta-item">
+        <div class="value">7</div>
+        <div class="label">フェーズ数</div>
+      </div>
+      <div class="meta-item">
+        <div class="value">3</div>
+        <div class="label">専門エージェント</div>
+      </div>
+      <div class="meta-item">
+        <div class="value">v1.0.0</div>
+        <div class="label">バージョン</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Overview -->
+  <section>
+    <h2>プラグインとは</h2>
+    <div class="card accent-left">
+      <p>
+        <strong>feature-dev</strong> は Anthropic が公式に提供・検証した Claude Code 用プラグインで、
+        新機能開発を <strong>7段階の構造化ワークフロー</strong> に沿って進める設計になっている。
+        単なるコード生成ツールではなく、「発見 → 探索 → 質問 → 設計 → 実装 → レビュー → サマリー」
+        というプロフェッショナルな開発プロセス全体を Claude Code 上で自動化する。
+      </p>
+      <br>
+      <p>作者: Sid Bidasaria（Anthropic社員）— リポジトリ: <code>anthropics/claude-plugins-official</code></p>
+    </div>
+  </section>
+
+  <!-- Philosophy -->
+  <section>
+    <h2>設計思想</h2>
+    <div class="quote-box">
+      "Building features requires more than just writing code. You need to understand the codebase before making changes, ask questions to clarify ambiguous requirements, design thoughtfully before implementing, and review for quality after building."
+    </div>
+    <div class="philosophy-grid">
+      <div class="philosophy-card">
+        <div class="philosophy-icon">🔍</div>
+        <div class="philosophy-title">理解してから変更する</div>
+        <div class="philosophy-desc">既存コードを深く把握してから手を入れる。知らずに変えると壊す。</div>
+      </div>
+      <div class="philosophy-card">
+        <div class="philosophy-icon">❓</div>
+        <div class="philosophy-title">曖昧さをゼロにする</div>
+        <div class="philosophy-desc">実装前に全ての不明点を解消。あとで「こんなはずじゃなかった」を防ぐ。</div>
+      </div>
+      <div class="philosophy-card">
+        <div class="philosophy-icon">🏗️</div>
+        <div class="philosophy-title">設計を先に行う</div>
+        <div class="philosophy-desc">複数アプローチを比較検討してから実装。手戻りを最小化する。</div>
+      </div>
+      <div class="philosophy-card">
+        <div class="philosophy-icon">🛡️</div>
+        <div class="philosophy-title">品質を組み込む</div>
+        <div class="philosophy-desc">実装後に専門レビューエージェントが自動で問題を検出する。</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7 Phases -->
+  <section>
+    <h2>7フェーズ ワークフロー</h2>
+    <div class="phase-grid">
+      <div class="phase-card">
+        <div class="phase-num">1</div>
+        <div class="phase-label">Phase 1</div>
+        <div class="phase-title">Discovery（発見）</div>
+        <div class="phase-desc">何を作るかを明確化。問題の定義・制約条件の把握・理解の確認。</div>
+      </div>
+      <div class="phase-card">
+        <div class="phase-num">2</div>
+        <div class="phase-label">Phase 2</div>
+        <div class="phase-title">Codebase Exploration（探索）</div>
+        <div class="phase-desc"><code>code-explorer</code> エージェントを 2〜3 個並列起動。類似機能・アーキテクチャ・読むべきファイルを洗い出す。</div>
+      </div>
+      <div class="phase-card">
+        <div class="phase-num">3</div>
+        <div class="phase-label">Phase 3</div>
+        <div class="phase-title">Clarifying Questions（質問）</div>
+        <div class="phase-desc">エッジケース・エラーハンドリング・後方互換性など、残った曖昧さを全て解消。<strong>回答を待ってから次へ進む</strong>。</div>
+      </div>
+      <div class="phase-card">
+        <div class="phase-num">4</div>
+        <div class="phase-label">Phase 4</div>
+        <div class="phase-title">Architecture Design（設計）</div>
+        <div class="phase-desc"><code>code-architect</code> が 3 つのアプローチ（最小変更・クリーン・バランス）を提案。推奨案付きで提示し、ユーザーが選択。</div>
+      </div>
+      <div class="phase-card">
+        <div class="phase-num">5</div>
+        <div class="phase-label">Phase 5</div>
+        <div class="phase-title">Implementation（実装）</div>
+        <div class="phase-desc"><strong>明示的な承認を得てから</strong>実装開始。既存のコード規約に厳密に従いながら構築。</div>
+      </div>
+      <div class="phase-card">
+        <div class="phase-num">6</div>
+        <div class="phase-label">Phase 6</div>
+        <div class="phase-title">Quality Review（品質レビュー）</div>
+        <div class="phase-desc"><code>code-reviewer</code> を 3 個並列起動。シンプルさ・バグ・規約の観点でレビュー。信頼度 80% 以上の問題のみ報告。</div>
+      </div>
+      <div class="phase-card">
+        <div class="phase-num">7</div>
+        <div class="phase-label">Phase 7</div>
+        <div class="phase-title">Summary（サマリー）</div>
+        <div class="phase-desc">実装内容・主要決定・変更ファイル・次のステップをドキュメント化。</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Agents -->
+  <section>
+    <h2>3つの専門エージェント</h2>
+    <div class="agent-grid">
+      <div class="agent-card">
+        <div class="agent-icon">🔭</div>
+        <div class="agent-name">code-explorer</div>
+        <h3>コードベース探索</h3>
+        <p style="font-size:0.85rem;color:var(--text-muted)">実行パスを辿り、アーキテクチャの全体像をマッピング。類似実装・データフロー・依存関係を可視化する。Phase 2 で自動起動、手動呼び出しも可能。</p>
+        <div class="tag-list">
+          <span class="tag">エントリーポイント特定</span>
+          <span class="tag">データフロー追跡</span>
+          <span class="tag">依存関係マップ</span>
+        </div>
+      </div>
+      <div class="agent-card">
+        <div class="agent-icon">🏛️</div>
+        <div class="agent-name">code-architect</div>
+        <h3>アーキテクチャ設計</h3>
+        <p style="font-size:0.85rem;color:var(--text-muted)">コードベースのパターンを分析し、複数の実装アプローチを設計。各アプローチのトレードオフを明示し、推奨案を提示する。</p>
+        <div class="tag-list">
+          <span class="tag">複数案提示</span>
+          <span class="tag">トレードオフ分析</span>
+          <span class="tag">実装ロードマップ</span>
+        </div>
+      </div>
+      <div class="agent-card">
+        <div class="agent-icon">🔬</div>
+        <div class="agent-name">code-reviewer</div>
+        <h3>コードレビュー</h3>
+        <p style="font-size:0.85rem;color:var(--text-muted)">CLAUDE.md 準拠・バグ検出・コード品質の3観点で並列レビュー。信頼度 80% 以上の問題のみ報告し、ノイズを抑える。</p>
+        <div class="tag-list">
+          <span class="tag">バグ検出</span>
+          <span class="tag">規約チェック</span>
+          <span class="tag">信頼度フィルタリング</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Comparison -->
+  <section>
+    <h2>プラグインあり vs なしの比較</h2>
+    <div class="card" style="padding:0;overflow:hidden;">
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th>観点</th>
+            <th>❌ プラグインなし（素の Claude Code）</th>
+            <th>✅ feature-dev あり</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="aspect">要件の扱い</td>
+            <td class="without">指示されたまま実装を開始。曖昧さは実装中に表面化する</td>
+            <td class="with">Phase 1〜3 で全ての曖昧さを解消してから実装する</td>
+          </tr>
+          <tr>
+            <td class="aspect">既存コードの理解</td>
+            <td class="without">Claude の文脈理解に依存。大規模コードベースでは見落としやすい</td>
+            <td class="with">code-explorer が並列で実行パスを追い、既存パターンを確実に把握</td>
+          </tr>
+          <tr>
+            <td class="aspect">設計判断</td>
+            <td class="without">Claude が暗黙的に一つのアプローチを選択してしまうことが多い</td>
+            <td class="with">3つのアプローチを比較提示し、ユーザーが意識的に選択できる</td>
+          </tr>
+          <tr>
+            <td class="aspect">コードレビュー</td>
+            <td class="without">別途依頼が必要。ユーザーが忘れると省略される</td>
+            <td class="with">Phase 6 で自動的に3エージェントによる多角的レビューが走る</td>
+          </tr>
+          <tr>
+            <td class="aspect">並列エージェント活用</td>
+            <td class="without">基本的にシングルスレッドで処理</td>
+            <td class="with">探索・設計・レビューの各フェーズで 2〜3 エージェントを並列起動</td>
+          </tr>
+          <tr>
+            <td class="aspect">コードベース整合性</td>
+            <td class="without">既存パターンを無視した実装になる場合がある</td>
+            <td class="with">探索フェーズで既存規約を学習し、それに従って実装</td>
+          </tr>
+          <tr>
+            <td class="aspect">手戻りリスク</td>
+            <td class="without">実装後に「要件が違う」「設計が合わない」が発覚しやすい</td>
+            <td class="with">各フェーズの確認ポイントが手戻りを最小化する</td>
+          </tr>
+          <tr>
+            <td class="aspect">適している場面</td>
+            <td class="without">バグ修正・小規模変更・ワンショットのスクリプト作成</td>
+            <td class="with">複数ファイルをまたぐ新機能・アーキテクチャ変更・要件が不明確な開発</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- When to use -->
+  <section>
+    <h2>使うべき場面 / 使わなくていい場面</h2>
+    <div class="use-grid">
+      <div class="use-card yes">
+        <div class="use-title">✅ 使うべき</div>
+        <ul class="use-list">
+          <li>複数ファイルをまたぐ新機能開発</li>
+          <li>アーキテクチャ上の判断が必要な実装</li>
+          <li>既存コードとの複雑な統合</li>
+          <li>要件が曖昧・不明確な機能</li>
+          <li>品質と保守性が重要なコア機能</li>
+        </ul>
+      </div>
+      <div class="use-card no">
+        <div class="use-title">❌ 使わなくていい</div>
+        <ul class="use-list">
+          <li>1行のバグ修正</li>
+          <li>小規模で明確な変更</li>
+          <li>シンプルなスクリプト作成</li>
+          <li>緊急のホットフィックス</li>
+          <li>要件が完全に定義済みのタスク</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Install & Usage -->
+  <section>
+    <h2>インストールと使い方</h2>
+    <div class="card">
+      <h3>インストール</h3>
+      <p style="font-size:0.9rem;color:var(--text-muted);margin-bottom:0.75rem;">Claude Code 内で以下を実行：</p>
+      <code style="display:block;padding:0.75rem;background:var(--surface2);border-radius:8px;font-size:0.9rem;">/plugin install @claude-plugins-official/feature-dev</code>
+    </div>
+    <div class="card" style="margin-top:1rem;">
+      <h3>基本的な使い方</h3>
+      <p style="font-size:0.9rem;color:var(--text-muted);margin-bottom:0.75rem;">インストール後、Claude Code 内で：</p>
+      <code style="display:block;padding:0.75rem;background:var(--surface2);border-radius:8px;font-size:0.9rem;margin-bottom:0.5rem;">/feature-dev Add user authentication with OAuth</code>
+      <p style="font-size:0.85rem;color:var(--text-muted)">7フェーズのインタラクティブなワークフローが起動する。各フェーズで確認ポイントがあり、ユーザーの判断を経てから次へ進む。</p>
+    </div>
+    <div class="card" style="margin-top:1rem;">
+      <h3>エージェントの手動呼び出し</h3>
+      <p style="font-size:0.85rem;color:var(--text-muted);">フルワークフロー以外にも、個別エージェントを直接呼び出せる：</p>
+      <div style="margin-top:0.5rem;font-size:0.85rem;color:var(--text-muted);">
+        <div style="padding:0.3rem 0;">"Launch <code>code-explorer</code> to trace how authentication works"</div>
+        <div style="padding:0.3rem 0;">"Launch <code>code-architect</code> to design the caching layer"</div>
+        <div style="padding:0.3rem 0;">"Launch <code>code-reviewer</code> to check my recent changes"</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Summary -->
+  <section>
+    <h2>まとめ</h2>
+    <div class="card accent-left">
+      <p>
+        feature-dev プラグインの本質は、<strong>「急いでコードを書くより、理解してから書いた方が速い」</strong> という逆説的な設計思想にある。
+        並列エージェントによる探索・複数アーキテクチャ案の提示・自動コードレビューを組み合わせることで、
+        個人開発でもチーム開発のベストプラクティスに近い品質を担保できる。
+      </p>
+      <br>
+      <p>
+        13万以上のインストール数が示す通り、「Claude Code に言えばなんとかしてくれる」ではなく
+        「Claude Code と一緒に正しく開発する」というアプローチへの需要が高い。
+        特に大規模コードベースや要件が曖昧なプロジェクトでは、フルワークフローの価値が高い。
+      </p>
+    </div>
+  </section>
+
+  <footer>
+    <p>作成日: 2026-03-27 | ソース: anthropics/claude-plugins-official, claude.com/plugins</p>
+    <p style="margin-top:0.5rem;font-size:0.75rem;opacity:0.6;">Researched by Tear — Claude Code + WebSearch</p>
+  </footer>
+
+</div>
+</body>
+</html>

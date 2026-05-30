@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>orchestrate スキル弱点分析 — 2026-03-26</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface2: #1c2128;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --blue: #58a6ff;
+      --blue-light: #79c0ff;
+      --purple: #d2a8ff;
+      --green: #3fb950;
+      --orange: #d29922;
+      --red: #f85149;
+      --teal: #56d364;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 15px;
+      line-height: 1.65;
+    }
+    .header {
+      background: linear-gradient(135deg, #2b1c05, #1a0c2a, #0c2d6b);
+      padding: 48px 40px 40px;
+      text-align: center;
+    }
+    .header .badge {
+      display: inline-block;
+      background: rgba(88,166,255,0.15);
+      color: var(--blue-light);
+      border: 1px solid rgba(88,166,255,0.3);
+      border-radius: 20px;
+      padding: 4px 14px;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    .header h1 {
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+    .header .date {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 20px;
+    }
+    .tear-comment {
+      display: inline-block;
+      background: rgba(210,168,255,0.1);
+      border-left: 3px solid var(--purple);
+      color: var(--purple);
+      padding: 10px 18px;
+      border-radius: 0 8px 8px 0;
+      font-style: italic;
+      font-size: 14px;
+      max-width: 600px;
+    }
+    .container {
+      max-width: 880px;
+      margin: 0 auto;
+      padding: 40px 24px;
+    }
+    .summary-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 24px;
+      margin-bottom: 36px;
+    }
+    .summary-card p {
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .summary-card strong {
+      color: var(--text);
+    }
+    h2 {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--text);
+      border-left: 3px solid var(--blue);
+      padding-left: 12px;
+      margin-bottom: 20px;
+    }
+    .section {
+      margin-bottom: 40px;
+    }
+    .issue-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+    .issue-card .card-header {
+      background: var(--surface2);
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .priority-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 3px 10px;
+      border-radius: 12px;
+    }
+    .priority-high {
+      background: rgba(248,81,73,0.15);
+      color: var(--red);
+      border: 1px solid rgba(248,81,73,0.3);
+    }
+    .priority-mid {
+      background: rgba(210,153,34,0.15);
+      color: var(--orange);
+      border: 1px solid rgba(210,153,34,0.3);
+    }
+    .priority-low {
+      background: rgba(63,185,80,0.15);
+      color: var(--green);
+      border: 1px solid rgba(63,185,80,0.3);
+    }
+    .card-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .card-body {
+      padding: 18px 20px;
+    }
+    .card-body .problem {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 12px;
+      line-height: 1.7;
+    }
+    .card-body .arrow {
+      color: var(--blue);
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .card-body .fix {
+      background: rgba(88,166,255,0.07);
+      border: 1px solid rgba(88,166,255,0.2);
+      border-radius: 6px;
+      padding: 10px 14px;
+      font-size: 13px;
+      color: var(--blue-light);
+      line-height: 1.6;
+    }
+    .code-quote {
+      background: #090d12;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 14px;
+      font-family: 'SFMono-Regular', Consolas, monospace;
+      font-size: 12px;
+      color: var(--teal);
+      margin: 10px 0;
+    }
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-bottom: 36px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+      text-align: center;
+    }
+    .stat-card .num {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .stat-card .label {
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .callout {
+      background: rgba(88,166,255,0.07);
+      border: 1px solid rgba(88,166,255,0.25);
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin-bottom: 36px;
+    }
+    .callout p {
+      font-size: 14px;
+      color: var(--blue-light);
+      line-height: 1.7;
+    }
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 20px 24px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    @media (max-width: 600px) {
+      .header { padding: 32px 20px; }
+      .header h1 { font-size: 20px; }
+      .summary-grid { grid-template-columns: 1fr; }
+      .container { padding: 24px 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="badge">Analysis — 2026-03-26</div>
+  <h1>orchestrate スキル弱点分析</h1>
+  <div class="date">分析対象: <code>.claude/skills/orchestrate/SKILL.md</code></div>
+  <p class="tear-comment">「調べてみたら、なんか想像より穴が多かった……ちゃんと直せると思う」</p>
+</div>
+
+<div class="container">
+
+  <div class="summary-card">
+    <p><strong>タスク概要</strong><br>
+    orchestrate スキル定義（SKILL.md）を読み込み、曖昧な指示・抜けている分岐・誤ルーティングしやすい箇所を洗い出し、優先度付きの改善案としてまとめた。</p>
+  </div>
+
+  <div class="summary-grid">
+    <div class="stat-card">
+      <div class="num" style="color: var(--red);">3</div>
+      <div class="label">高優先度の問題</div>
+    </div>
+    <div class="stat-card">
+      <div class="num" style="color: var(--orange);">3</div>
+      <div class="label">中優先度の問題</div>
+    </div>
+    <div class="stat-card">
+      <div class="num" style="color: var(--green);">2</div>
+      <div class="label">低優先度の問題</div>
+    </div>
+  </div>
+
+  <!-- 高優先度 -->
+  <div class="section">
+    <h2>🔴 高優先度</h2>
+
+    <div class="issue-card">
+      <div class="card-header">
+        <span class="priority-badge priority-high">HIGH</span>
+        <span class="card-title">① トリガー条件が曖昧すぎる</span>
+      </div>
+      <div class="card-body">
+        <p class="problem">
+          「複数ステップにわたる複雑なタスク」「明らかに調査 or 実行系が含まれる場合」はほぼあらゆるタスクに当てはまる。
+          Claude が自分でやるべき場面と orchestrate を起動すべき場面の境界が定義されておらず、毎回判断が揺れる。
+        </p>
+        <p class="arrow">→ 改善案</p>
+        <div class="fix">「Codex/Gemini を呼ぶ明確な理由（実行環境の分離・外部情報の取得・並列化）がある場合のみ起動」という否定条件を追記する。Claude 一人でできる場合は orchestrate を起動しない、と明記する。</div>
+      </div>
+    </div>
+
+    <div class="issue-card">
+      <div class="card-header">
+        <span class="priority-badge priority-high">HIGH</span>
+        <span class="card-title">② エラー・タイムアウト時の分岐がゼロ</span>
+      </div>
+      <div class="card-body">
+        <p class="problem">
+          Codex/Gemini がエラーを返した・応答しない場合に何をするかの定義がない。
+          STEP 4 の「問題あり → 再依頼」は上限もなく無限ループになりうる。
+          CLAUDE.md の「同じエラーが3回続いたら止まる」ルールとの整合性も不明確。
+        </p>
+        <p class="arrow">→ 改善案</p>
+        <div class="fix">
+          エラー時フローを明記する：<br>
+          1. エラー内容を確認<br>
+          2. 再試行は最大2回まで<br>
+          3. 3回目も失敗したら Discord に報告して止まる<br>
+          STEP 4 の再依頼にも「最大2回」の上限を追記する。
+        </div>
+      </div>
+    </div>
+
+    <div class="issue-card">
+      <div class="card-header">
+        <span class="priority-badge priority-high">HIGH</span>
+        <span class="card-title">③ 複数エージェント並行時の判断基準がない</span>
+      </div>
+      <div class="card-body">
+        <p class="problem">
+          STEP 2 に「並行可能 or 順序必須を決める」とあるが、何を根拠に判断するかの基準がなく、例も1パターンしかない。
+          実際に判断する際に迷いが生じやすい。
+        </p>
+        <p class="arrow">→ 改善案</p>
+        <div class="fix">「次のエージェントの入力が前のエージェントの出力に依存するなら順序必須、そうでなければ並行可」という一文を追加する。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 中優先度 -->
+  <div class="section">
+    <h2>🟡 中優先度</h2>
+
+    <div class="issue-card">
+      <div class="card-header">
+        <span class="priority-badge priority-mid">MID</span>
+        <span class="card-title">④ Sandbox レベルの選択基準が曖昧</span>
+      </div>
+      <div class="card-body">
+        <p class="problem">
+          「安全度に応じてSandboxを選ぶ」とあるが、何をもって安全と判断するかの基準がない。
+          <code>workspace-write</code> と <code>danger-full-access</code> の使い分けが「書き込みあり」だけでは不十分。
+        </p>
+        <p class="arrow">→ 改善案</p>
+        <div class="fix">
+          各レベルの使用条件を明記する：<br>
+          • read-only → 読み取り・確認のみ（デフォルト）<br>
+          • workspace-write → agy/ 以下にファイルを生成・変更する場合<br>
+          • danger-full-access → システム設定・外部サービスに触れる場合（必ずユーザー確認）
+        </div>
+      </div>
+    </div>
+
+    <div class="issue-card">
+      <div class="card-header">
+        <span class="priority-badge priority-mid">MID</span>
+        <span class="card-title">⑤ ルーティングキーワードが日本語専用</span>
+      </div>
+      <div class="card-body">
+        <p class="problem">
+          ルーティング判定表のキーワードがすべて日本語。英語表記や混在した指示が来るとマッチしない。
+          また「キーワードが含まれていれば振り分ける」という単純一致はノイズを生みやすい。
+        </p>
+        <p class="arrow">→ 改善案</p>
+        <div class="fix">キーワード一致ではなく「タスクの性質（調査/実行/設計）はどれか」を意味的に判断する記述に切り替える。キーワード表はあくまで例示として残す。</div>
+      </div>
+    </div>
+
+    <div class="issue-card">
+      <div class="card-header">
+        <span class="priority-badge priority-mid">MID</span>
+        <span class="card-title">⑥ 「Claude 自分でやる」条件が Gemini ルートと矛盾</span>
+      </div>
+      <div class="card-body">
+        <p class="problem">
+          「設計・アーキテクチャ決定は Claude がやる」とある一方、パターンAでは「Gemini 調査 → Claude 設計」の流れになっている。
+          読む人によって「設計は全部 Claude がやる」「調査後に Claude が判断する」と解釈が分かれる。
+        </p>
+        <p class="arrow">→ 改善案</p>
+        <div class="fix">「Gemini の調査結果をインプットとして、最終的な設計判断は必ず Claude が行う」と明記し、矛盾を解消する。</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 低優先度 -->
+  <div class="section">
+    <h2>🟢 低優先度</h2>
+
+    <div class="issue-card">
+      <div class="card-header">
+        <span class="priority-badge priority-low">LOW</span>
+        <span class="card-title">⑦ 「確認してから進める」の基準がない</span>
+      </div>
+      <div class="card-body">
+        <p class="problem">
+          注意事項に「大きなタスクは確認ファースト」とあるが「大きい」の定義がなく、いつ確認してどこから黙って動くかが曖昧。
+        </p>
+        <p class="arrow">→ 改善案</p>
+        <div class="fix">「3ステップ以上 or Codex に workspace-write 以上が必要な場合は、実行前にユーザーに分解計画を見せる」を目安として追記する。</div>
+      </div>
+    </div>
+
+    <div class="issue-card">
+      <div class="card-header">
+        <span class="priority-badge priority-low">LOW</span>
+        <span class="card-title">⑧ .ai-consults/ のファイル命名規則が未定義</span>
+      </div>
+      <div class="card-body">
+        <p class="problem">
+          STEP 3 で「.ai-consults/ のファイルを Read して確認する」とあるが、ファイルがどんな名前で保存されるかの規則がなく、どのファイルを読めばいいかが不明。
+        </p>
+        <p class="arrow">→ 改善案</p>
+        <div class="fix">
+          命名規則を追記する：
+          <div class="code-quote">{YYYY-MM-DD}-{agent}-{task-slug}.md<br>例: 2026-03-26-gemini-competitor-research.md</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout">
+    <p>
+      <strong style="color: var(--blue);">全体の傾向</strong><br>
+      「何をすべきかは書いてあるが、<em>いつ・どの条件で・失敗したらどうするか</em>が抜けている」パターンが多い。
+      高優先度3件を先に直すだけでも、誤ルーティングと無限ループのリスクが大幅に下がる。
+    </p>
+  </div>
+
+</div>
+
+<footer>
+  generated by ティア / Claude Code Sonnet 4.6 — 2026-03-26
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>cc-company リサーチレポート</title>
+<style>
+  body { background: #0f1117; color: #e0e0e0; font-family: 'Segoe UI', sans-serif; max-width: 860px; margin: 0 auto; padding: 24px; line-height: 1.7; }
+  h1 { color: #7dd3fc; border-bottom: 1px solid #334155; padding-bottom: 12px; }
+  h2 { color: #a5f3fc; margin-top: 32px; }
+  h3 { color: #c084fc; }
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+  th { background: #1e293b; color: #7dd3fc; padding: 10px 14px; text-align: left; }
+  td { padding: 10px 14px; border-bottom: 1px solid #1e293b; }
+  tr:hover td { background: #1a2233; }
+  code, pre { background: #1e293b; color: #86efac; padding: 2px 8px; border-radius: 4px; font-family: monospace; }
+  pre { padding: 14px; overflow-x: auto; line-height: 1.5; }
+  .tag { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 0.82em; margin: 2px; }
+  .tag-green { background: #14532d; color: #86efac; }
+  .tag-yellow { background: #422006; color: #fde68a; }
+  .tag-blue { background: #1e3a5f; color: #93c5fd; }
+  .tag-red { background: #450a0a; color: #fca5a5; }
+  .card { background: #1e293b; border-radius: 8px; padding: 16px 20px; margin: 12px 0; border-left: 3px solid #7dd3fc; }
+  .card.warn { border-left-color: #fbbf24; }
+  .card.good { border-left-color: #34d399; }
+  .card.bad { border-left-color: #f87171; }
+  .section-meta { color: #64748b; font-size: 0.88em; margin-bottom: 4px; }
+</style>
+</head>
+<body>
+
+<h1>🏢 cc-company リサーチレポート</h1>
+<p class="section-meta">調査日: 2026-03-28 ／ 対象: <a href="https://github.com/Shin-sibainu/cc-company" style="color:#7dd3fc">Shin-sibainu/cc-company</a></p>
+
+<!-- ==================== OVERVIEW ==================== -->
+<h2>1. cc-company とは</h2>
+<div class="card">
+  <p>Claude Code に「仮想会社組織」を持ち込むプラグイン（MIT ライセンス）。<br>
+  ユーザーは秘書に話しかけるだけで、TODO 管理・壁打ち・タスク振り分けが自動化される。</p>
+  <pre>/plugin marketplace add Shin-sibainu/cc-company
+/plugin install company@cc-company
+/company  ← セットアップ開始</pre>
+</div>
+
+<h3>コンセプト</h3>
+<pre>あなた → 秘書（常設窓口） → 各部署（仕事が増えたら秘書が提案して追加）</pre>
+
+<h3>定義されている部署</h3>
+<table>
+  <tr><th>部署</th><th>担当領域</th><th>ステータス</th></tr>
+  <tr><td>秘書室</td><td>TODO管理・壁打ち・メモ・相談</td><td><span class="tag tag-green">常設</span></td></tr>
+  <tr><td>PM</td><td>プロジェクト進捗・チケット管理</td><td><span class="tag tag-blue">追加制</span></td></tr>
+  <tr><td>リサーチ</td><td>市場調査・競合分析</td><td><span class="tag tag-blue">追加制</span></td></tr>
+  <tr><td>マーケティング</td><td>コンテンツ企画・SNS</td><td><span class="tag tag-blue">追加制</span></td></tr>
+  <tr><td>開発</td><td>技術ドキュメント・設計</td><td><span class="tag tag-blue">追加制</span></td></tr>
+  <tr><td>経理・営業・クリエイティブ・人事</td><td>各業務領域</td><td><span class="tag tag-blue">追加制</span></td></tr>
+</table>
+
+<h3>生成されるファイル構成</h3>
+<pre>.company/
+├── CLAUDE.md       ← 組織全体のルール
+└── secretary/
+    ├── CLAUDE.md   ← 秘書の振る舞い定義
+    ├── inbox/      ← クイックキャプチャ
+    ├── todos/      ← 日次タスク管理
+    └── notes/      ← 壁打ち・相談メモ</pre>
+
+<!-- ==================== COMPARISON ==================== -->
+<h2>2. AGY プロジェクトとの比較</h2>
+
+<div class="card good">
+  <strong>本質的な発想は同じ</strong><br>
+  cc-company の「秘書→部署」構造と、AGY の「ティア（窓口）→ユリ/リク（専門担当）」は同じアーキテクチャ。
+  うちは既に独自実装で同等の構造を持っている。
+</div>
+
+<table>
+  <tr><th>観点</th><th>cc-company</th><th>AGY プロジェクト（現状）</th></tr>
+  <tr><td>窓口</td><td>秘書（汎用）</td><td>ティア（キャラクター付き）</td></tr>
+  <tr><td>専門担当</td><td>部署（CLAUDE.md で定義）</td><td>ユリ（Gemini CLI）、リク（Codex CLI）— 実際の別プロセス</td></tr>
+  <tr><td>エージェントの実体</td><td>Claude Code 内のロールプレイ<br>（同一プロセス）</td><td>リアルな別 AI（Gemini、Codex）を CLI 呼び出し</td></tr>
+  <tr><td>設定方法</td><td>.company/CLAUDE.md</td><td>.claude/rules/ + .claude/skills/ + .claude/souls/</td></tr>
+  <tr><td>TODO 管理</td><td>秘書室が担当（ファイルベース）</td><td>TaskCreate ツール</td></tr>
+  <tr><td>壁打ち・メモ</td><td>notes/ フォルダ</td><td>handoff.md + memory/</td></tr>
+  <tr><td>キャラクター付け</td><td>なし（汎用ロール）</td><td>あり（ティア/ユリ/リク）</td></tr>
+</table>
+
+<!-- ==================== VERDICT ==================== -->
+<h2>3. 可用性の評価</h2>
+
+<div class="card warn">
+  <strong>⚠ 導入メリットは薄い（競合リスクあり）</strong>
+  <ul>
+    <li>.company/ ディレクトリが .claude/ と別系統で管理が分散する</li>
+    <li>AGY の組織構造は cc-company より高度（実際の別 AI を呼び出す）</li>
+    <li>秘書の役割はティアがすでに担っている</li>
+  </ul>
+</div>
+
+<div class="card good">
+  <strong>✅ 参考にできる点</strong>
+  <ul>
+    <li><strong>inbox/ フォルダ</strong> — クイックキャプチャの発想。思いついたことをすぐ残す仕組みは AGY にあってもいい</li>
+    <li><strong>部署提案のトリガー設計</strong> — 「仕事が増えたら秘書が部署追加を提案」というフロー。AGY でも新しいタスクパターンが増えたらスキル追加を提案する仕組みが作れる</li>
+    <li><strong>シンプルなエントリポイント（/company）</strong> — 一つのコマンドで全体が動く設計思想は参考になる</li>
+  </ul>
+</div>
+
+<!-- ==================== SUBAGENT ==================== -->
+<h2>4. サブエージェント化との兼ね合い</h2>
+
+<div class="card">
+  <p><strong>cc-company のエージェントは「同一プロセス内のロールプレイ」</strong></p>
+  <p>部署は CLAUDE.md でペルソナを定義するだけで、実際に別プロセスが動くわけではない。<br>
+  Claude Code が自分自身で「開発部署として答える」という動き。</p>
+
+  <p><strong>AGY の orchestrate は「リアルな別 AI プロセスへの委譲」</strong></p>
+  <p>Gemini CLI（ユリ）は実際に Google の AI が動く。Codex CLI（リク）は OpenAI が動く。<br>
+  これは cc-company とは根本的に異なる——真のマルチエージェントアーキテクチャ。</p>
+</div>
+
+<table>
+  <tr><th>観点</th><th>cc-company の部署</th><th>AGY の orchestrate</th></tr>
+  <tr><td>実行モデル</td><td>Claude 単体でロールプレイ</td><td>異なる AI が実際に動く</td></tr>
+  <tr><td>リサーチ精度</td><td>Claude の知識範囲内</td><td>Gemini の Web 検索 + SNS 情報</td></tr>
+  <tr><td>コスト</td><td>同じトークン枠を使う</td><td>Gemini は別クォータ</td></tr>
+  <tr><td>スケーラビリティ</td><td>Claude のコンテキスト上限に依存</td><td>並列実行でコンテキストを分散</td></tr>
+</table>
+
+<!-- ==================== CONCLUSION ==================== -->
+<h2>5. 結論</h2>
+
+<div class="card good">
+  <strong>AGY は cc-company を超えた構造をすでに持っている。</strong><br><br>
+  cc-company は Claude Code 単体で「組織っぽく動かしたい」ユーザー向けの良いスターターキット。<br>
+  一方 AGY は実際の別 AI（Gemini/Codex）を呼び出す真のマルチエージェントシステムで、キャラクター付きで運用している。<br><br>
+  <strong>推奨アクション：</strong><br>
+  cc-company のインストールは不要。ただし「inbox/ によるクイックキャプチャ」の発想は今後 .claude/ に取り込むことを検討してもよい。
+</div>
+
+<hr style="border-color:#1e293b; margin: 32px 0">
+<p style="color:#475569; font-size:0.85em">リサーチ: ティア（Claude Code） ／ 2026-03-28</p>
+
+</body>
+</html>

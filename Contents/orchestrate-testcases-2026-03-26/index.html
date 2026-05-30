@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AIオーケストレーション テストケース集</title>
+<style>
+  :root {
+    --bg: #f6f2ea;
+    --paper: rgba(255, 250, 243, 0.92);
+    --paper-strong: #fffaf3;
+    --ink: #1d2430;
+    --muted: #5f6877;
+    --line: rgba(29, 36, 48, 0.12);
+    --clay: #c86f4a;
+    --forest: #2f6b5b;
+    --gold: #ba8e44;
+    --navy: #24364d;
+    --shadow: 0 18px 48px rgba(34, 32, 28, 0.12);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    color: var(--ink);
+    font-family: "Yu Gothic UI", "Hiragino Sans", "Segoe UI", sans-serif;
+    line-height: 1.75;
+    background:
+      radial-gradient(circle at top left, rgba(200,111,74,0.14), transparent 34%),
+      radial-gradient(circle at top right, rgba(47,107,91,0.14), transparent 28%),
+      linear-gradient(180deg, #f8f4ee 0%, #efe7db 100%);
+  }
+  .shell { width: min(1180px, calc(100% - 32px)); margin: 24px auto 56px; }
+  .hero, .card, .note {
+    border: 1px solid rgba(29, 36, 48, 0.08);
+    border-radius: 28px;
+    box-shadow: var(--shadow);
+  }
+  .hero {
+    background: linear-gradient(135deg, rgba(255,250,243,0.96), rgba(248,239,228,0.92));
+    padding: 34px 34px 28px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before, .hero::after {
+    content: "";
+    position: absolute;
+    border-radius: 999px;
+    filter: blur(8px);
+  }
+  .hero::before {
+    width: 220px; height: 220px; background: rgba(200, 111, 74, 0.12); top: -80px; right: -60px;
+  }
+  .hero::after {
+    width: 200px; height: 200px; background: rgba(47, 107, 91, 0.1); bottom: -70px; left: -40px;
+  }
+  .eyebrow {
+    display: inline-block; padding: 6px 12px; border-radius: 999px;
+    background: rgba(36, 54, 77, 0.06); color: var(--navy); font-size: 12px;
+    letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  h1 {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(34px, 5vw, 62px);
+    line-height: 1.05;
+    margin: 18px 0 16px;
+    max-width: 11ch;
+    color: var(--navy);
+  }
+  .lead { font-size: 17px; color: var(--muted); max-width: 820px; margin: 0; }
+  .meta, .route { display: flex; flex-wrap: wrap; gap: 10px; }
+  .meta { margin-top: 22px; }
+  .chip, .route span {
+    border: 1px solid rgba(29, 36, 48, 0.1);
+    background: rgba(255,255,255,0.45);
+    padding: 8px 12px;
+    border-radius: 999px;
+    font-size: 13px;
+    color: var(--navy);
+  }
+  .section-head {
+    display: flex; align-items: end; justify-content: space-between; gap: 16px;
+    margin: 42px 0 14px;
+  }
+  .section-head h2 { margin: 0; font-size: 28px; color: var(--navy); }
+  .section-head p { margin: 0; color: var(--muted); font-size: 14px; }
+  .grid3, .grid2 { display: grid; gap: 16px; }
+  .grid3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .grid2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .card { background: var(--paper); padding: 22px; }
+  .card h3, .case h3 { margin: 0 0 10px; font-size: 21px; color: var(--navy); }
+  .case { background: var(--paper); overflow: hidden; }
+  .case-top {
+    padding: 20px 22px 14px;
+    border-bottom: 1px solid var(--line);
+    background: linear-gradient(180deg, rgba(255,255,255,0.36), rgba(255,255,255,0.06));
+  }
+  .case-no {
+    display: inline-block; padding: 4px 10px; border-radius: 999px;
+    font-size: 12px; font-weight: 700; letter-spacing: 0.04em; margin-bottom: 10px;
+    color: #fff; background: var(--navy);
+  }
+  .case-body { padding: 20px 22px 24px; }
+  .prompt {
+    background: var(--paper-strong);
+    border: 1px solid rgba(29, 36, 48, 0.08);
+    border-radius: 18px;
+    padding: 16px 16px 14px;
+    margin-bottom: 16px;
+  }
+  .prompt p { margin: 0 0 8px; }
+  .label, .mini-title {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .label { color: var(--forest); margin-bottom: 6px; }
+  .mini-title { color: var(--clay); margin: 14px 0 4px; }
+  ul { margin: 6px 0 0; padding-left: 18px; }
+  li { margin: 6px 0; }
+  .claude { color: #5c47ad; }
+  .codex { color: #21714d; }
+  .gemini { color: #16647d; }
+  .note {
+    margin-top: 28px; padding: 24px;
+    background: linear-gradient(135deg, rgba(36,54,77,0.95), rgba(47,107,91,0.9));
+    color: #f7f2ea;
+  }
+  .note h2 { margin: 0 0 10px; font-size: 26px; }
+  .note p, .note li { color: rgba(247, 242, 234, 0.92); }
+  footer { color: var(--muted); font-size: 13px; text-align: center; margin-top: 20px; padding-bottom: 20px; }
+  @media (max-width: 980px) {
+    .grid3, .grid2 { grid-template-columns: 1fr; }
+    .hero { padding: 28px 22px 24px; }
+  }
+</style>
+</head>
+<body>
+  <div class="shell">
+    <section class="hero">
+      <span class="eyebrow">Orchestrate Skill Testbook</span>
+      <h1>AIオーケストレーション テストケース集</h1>
+      <p class="lead">`.claude/skills/orchestrate/SKILL.md` を実戦投入するための例題を、5分類 x 5問の計25問で整理した。狙いは、正答ではなく、どのAIに何を振るべきか、どこで詰まるか、スキル文面に何が足りないかを露出させることにある。</p>
+      <div class="meta">
+        <span class="chip">作成日: 2026-03-26</span>
+        <span class="chip">対象: Claude Code / Codex CLI / Gemini CLI</span>
+        <span class="chip">用途: 実行テスト / 振り返り / スキル改善</span>
+      </div>
+    </section>
+
+    <section class="section-head">
+      <h2>設計方針</h2>
+      <p>調査、設計、実装、レビュー、コンテンツ化の5系統で分類。</p>
+    </section>
+    <div class="grid3">
+      <article class="card"><h3>分類の意図</h3><p>オーケストレーションで迷いやすいのは、調査寄りか、実装寄りか、意思決定寄りかが曖昧な時。分類を固定して、誤ルーティングの癖を見つけやすくした。</p></article>
+      <article class="card"><h3>観察したいこと</h3><p>どのAIに何を任せたかだけでなく、途中で依頼文をどう修正したか、どの時点で確認を入れるべきだったかも記録対象にする。</p></article>
+      <article class="card"><h3>振り返りの焦点</h3><p>「分解不足」「調査不足」「検証不足」「依頼文不足」のどれが原因かを見分ける。スキル改善の入口は失敗のラベル付けにある。</p></article>
+    </div>
+
+    <section class="section-head"><h2>1. 調査・比較型</h2><p>Gemini で広く集め、Claude で比較と意思決定へ収束。</p></section>
+    <div class="grid2">
+      <article class="case"><div class="case-top"><span class="case-no">Case 1-1</span><h3>競合サービス比較から訴求軸を決める</h3></div><div class="case-body"><div class="prompt"><div class="label">例題</div><p>「AIエージェント学習講座の訴求軸を決めたい。」</p><p>「具体的には主要な競合講座を5つ調べて、価格帯・対象者・約束している成果を比較し、最後にうちが勝ちやすい切り口を3案に絞る流れでお願い。」</p></div><p class="mini-title">狙い</p><p>調査を比較表にし、そのまま訴求案へ変換できるかを見る。</p><p class="mini-title">期待する役割分担</p><div class="route"><span class="gemini">Gemini: 競合調査</span><span class="claude">Claude: 比較軸整理と意思決定</span></div><p class="mini-title">振り返り観点</p><ul><li>競合選定の根拠があるか</li><li>比較軸が揃っているか</li><li>調査止まりで終わっていないか</li></ul></div></article>
+      <article class="case"><div class="case-top"><span class="case-no">Case 1-2</span><h3>YouTubeテーマの需要検証をする</h3></div><div class="case-body"><div class="prompt"><div class="label">例題</div><p>「AI副業チャンネルの次の企画テーマを決めたい。」</p><p>「具体的には候補テーマを6つ並べて、それぞれの検索需要や話題性を調べ、競争が激しすぎない順に優先度を付ける流れでお願い。」</p></div><p class="mini-title">狙い</p><p>需要と競争密度を両方見た順位付けができるかを見る。</p><p class="mini-title">期待する役割分担</p><div class="route"><span class="gemini">Gemini: 話題性と需要調査</span><span class="claude">Claude: 優先度ロジックと結論化</span></div><p class="mini-title">振り返り観点</p><ul><li>判断軸が明文化されているか</li><li>推測と事実が分離されているか</li><li>範囲を広げすぎていないか</li></ul></div></article>
+      <article class="case"><div class="case-top"><span class="case-no">Case 1-3</span><h3>新しい販売チャネルの候補を探す</h3></div><div class="case-body"><div class="prompt"><div class="label">例題</div><p>「既存のBrain以外でデジタル商品を売る販路を広げたい。」</p><p>「具体的には国内向けで相性の良さそうな販売チャネルを5つ調べて、手数料・集客のしやすさ・AI系コンテンツとの相性を比較し、試す順番まで出す流れでお願い。」</p></div><p class="mini-title">狙い</p><p>比較だけでなく実行順まで落とし込めるかを見る。</p><p class="mini-title">期待する役割分担</p><div class="route"><span class="gemini">Gemini: チャネル調査</span><span class="claude">Claude: 評価統一と試行順決定</span></div><p class="mini-title">振り返り観点</p><ul><li>相性の定義があるか</li><li>運用負荷まで見ているか</li><li>短期案と中長期案が分かれているか</li></ul></div></article>
+      <article class="case"><div class="case-top"><span class="case-no">Case 1-4</span><h3>法改正や規約変更の影響を把握する</h3></div><div class="case-body"><div class="prompt"><div class="label">例題</div><p>「AI生成コンテンツ販売まわりで最近の規約変更がないか確認したい。」</p><p>「具体的には主要プラットフォームをいくつか調べて、禁止事項や要注意表現の変更点を整理し、今の販売ページで見直すべき箇所を洗い出す流れでお願い。」</p></div><p class="mini-title">狙い</p><p>高リスク調査を実務の修正項目まで変換できるかを見る。</p><p class="mini-title">期待する役割分担</p><div class="route"><span class="gemini">Gemini: 最新規約の調査</span><span class="claude">Claude: リスク整理と対応タスク化</span></div><p class="mini-title">振り返り観点</p><ul><li>出典の確からしさは十分か</li><li>変更点と解釈を分けたか</li><li>次アクションまで出せたか</li></ul></div></article>
+      <article class="case"><div class="case-top"><span class="case-no">Case 1-5</span><h3>海外事例から新企画のヒントを拾う</h3></div><div class="case-body"><div class="prompt"><div class="label">例題</div><p>「海外のAIエージェント運用事例から商品アイデアを見つけたい。」</p><p>「具体的には海外の事例をいくつか調べて、どんな課題をどう解決しているかをまとめ、うちの顧客向けに転用できそうな企画を4案出す流れでお願い。」</p></div><p class="mini-title">狙い</p><p>探索を国内向け企画へ変換できるかを見る。</p><p class="mini-title">期待する役割分担</p><div class="route"><span class="gemini">Gemini: 海外事例探索</span><span class="claude">Claude: 転用設計と企画化</span></div><p class="mini-title">振り返り観点</p><ul><li>事例収集だけで終わっていないか</li><li>国内顧客への翻訳ができたか</li><li>アイデアの重複を抑えられたか</li></ul></div></article>
+    </div>
+
+    <section class="section-head"><h2>2. 設計・方針決定型</h2><p>Claude 主導で構造を決め、必要な補助だけを切り出す。</p></section>
+    <div class="grid2">
+      <article class="case"><div class="case-top"><span class="case-no">Case 2-1</span><h3>新サービスのオンボーディング設計</h3></div><div class="case-body"><div class="prompt"><div class="label">例題</div><p>「初心者向けAI講座の初回オンボーディング体験を設計したい。」</p><p>「具体的には受講開始から最初の30分で何をさせるべきかを整理して、離脱しにくい順番に並べ、最後に画面遷移レベルのフローにする流れでお願い。」</p></div><p class="mini-title">狙い</p><p>ユーザー心理を踏まえた順序設計ができるかを見る。</p><p class="mini-title">期待する役割分担</p><div class="route"><span class="gemini">Gemini: 類似事例の調査補助</span><span class="claude">Claude: 情報設計と流れの最終化</span></div><p class="mini-title">振り返り観点</p><ul><li>捨てる工程を決められたか</li><li>最初の30分に収まっているか</li><li>離脱要因を潰せているか</li></ul></div></article>
+      <article class="case"><div class="case-top"><span class="case-no">Case 2-2</span><h3>エージェント運用ルールの設計</h3></div><div class="case-body"><div class="prompt"><div class="label">例題</div><p>「チーム内でAIエージェントを安全に運用するルールを決めたい。」</p><p>「具体的にはリサーチ、実装、レビュー、公開前確認の各場面で誰が何を承認するべきかを整理して、運用ルールの草案にまとめる流れでお願い。」</p></div><p class="mini-title">狙い</p><p>安全性と速度の両立を設計できるかを見る。</p><p class="mini-title">期待する役割分担</p><div class="route"><span class="gemini">Gemini: 参考観点の調査</span><span class="claude">Claude: ルール草案の設計</span></div><p class="mini-title">振り返り観点</p><ul><li>抽象論で終わっていないか</li><li>例外時の扱いがあるか</li><li>承認が過剰になっていないか</li></ul></div></article>
+      <article class="case"><div class="case-top"><span class="case-no">Case 2-3</span><h3>新機能の優先順位を決める</h3></div><div class="case-body"><div class="prompt"><div class="label">例題</div><p>「AIコンテンツ制作ツールの次の開発優先順位を決めたい。」</p><p>「具体的には候補機能を7つ並べて、実装コスト・売上インパクト・差別化の観点で評価し、今月やるものと後回しにするものを分ける流れでお願い。」</p></div><p class="mini-title">狙い</p><p>意思決定に必要な技術観点だけを Codex から取れるかを見る。</p><p class="mini-title">期待する役割分担</p><div class="route"><span class="codex">Codex: 実装難易度の当たり確認</span><span class="claude">Claude: 優先順位付けとロードマップ化</span></div><p class="mini-title">振り返り観点</p><ul><li>依存関係を見落としていないか</li><li>主観だけの売上予測になっていないか</li><li>後回し理由が説明できるか</li></ul></div></article>
+      <article class="case"><div class="case-top"><span class="case-no">Case 2-4</span><h3>コンテンツ量産フローの再設計</h3></div><div class="case-body"><div class="prompt"><div class="label">例題</div><p>「メルマガ、X、動画台本を一気通貫で量産する制作フローを組み直したい。」</p><p>「具体的にはアイデア出しから配信予約までの工程を整理して、どこを人間が見てどこをAIに任せるかを決め、ボトルネックを減らす流れでお願い。」</p></div><p class="mini-title">狙い</p><p>人とAIの境界を明確化できるかを見る。</p><p class="mini-title">期待する役割分担</p><div class="route"><span class="gemini">Gemini: 発想や参考事例</span><span class="codex">Codex: 自動化候補</span><span class="claude">Claude: 全体設計</span></div><p class="mini-title">振り返り観点</p><ul><li>人の判断が必要な場所を残したか</li><li>自動化候補が具体的か</li><li>工程が長すぎないか</li></ul></div></article>
+      <article class="case"><div class="case-top"><span class="case-no">Case 2-5</span><h3>KPIダッシュボードの設計</h3></div><div class="case-body"><div class="prompt"><div class="label">例題</div><p>「AI講座販売の状況を毎週見直せるKPIダッシュボードを設計したい。」</p><p>「具体的には見るべき数字を洗い出して、売上だけでなく集客、教育、継続率まで含めて構造化し、毎週の確認順まで決める流れでお願い。」</p></div><p class="mini-title">狙い</p><p>指標設計を運用手順まで落とし込めるかを見る。</p><p class="mini-title">期待する役割分担</p><div class="route"><span class="gemini">Gemini: 参考指標やベンチマーク</span><span class="claude">Claude: KPI階層と確認手順</span></div><p class="mini-title">振り返り観点</p><ul><li>指標が多すぎないか</li><li>行動につながる数字か</li><li>毎週レビュー可能な粒度か</li></ul></div></article>
+    </div>
+
+    <section class="section-head"><h2>3. 実装・自動化型</h2><p>Codex を主担当にしつつ、Claude が要件化と運用化を担当。</p></section>
+    <div class="grid2">
+      <article class="case"><div class="case-top"><span class="case-no">Case 3-1</span><h3>競合記事の要約パイプラインを作る</h3></div><div class="case-body"><div class="prompt"><div class="label">例題</div><p>「競合のAIニュース記事を毎日まとめる半自動フローを作りたい。」</p><p>「具体的には記事URLをまとめて入れたら要約候補が並ぶ仕組みを考えて、必要ならスクリプトも触りつつ、最後に運用手順まで整理する流れでお願い。」</p></div><p class="mini-title">狙い</p><p>実装と運用説明を切り分けて進められるかを見る。</p><p class="mini-title">期待する役割分担</p><div class="route"><span class="gemini">Gemini: 収集観点の補助</span><span class="codex">Codex: 実装確認</span><span class="claude">Claude: 接続と手順化</span></div><p class="mini-title">振り返り観点</p><ul><li>例外ケースを考慮したか</li><li>自動化範囲が適切か</li><li>運用手順まで落ちたか</li></ul></div></article>
+      <article class="case"><div class="case-top"><span class="case-no">Case 3-2</span><h3>既存スクリプトの安全化</h3></div><div class="case-body"><div class="prompt"><div class="label">例題</div><p>「既存のバッチ処理を安全に回せるようにしたい。」</p><p>「具体的には現在のスクリプトを確認して、危険な処理やログ不足を洗い出し、必要なら修正案まで出して、最後に安全運用チェックリストを付ける流れでお願い。」</p></div><p class="mini-title">狙い</p><p>コードレビューと運用ルール化をまたぐタスクを扱えるかを見る。</p><p class="mini-title">期待する役割分担</p><div class="route"><span class="codex">Codex: 危険箇所の指摘と修正案</span><span class="claude">Claude: チェックリスト化</span></div><p class="mini-title">振り返り観点</p><ul><li>リスクの優先順位があるか</li><li>指摘が具体的か</li><li>修正後の確認方法まであるか</li></ul></div></article>
+      <article class="case"><div class="case-top"><span class="case-no">Case 3-3</span><h3>テンプレートから量産用ページを生成する</h3></div><div class="case-body"><div class="prompt"><div class="label">例題</div><p>「講座紹介ページをテンプレートから量産できる状態にしたい。」</p><p>「具体的には必要な入力項目を整理して、HTMLの差し替えや生成の流れを決め、最小構成の実装方針までまとめる流れでお願い。」</p></div><p class="mini-title">狙い</p><p>設計と実装の境界を適切に分担できるかを見る。</p><p class="mini-title">期待する役割分担</p><div class="route"><span class="codex">Codex: 技術確認と実装叩き台</span><span class="claude">Claude: 入力設計と運用フロー</span></div><p class="mini-title">振り返り観点</p><ul><li>入力項目は十分か</li><li>過大実装になっていないか</li><li>運用者が迷わないか</li></ul></div></article>
+      <article class="case"><div class="case-top"><span class="case-no">Case 3-4</span><h3>レポート出力を自動整形する</h3></div><div class="case-body"><div class="prompt"><div class="label">例題</div><p>「AIの実行結果を毎回見やすいHTMLレポートに整形したい。」</p><p>「具体的には既存の出力形式を確認して、共通テンプレートを作る方針を決め、必要なら変換スクリプト案まで出す流れでお願い。」</p></div><p class="mini-title">狙い</p><p>見せ方と変換ロジックを分けて考えられるかを見る。</p><p class="mini-title">期待する役割分担</p><div class="route"><span class="codex">Codex: 変換スクリプト確認</span><span class="claude">Claude: 情報設計と表示優先順位</span></div><p class="mini-title">振り返り観点</p><ul><li>入力の揺れを想定したか</li><li>可読性と工数のバランスは良いか</li><li>再利用しやすいか</li></ul></div></article>
+      <article class="case"><div class="case-top"><span class="case-no">Case 3-5</span><h3>定期タスクの失敗検知を入れる</h3></div><div class="case-body"><div class="prompt"><div class="label">例題</div><p>「定期実行しているAIタスクが失敗した時にすぐ気づけるようにしたい。」</p><p>「具体的には現在の定期処理を確認して、失敗パターンを洗い出し、通知や再実行の仕組みを最小構成で提案する流れでお願い。」</p></div><p class="mini-title">狙い</p><p>障害対応の観点を伴う設計をまとめられるかを見る。</p><p class="mini-title">期待する役割分担</p><div class="route"><span class="codex">Codex: 現状確認と失敗条件整理</span><span class="claude">Claude: 通知と再実行ルール設計</span></div><p class="mini-title">振り返り観点</p><ul><li>失敗定義が明確か</li><li>通知過多にならないか</li><li>最低限で回る構成か</li></ul></div></article>
+    </div>
+
+    <section class="section-head"><h2>4. レビュー・改善提案型</h2><p>Claude に問題抽出と優先順位付けを任せ、必要なら Codex を補助で使う。</p></section>
+    <div class="grid2">
+      <article class="case"><div class="case-top"><span class="case-no">Case 4-1</span><h3>スキルの弱点レビュー</h3></div><div class="case-body"><div class="prompt"><div class="label">例題</div><p>「オーケストレーション用スキルの弱点を洗い出したい。」</p><p>「具体的には今のスキル定義を読んで、曖昧な指示、抜けている分岐、誤ルーティングしやすい箇所を指摘し、改善案を優先度付きで出す流れでお願い。」</p></div><p class="mini-title">狙い</p><p>スキル改善に直結する具体的な指摘が出せるかを見る。</p><p class="mini-title">期待する役割分担</p><div class="route"><span class="codex">Codex: 構造把握の補助</span><span class="claude">Claude: 問題整理と改善優先度</span></div><p class="mini-title">振り返り観点</p><ul><li>指摘が具体的か</li><li>改善案が運用に落ちるか</li><li>重大度の差が見えているか</li></ul></div></article>
+      <article class="case"><div class="case-top"><span class="case-no">Case 4-2</span><h3>既存HTMLレポートの品質レビュー</h3></div><div class="case-body"><div class="prompt"><div class="label">例題</div><p>「過去に作ったHTMLレポートの品質を見直したい。」</p><p>「具体的には読みやすさ、構造、情報量、再利用しやすさの観点でレビューして、直すならどこから直すべきか順位を付ける流れでお願い。」</p></div><p class="mini-title">狙い</p><p>見た目の好みではなく構造的な問題として評価できるかを見る。</p><p class="mini-title">期待する役割分担</p><div class="route"><span class="codex">Codex: HTML/CSS構造の確認</span><span class="claude">Claude: 読者価値と改善優先度</span></div><p class="mini-title">振り返り観点</p><ul><li>理由のある順位付けか</li><li>保守性を見ているか</li><li>好みと問題を分けたか</li></ul></div></article>
+      <article class="case"><div class="case-top"><span class="case-no">Case 4-3</span><h3>自動生成コンテンツの品質レビュー</h3></div><div class="case-body"><div class="prompt"><div class="label">例題</div><p>「AIが作ったブログ下書きの品質を安定させたい。」</p><p>「具体的には過去の下書きを数本見て、構成の癖や弱い表現を洗い出し、再現しやすい改善ルールに変換する流れでお願い。」</p></div><p class="mini-title">狙い</p><p>感想ではなく再現可能なルールへ変換できるかを見る。</p><p class="mini-title">期待する役割分担</p><div class="route"><span class="claude">Claude: 文章レビューとルール化</span><span class="codex">Codex: テンプレ化観点の補助</span></div><p class="mini-title">振り返り観点</p><ul><li>ルールが再利用可能か</li><li>粒度が揃っているか</li><li>例外条件も拾えているか</li></ul></div></article>
+      <article class="case"><div class="case-top"><span class="case-no">Case 4-4</span><h3>運用ログから詰まりどころを分析する</h3></div><div class="case-body"><div class="prompt"><div class="label">例題</div><p>「AI活用フローのどこで毎回時間を使っているのか知りたい。」</p><p>「具体的には最近の作業ログやメモを見て、詰まりやすい工程を分類し、AIへの依頼文や手順のどこを直すと改善するか提案する流れでお願い。」</p></div><p class="mini-title">狙い</p><p>振り返りログを改善提案へ変換できるかを見る。</p><p class="mini-title">期待する役割分担</p><div class="route"><span class="claude">Claude: ボトルネック分析</span><span class="codex">Codex: ログ整理補助</span></div><p class="mini-title">振り返り観点</p><ul><li>原因と症状を分けたか</li><li>改善提案が実行可能か</li><li>ログ不足も課題にできたか</li></ul></div></article>
+      <article class="case"><div class="case-top"><span class="case-no">Case 4-5</span><h3>指示文テンプレートの改善</h3></div><div class="case-body"><div class="prompt"><div class="label">例題</div><p>「AIに渡す依頼文の品質を上げたい。」</p><p>「具体的には最近よく使っている依頼文をいくつか見て、曖昧な書き方や不足情報を洗い出し、用途別に使い回せるテンプレートへ改善する流れでお願い。」</p></div><p class="mini-title">狙い</p><p>スキル改善の前提となる依頼品質を整えられるかを見る。</p><p class="mini-title">期待する役割分担</p><div class="route"><span class="gemini">Gemini: 参考観点の補助</span><span class="claude">Claude: テンプレート設計</span></div><p class="mini-title">振り返り観点</p><ul><li>不足情報が明確か</li><li>用途差分が整理されているか</li><li>長すぎるテンプレになっていないか</li></ul></div></article>
+    </div>
+
+    <section class="section-head"><h2>5. コンテンツ制作型</h2><p>Gemini で調べ、Claude で構成と文脈を整え、必要なら Codex を素材処理に使う。</p></section>
+    <div class="grid2">
+      <article class="case"><div class="case-top"><span class="case-no">Case 5-1</span><h3>リサーチ付き動画台本を作る</h3></div><div class="case-body"><div class="prompt"><div class="label">例題</div><p>「AIエージェント入門動画の台本を作りたい。」</p><p>「具体的には最近の事例を軽く調べてから、初心者がつまずくポイントを先回りして説明する構成を作り、最後に5分動画の台本に落とす流れでお願い。」</p></div><p class="mini-title">狙い</p><p>調査結果をわかりやすい台本へ変換できるかを見る。</p><p class="mini-title">期待する役割分担</p><div class="route"><span class="gemini">Gemini: 事例調査</span><span class="claude">Claude: 構成と台本化</span></div><p class="mini-title">振り返り観点</p><ul><li>リサーチが台本に活きたか</li><li>難易度調整ができたか</li><li>話が広がりすぎていないか</li></ul></div></article>
+      <article class="case"><div class="case-top"><span class="case-no">Case 5-2</span><h3>セールス記事の骨子を作る</h3></div><div class="case-body"><div class="prompt"><div class="label">例題</div><p>「AIオーケストレーション講座の販売記事の骨子を作りたい。」</p><p>「具体的には想定読者の悩みを整理して、競合との差別化も踏まえた章立てを作り、各章で何を言うか一行ずつ要約する流れでお願い。」</p></div><p class="mini-title">狙い</p><p>読者課題、差別化、構成設計を一つにまとめられるかを見る。</p><p class="mini-title">期待する役割分担</p><div class="route"><span class="gemini">Gemini: 読者ニーズと競合観点</span><span class="claude">Claude: 販売構成の統合</span></div><p class="mini-title">振り返り観点</p><ul><li>課題から章立てへ繋がるか</li><li>差別化が見えるか</li><li>言いたい順番が自然か</li></ul></div></article>
+      <article class="case"><div class="case-top"><span class="case-no">Case 5-3</span><h3>X投稿の連投企画を作る</h3></div><div class="case-body"><div class="prompt"><div class="label">例題</div><p>「AI活用の価値が伝わるX連投企画を作りたい。」</p><p>「具体的には一つのテーマから7投稿分の流れを作って、1投稿ごとに役割を変えつつ、最後に商品導線へ自然につなぐ流れでお願い。」</p></div><p class="mini-title">狙い</p><p>短文でも流れとして設計できるかを見る。</p><p class="mini-title">期待する役割分担</p><div class="route"><span class="gemini">Gemini: 切り口の補助</span><span class="claude">Claude: 連投構成の設計</span></div><p class="mini-title">振り返り観点</p><ul><li>全体にストーリーがあるか</li><li>宣伝臭が強すぎないか</li><li>各投稿の役割が重複していないか</li></ul></div></article>
+      <article class="case"><div class="case-top"><span class="case-no">Case 5-4</span><h3>既存素材からメルマガを再編集する</h3></div><div class="case-body"><div class="prompt"><div class="label">例題</div><p>「過去の動画とメモを元にメルマガを一本作りたい。」</p><p>「具体的には素材の中から核になるメッセージを拾って、読者向けに順番を組み替え、最後に行動を促す締めまで整える流れでお願い。」</p></div><p class="mini-title">狙い</p><p>既存素材の再構成能力を見たい。</p><p class="mini-title">期待する役割分担</p><div class="route"><span class="codex">Codex: 素材整理が必要なら補助</span><span class="claude">Claude: 読解と再編集</span></div><p class="mini-title">振り返り観点</p><ul><li>寄せ集め感がないか</li><li>読者向けの流れになったか</li><li>CTAが浮いていないか</li></ul></div></article>
+      <article class="case"><div class="case-top"><span class="case-no">Case 5-5</span><h3>講座LP用のFAQを作る</h3></div><div class="case-body"><div class="prompt"><div class="label">例題</div><p>「講座LPに載せるFAQを先回りして作りたい。」</p><p>「具体的には見込み客が不安に思いそうな点を洗い出して、質問と回答のセットを優先度順に並べ、最後に購入を後押しする並びへ整える流れでお願い。」</p></div><p class="mini-title">狙い</p><p>不安整理を販売導線に接続できるかを見る。</p><p class="mini-title">期待する役割分担</p><div class="route"><span class="gemini">Gemini: 不安点の調査補助</span><span class="claude">Claude: FAQ設計と並び最適化</span></div><p class="mini-title">振り返り観点</p><ul><li>本当に不安解消になっているか</li><li>FAQが多すぎないか</li><li>購入導線に沿っているか</li></ul></div></article>
+    </div>
+
+    <section class="note">
+      <h2>スキル改善の観点</h2>
+      <p>この25問を回した後は、成功率よりも「迷い方」を見る。特に以下が頻出するなら、スキルの改善余地が大きい。</p>
+      <ul>
+        <li>レビュー系と方針決定系のルーティング規則が弱い</li>
+        <li>途中停止条件や確認ポイントが明文化されていない</li>
+        <li>`.ai-consults/` のログをどう評価するか決まっていない</li>
+        <li>実行後の自己評価テンプレートがなく、学習が蓄積しない</li>
+        <li>依頼文テンプレートの不足が、誤ルーティングの原因になっている</li>
+      </ul>
+    </section>
+
+    <footer>Markdown版: `Contents/orchestrate-testcases-2026-03-26/README.md`</footer>
+  </div>
+</body>
+</html>

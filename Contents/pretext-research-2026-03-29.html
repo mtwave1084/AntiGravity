@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pretext 技術調査レポート — 2026-03-29</title>
+<style>
+  body { background: #0d1117; color: #e6edf3; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 24px; max-width: 900px; }
+  h1 { color: #58a6ff; border-bottom: 1px solid #30363d; padding-bottom: 12px; }
+  h2 { color: #79c0ff; margin-top: 36px; }
+  h3 { color: #d2a8ff; margin-top: 20px; }
+  .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 18px; margin: 14px 0; }
+  .card p { margin: 6px 0; color: #c9d1d9; font-size: 0.92em; line-height: 1.7; }
+  .badge { display: inline-block; background: #1f6feb; color: #fff; font-size: 0.75em; padding: 2px 10px; border-radius: 12px; margin-left: 6px; vertical-align: middle; }
+  .badge.green { background: #238636; }
+  .badge.purple { background: #8250df; }
+  .badge.orange { background: #fb8f44; color: #0d1117; }
+  .badge.red { background: #da3633; }
+  .meta { color: #8b949e; font-size: 0.82em; margin-bottom: 16px; }
+  a { color: #58a6ff; }
+  code { background: #1c2128; padding: 2px 6px; border-radius: 4px; font-size: 0.88em; color: #e3b341; }
+  .highlight { background: #1c2128; border-left: 3px solid #58a6ff; padding: 12px 16px; border-radius: 0 6px 6px 0; margin: 12px 0; color: #c9d1d9; font-size: 0.92em; line-height: 1.7; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+  th { background: #1c2128; color: #79c0ff; padding: 10px 14px; text-align: left; font-size: 0.88em; }
+  td { padding: 9px 14px; border-top: 1px solid #30363d; color: #c9d1d9; font-size: 0.88em; }
+  .demo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 14px 0; }
+  @media (max-width: 600px) { .demo-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<h1>🔬 Pretext 技術調査レポート</h1>
+<div class="meta">調査日: 2026-03-29 ｜ ソース: X (@_chenglou), GitHub, chenglou.me/pretext ｜ 調査: Gemini CLI + WebSearch</div>
+
+<h2>概要</h2>
+<div class="card">
+  <p><strong>Pretext</strong> は、元 Meta エンジニアの <strong>Cheng Lou</strong>（@_chenglou / ReasonML・ReScript の作者）が開発した、JavaScript/TypeScript 製の高性能テキスト計測・レイアウトライブラリ。</p>
+  <p>「画像や任意の形状にテキストが自動的に流れ込む」ような複雑なレイアウトを、DOMに頼らない独自の算術ロジックで超高速に実現する。</p>
+  <p>
+    <a href="https://github.com/chenglou/pretext" target="_blank">GitHub: chenglou/pretext</a> ｜
+    <a href="https://chenglou.me/pretext/" target="_blank">デモページ</a>
+  </p>
+</div>
+
+<h2>技術の原理・仕組み</h2>
+
+<div class="card">
+  <h3>DOM計測の問題点 <span class="badge red">課題</span></h3>
+  <p>通常のブラウザは <code>getBoundingClientRect</code> や <code>offsetHeight</code> などの DOM API でテキストの高さ・位置を取得する。</p>
+  <p>この操作を呼び出すたびに <strong>レイアウト・リフロー</strong>（再計算）が強制実行され、ブラウザの最も重い処理の一つが走る。大量のテキストを扱うUIでは深刻なパフォーマンスボトルネックになる。</p>
+</div>
+
+<div class="card">
+  <h3>Pretext のアプローチ：DOM不要の独自計算 <span class="badge green">解決策</span></h3>
+  <div class="highlight">
+    ブラウザのフォントエンジンを「正解データ（Ground Truth）」として使いながら、DOM計測を一切行わずに独自の算術ロジックでテキストを計算する。
+  </div>
+  <table>
+    <tr>
+      <th>機能</th>
+      <th>内容</th>
+    </tr>
+    <tr>
+      <td>テキスト高さ計算</td>
+      <td>最大幅・行高さを指定すると行数・高さを返す</td>
+    </tr>
+    <tr>
+      <td>手動ルーティング</td>
+      <td>テキストを任意の形状（画像の輪郭・UIパーツ）に沿って流す</td>
+    </tr>
+    <tr>
+      <td>Shrinkwrap</td>
+      <td>テキストが「最も狭い幅でも行数が変わらない」幅を自動計算</td>
+    </tr>
+    <tr>
+      <td>多言語・絵文字</td>
+      <td>双方向テキスト（Bidi）・絵文字・全言語に対応</td>
+    </tr>
+    <tr>
+      <td>出力先</td>
+      <td>DOM / Canvas / SVG / WebGL（SSR は近日対応予定）</td>
+    </tr>
+  </table>
+  <p>📊 <strong>パフォーマンス実績</strong>：500件のテキストバッチ計算が <strong>約 0.10ms</strong> で完了</p>
+</div>
+
+<h2>デモ一覧</h2>
+<div class="demo-grid">
+  <div class="card">
+    <h3>Shrinkwrap Showdown <span class="badge purple">代表デモ</span></h3>
+    <p>画像や図形の輪郭に沿ってテキストがぴったり回り込む。CSSの <code>shape-outside</code> とは違い、動的に変化する形状にも対応。</p>
+    <p><a href="https://chenglou.me/pretext/bubbles/" target="_blank">→ デモを見る</a></p>
+  </div>
+  <div class="card">
+    <h3>Editorial Engine</h3>
+    <p>雑誌・新聞スタイルのレイアウト。テキストが画像を避けながら自動的にカラムを形成する。</p>
+    <p><a href="https://chenglou.me/pretext/editorial-engine/" target="_blank">→ デモを見る</a></p>
+  </div>
+  <div class="card">
+    <h3>Dynamic Layout</h3>
+    <p>コンテンツが変わるたびにレイアウト全体がリアルタイムで再計算される。</p>
+    <p><a href="https://chenglou.me/pretext/dynamic-layout/" target="_blank">→ デモを見る</a></p>
+  </div>
+  <div class="card">
+    <h3>Rich Note</h3>
+    <p>リッチテキスト（太字・インライン画像・異なるフォントサイズの混在）への対応。</p>
+    <p><a href="https://chenglou.me/pretext/rich-note/" target="_blank">→ デモを見る</a></p>
+  </div>
+</div>
+
+<h2>実用性・活用法</h2>
+
+<div class="card">
+  <h3>既存CSSとの違い <span class="badge orange">比較</span></h3>
+  <table>
+    <tr>
+      <th>手段</th>
+      <th>できること</th>
+      <th>できないこと</th>
+    </tr>
+    <tr>
+      <td>CSS <code>float</code></td>
+      <td>シンプルな左右回り込み</td>
+      <td>複雑な形状・動的変化</td>
+    </tr>
+    <tr>
+      <td>CSS <code>shape-outside</code></td>
+      <td>静的な任意形状への回り込み</td>
+      <td>リアルタイム再計算・大量処理</td>
+    </tr>
+    <tr>
+      <td><strong>Pretext</strong></td>
+      <td>動的・複雑形状・高速・全言語</td>
+      <td>SSR（近日対応予定）</td>
+    </tr>
+  </table>
+</div>
+
+<div class="card">
+  <h3>主な活用シーン</h3>
+  <p>• <strong>仮想スクロール</strong> — 大量リスト表示。事前に正確な高さが分かるためスクロールが滑らか</p>
+  <p>• <strong>CLS対策</strong> — ページ読み込み時のレイアウトシフト（ガタつき）を完全防止</p>
+  <p>• <strong>Masonryレイアウト</strong> — Pinterestのようなカード型グリッド</p>
+  <p>• <strong>雑誌・editorial UI</strong> — 画像・広告・図解を含む複雑なテキストレイアウト</p>
+  <p>• <strong>リアルタイム計算が必要なUI</strong> — テキスト量・フォントが変わるたびにレイアウトを再構成</p>
+</div>
+
+<div class="card">
+  <h3>Remotion / 動画制作への応用 <span class="badge purple">AGY関連</span></h3>
+  <p>テロップや字幕が画像・キャラクターの輪郭に沿って動的に回り込む表現が実現できる。</p>
+  <p>Remotion（React ベース）と組み合わせると、フレームごとにテキストレイアウトを再計算しながらアニメーションさせることが可能になる可能性がある。</p>
+  <p>SSR 対応が完成次第、Node.js 側での事前レンダリングにも使えるようになる。</p>
+</div>
+
+<h2>注意点・制約</h2>
+<div class="card">
+  <p>• <strong>SSR</strong>：ドキュメントに「soon（近日対応）」と記載あり。現在はブラウザ環境のみ</p>
+  <p>• <strong>システムフォント</strong>：macOS の <code>system-ui</code> 等では計算精度が低下することがある。明示的なフォント指定を推奨</p>
+  <p>• <strong>学習コスト</strong>：DOM の自動レイアウトから抜けて「手動でテキストを配置する」設計思想に慣れる必要がある</p>
+</div>
+
+<div class="meta" style="margin-top: 32px;">調査: Gemini CLI (gemini-2.5-flash) + WebSearch ｜ まとめ: ティア (Claude Code)</div>
+
+</body>
+</html>

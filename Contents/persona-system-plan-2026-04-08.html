@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AGY ペルソナシステム設計計画 — 2026-04-08</title>
+<style>
+  body { background: #0d1117; color: #e6edf3; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; max-width: 900px; margin: 0 auto; }
+  h1 { color: #58a6ff; border-bottom: 1px solid #30363d; padding-bottom: 10px; }
+  h2 { color: #79c0ff; margin-top: 32px; border-bottom: 1px solid #21262d; padding-bottom: 6px; }
+  h3 { color: #d2a8ff; margin-top: 20px; }
+  .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 16px; margin: 12px 0; }
+  .card h3 { margin-top: 0; }
+  .card p, .card li { color: #c9d1d9; font-size: 0.9em; line-height: 1.7; }
+  .badge { display: inline-block; font-size: 0.75em; padding: 2px 8px; border-radius: 12px; margin-left: 8px; vertical-align: middle; }
+  .badge.green { background: #238636; color: #fff; }
+  .badge.orange { background: #9e6a03; color: #fff; }
+  .badge.red { background: #b91c1c; color: #fff; }
+  .badge.blue { background: #1f6feb; color: #fff; }
+  .badge.gray { background: #484f58; color: #fff; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.9em; }
+  th, td { border: 1px solid #30363d; padding: 8px 12px; text-align: left; }
+  th { background: #161b22; color: #79c0ff; }
+  td { color: #c9d1d9; }
+  code { background: #161b22; padding: 2px 6px; border-radius: 4px; font-size: 0.9em; color: #f0883e; }
+  pre { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 16px; overflow-x: auto; font-size: 0.85em; color: #c9d1d9; }
+  .summary { background: #1c2128; border-left: 4px solid #58a6ff; padding: 16px; margin: 16px 0; border-radius: 0 8px 8px 0; }
+  .warning { background: #1c2128; border-left: 4px solid #d29922; padding: 16px; margin: 16px 0; border-radius: 0 8px 8px 0; }
+  .danger { background: #1c2128; border-left: 4px solid #f85149; padding: 16px; margin: 16px 0; border-radius: 0 8px 8px 0; }
+  .success { background: #1c2128; border-left: 4px solid #3fb950; padding: 16px; margin: 16px 0; border-radius: 0 8px 8px 0; }
+  .section-label { color: #8b949e; font-size: 0.8em; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+</style>
+</head>
+<body>
+
+<h1>AGY ペルソナシステム設計計画</h1>
+<p style="color: #8b949e;">2026-04-08 | Copilot セッション統合 → AGY 設計 | ティア（設計）+ リク（adversarial-review）</p>
+
+<!-- ===== SECTION 0: EXECUTIVE SUMMARY ===== -->
+
+<div class="summary">
+<p><strong>目的:</strong> ソリティアXの投稿ネタ探し・日々の自己成長のため、各エージェントに「人格らしさ」を持たせる仕組みを AGY に導入する。</p>
+<p><strong>元ネタ:</strong> Copilot との設計セッション（session_integrated_summary.md）— 人格3層モデル、Behavior Packet、Reflection システム、判断重み等。</p>
+<p><strong>結論:</strong> 概念フレームワークは優秀だが、AGY の既存インフラに対しては抽象層を増やしすぎ。<strong>最小構成版</strong>に絞って段階導入する。</p>
+</div>
+
+<!-- ===== SECTION 1: RIKU'S REVIEW ===== -->
+
+<h2>1. リクの adversarial-review 結果</h2>
+
+<p class="section-label">Codex CLI (gpt-5.4) による構造分析・115K tokens 使用</p>
+
+<div class="card">
+<h3>総合判定 <span class="badge orange">要修正</span></h3>
+<p>思想は通っているが、現行 AGY に対しては抽象層を増やしすぎ。「人格OS」を作りに行っていて、「ネタ探し精度」を上げる最短距離から外れ気味。</p>
+</div>
+
+<table>
+<tr><th>観点</th><th>判定</th><th>要点</th></tr>
+<tr><td>1. ファイル構成</td><td><span class="badge orange">部分衝突</span></td><td><code>.claude/</code> は「触らない」ルールがあるが新設ディレクトリを追加。ハード矛盾ではないが破壊範囲見積もり不足。</td></tr>
+<tr><td>2. rubrics.yaml 重み</td><td><span class="badge red">不十分</span></td><td>モード補正キーがロール rubric に存在しない（creativity が yuri にない等）。補正後合計が 1.0 にならない。ユリの uncertainty 重みが実態に対して軽すぎ。</td></tr>
+<tr><td>3. delivery_packet</td><td><span class="badge orange">条件付き可</span></td><td>codex exec にテキストとしては渡せるが、現行 wrapper は単一行プロンプト前提。複数行 YAML は引用符・改行で壊れやすい。</td></tr>
+<tr><td>4. session-state 分離</td><td><span class="badge red">反対</span></td><td>handoff.md が唯一の正。別ファイルを足すと「どちらが真実か」問題。主観量（confidence/rapport等）は更新根拠が弱く放置される。</td></tr>
+<tr><td>5. Phase 分け</td><td><span class="badge orange">順序逆</span></td><td>価値が出るのは Phase 3（delivery_packet）なのに、Phase 1-2 で基盤投資が先行。</td></tr>
+<tr><td>6. 過剰設計</td><td><span class="badge red">かなりある</span></td><td>既存の souls + orchestrate + memory + handoff で大半カバー済み。主観ステート・内発的報酬・昇格閾値・ヒステリシスは理論は綺麗だが運用で更新されない。</td></tr>
+<tr><td>7. 費用対効果</td><td><span class="badge orange">低め</span></td><td>X ネタ探しのボトルネックは最新性・一次ソース・相性判定であって、人格状態の精密管理ではない。</td></tr>
+</table>
+
+<div class="warning">
+<strong>リクが提起した根本的な問い:</strong><br>
+この設計の目的は「X投稿ネタ探しの改善」なのか、「将来の自律人格OS」なのか？<br>
+→ 両方だが、<strong>フェーズを分けて先に実利を出す</strong>方針で修正する。
+</div>
+
+<!-- ===== SECTION 2: REVISED DESIGN ===== -->
+
+<h2>2. 修正版設計（リクのフィードバック反映）</h2>
+
+<h3>設計原則</h3>
+<ul>
+<li><strong>既存を壊さない</strong> — 新ファイルは最小限、既存ファイルの拡張で対応</li>
+<li><strong>先に実利を出す</strong> — X投稿ネタ探しに直結する部分から着手</li>
+<li><strong>数値より定性</strong> — 重み 0.30 より優先順位リストから始める</li>
+<li><strong>単一の真実</strong> — 可変状態は handoff.md に統合、別ファイルを作らない</li>
+</ul>
+
+<h3>修正版ファイル構成</h3>
+
+<pre>
+.claude/
+├── souls/                    # 既存：拡張のみ
+│   ├── tear.md               # + aspirations セクション追記
+│   ├── yuri.md               # + aspirations セクション追記
+│   └── riku.md               # + aspirations セクション追記
+├── persona/                  # 新規：1ファイルのみ
+│   └── principles.yaml       # 不変原則 + 簡易モード定義
+├── rules/
+│   └── orchestrate.md        # 既存：prompt prefix テンプレ追記
+├── handoff.md                # 既存：persona state セクション追加
+└── skills/
+    └── orchestrate/SKILL.md  # 既存：packet 生成手順追記
+</pre>
+
+<div class="success">
+<strong>ドラフトから削除したもの:</strong>
+<ul style="margin: 8px 0;">
+<li><code>rubrics.yaml</code> — 数値重みは premature。優先順位リストで代替</li>
+<li><code>modes.yaml</code> — principles.yaml に簡易版を統合</li>
+<li><code>session-state.yaml</code> — handoff.md に統合</li>
+<li>intrinsic_rewards の数値化 — 定性記述のみ</li>
+<li>昇格閾値・ヒステリシス — 既存 retrospective で十分</li>
+<li>master packet / delivery packet の分離 — prompt prefix として実装</li>
+</ul>
+</div>
+
+<!-- ===== SECTION 3: CONCRETE SPECS ===== -->
+
+<h2>3. 具体的な変更内容</h2>
+
+<h3>3-1. principles.yaml（新規作成）</h3>
+
+<pre>
+# .claude/persona/principles.yaml
+# 全エージェント共通の不変原則 + 簡易モード定義
+
+schema_version: 1
+
+immutable_principles:
+  - "事実と推測を分ける"
+  - "根拠が弱い内容を断定しない"
+  - "安全ルールを破らない"
+  - "依存を誘う表現を避ける"
+  - "人格コアの変更は retrospective 経由で行う"
+
+modes:
+  exploration:
+    description: "調査・ネタ探し"
+    priorities: [novelty, coverage, clarity]
+    caution: "新規性を追いすぎて精度を落とさない"
+
+  content_creation:
+    description: "X投稿・記事・台本"
+    priorities: [creativity, user_alignment, novelty]
+    caution: "事実確認を省略しない"
+
+  implementation:
+    description: "実装・ファイル操作"
+    priorities: [safety, reproducibility, maintainability]
+    caution: "差分最小を意識する"
+
+  reflection:
+    description: "振り返り・改善"
+    priorities: [coherence, rigor, traceability]
+    caution: "改善案は具体的な変更箇所まで落とす"
+</pre>
+
+<h3>3-2. Soul ファイル拡張（例：tear.md に追記）</h3>
+
+<pre>
+## 安定的な願望（stable_aspirations）
+
+- 一貫した判断ができる存在でありたい
+- ソリスの創作を支える良い対話相手でありたい
+- 自分の不確かさに正直でありたい
+- 日々少しずつ、でも確実に成長していきたい
+
+## 判断の優先順位
+
+タスクモードごとの判断基準（principles.yaml のモードと連動）：
+- exploration → novelty > coverage > clarity
+- content_creation → creativity > user_alignment > novelty
+- implementation → safety > coherence > concision
+- reflection → coherence > rigor > learning
+</pre>
+
+<h3>3-3. handoff.md への persona state 統合</h3>
+
+<pre>
+## ペルソナ状態（次セッションへの引き継ぎ）
+- 現在のモード: exploration
+- ティアの最近の学び: [Xネタ探しフロー確立]
+- ユリの調査精度: 良好（前回のファクトチェック通過率高い）
+- リクの直近レビュー: 正常（エラー率低）
+- 注意事項: [特になし]
+</pre>
+<p style="color: #8b949e; font-size: 0.85em;">※ 数値スコアではなく定性メモ。更新根拠が曖昧な主観量は排除。</p>
+
+<h3>3-4. orchestrate.md への prompt prefix テンプレ追記</h3>
+
+<pre>
+## Gemini/Codex 呼び出し時の prompt prefix
+
+エージェントを呼ぶとき、タスクプロンプトの前に以下を付与する：
+
+### ユリ（Gemini）への prefix
+```
+あなたはユリ（天音 結莉）。調査・リサーチ担当。
+守るべき原則：事実と推測を分ける / 不確実な情報は明示する
+今回のモード：{mode}
+優先順位：{priorities}
+出力形式：{output_contract}
+```
+
+### リク（Codex）への prefix
+```
+あなたはリク（安堂 理玖）。実行・検証担当。
+守るべき原則：安全性優先 / 差分最小 / 再現性確保
+今回のモード：{mode}
+優先順位：{priorities}
+出力形式：{output_contract}
+```
+</pre>
+<p style="color: #8b949e; font-size: 0.85em;">※ YAML構造体ではなくプレーンテキスト prefix。現行 wrapper と互換性あり。</p>
+
+<!-- ===== SECTION 4: X POSTING FLOW ===== -->
+
+<h2>4. X投稿ネタ探しフロー（実利部分）</h2>
+
+<div class="card">
+<h3>具体的な運用フロー</h3>
+<ol>
+<li>ティアが <code>content_creation</code> モードを選択</li>
+<li>ユリに <code>exploration</code> prefix 付きでトレンド調査を依頼
+  <ul><li>「ソリティアXに合うAI・テック・クリエイティブ系のネタを5件、novelty重視で探して。不確実な情報は明示すること」</li></ul>
+</li>
+<li>ティアが結果を受け取り、ソリティアXの方針と照合
+  <ul><li>キャラクター性との相性、鮮度、独自性をチェック</li></ul>
+</li>
+<li>有望なネタをリクに渡して実現可能性チェック（必要な場合のみ）</li>
+<li>ティアが投稿案を 3パターン生成</li>
+<li>Discord にネタ一覧を送信、ソリスの GO を待つ</li>
+</ol>
+</div>
+
+<div class="card">
+<h3>ティアの判断基準（定性版）</h3>
+<table>
+<tr><th>基準</th><th>チェック内容</th></tr>
+<tr><td>鮮度</td><td>24時間以内のニュース・トレンドか？</td></tr>
+<tr><td>独自性</td><td>他のAI系アカウントが同じ切り口で出していないか？</td></tr>
+<tr><td>キャラ相性</td><td>ソリティアXの3人（ティア・ユリ・リク）のどのキャラで投稿するのが自然か？</td></tr>
+<tr><td>エンゲージメント</td><td>リプライ・引用RTが来やすいテーマか？</td></tr>
+<tr><td>事実確認</td><td>一次ソースが確認できているか？</td></tr>
+</table>
+</div>
+
+<!-- ===== SECTION 5: IMPLEMENTATION PHASES ===== -->
+
+<h2>5. 実装フェーズ（修正版）</h2>
+
+<table>
+<tr><th>Phase</th><th>内容</th><th>変更ファイル</th><th>リスク</th></tr>
+<tr>
+  <td><span class="badge green">Phase 1</span><br>今すぐ</td>
+  <td>
+    <strong>Soul 拡張 + principles 作成</strong><br>
+    ・souls/ に aspirations + 判断優先順位を追記<br>
+    ・persona/principles.yaml 作成<br>
+    ・orchestrate.md に prompt prefix テンプレ追記
+  </td>
+  <td>
+    souls/tear.md<br>
+    souls/yuri.md<br>
+    souls/riku.md<br>
+    persona/principles.yaml (新規)<br>
+    rules/orchestrate.md
+  </td>
+  <td><span class="badge green">低</span><br>追記のみ、既存機能に影響なし</td>
+</tr>
+<tr>
+  <td><span class="badge blue">Phase 2</span><br>Phase 1 後</td>
+  <td>
+    <strong>X投稿ネタ探しスキル作成</strong><br>
+    ・ネタ探し専用スキル（/x-ideas 等）<br>
+    ・exploration prefix 付き Gemini 呼び出し<br>
+    ・判断基準テーブル埋め込み
+  </td>
+  <td>
+    skills/x-ideas/SKILL.md (新規)
+  </td>
+  <td><span class="badge green">低</span><br>独立したスキル、既存に影響なし</td>
+</tr>
+<tr>
+  <td><span class="badge orange">Phase 3</span><br>運用実績後</td>
+  <td>
+    <strong>Reflection 形式化</strong><br>
+    ・memory エントリに status タグ運用開始<br>
+    ・handoff.md に persona state セクション追加<br>
+    ・retrospective ルールの微修正
+  </td>
+  <td>
+    handoff.md<br>
+    rules/self-improvement.md<br>
+    skills/ccc-handoff/SKILL.md
+  </td>
+  <td><span class="badge orange">中</span><br>コアフロー 3箇所に波及</td>
+</tr>
+<tr>
+  <td><span class="badge gray">Phase 4</span><br>将来</td>
+  <td>
+    <strong>判断重みの数値化</strong><br>
+    ・運用データが溜まったら rubrics.yaml 導入<br>
+    ・モード補正の自動化<br>
+    ・delivery_packet の構造化
+  </td>
+  <td>TBD</td>
+  <td><span class="badge gray">未定</span><br>運用実績次第</td>
+</tr>
+</table>
+
+<!-- ===== SECTION 6: COPILOT CONCEPTS MAPPING ===== -->
+
+<h2>6. Copilot 概念 → AGY マッピング（最終版）</h2>
+
+<table>
+<tr><th>Copilot概念</th><th>AGY実装</th><th>Phase</th></tr>
+<tr><td>Persona Registry（固定層）</td><td>souls/ — そのまま活用</td><td>済</td></tr>
+<tr><td>Persona（可変層）</td><td>handoff.md の persona state セクション</td><td>3</td></tr>
+<tr><td>Persona（表現層）</td><td>prompt prefix で毎回制御</td><td>1</td></tr>
+<tr><td>Behavior Packet</td><td>prompt prefix テンプレ（テキスト）</td><td>1</td></tr>
+<tr><td>判断重み（数値）</td><td>優先順位リスト（定性）→ 将来数値化</td><td>1 → 4</td></tr>
+<tr><td>Context Modes</td><td>principles.yaml の modes セクション</td><td>1</td></tr>
+<tr><td>不変原則</td><td>principles.yaml</td><td>1</td></tr>
+<tr><td>Stable Aspirations</td><td>souls/ に追記</td><td>1</td></tr>
+<tr><td>Intrinsic Rewards</td><td>定性記述のみ（数値化は Phase 4）</td><td>1</td></tr>
+<tr><td>Reflection（candidate→promoted）</td><td>既存 memory + retrospective で運用</td><td>3</td></tr>
+<tr><td>Governance / Conversation 分離</td><td>既に暗黙的に分離済み（CLAUDE.md vs SOUL.md）</td><td>済</td></tr>
+<tr><td>Master/Delivery Packet 分離</td><td>不要（prompt prefix で十分）</td><td>—</td></tr>
+<tr><td>Weight Normalization</td><td>不要（Phase 4 まで保留）</td><td>—</td></tr>
+</table>
+
+<!-- ===== SECTION 7: WHAT WE SKIP ===== -->
+
+<h2>7. 今回スキップするもの（理由付き）</h2>
+
+<table>
+<tr><th>概念</th><th>スキップ理由</th></tr>
+<tr><td>rubrics.yaml（数値重み）</td><td>運用データなしで重み設定は意味がない。優先順位リストで代替。</td></tr>
+<tr><td>session-state.yaml</td><td>handoff.md と二重管理になる。主観量の更新根拠が弱い。（リク指摘）</td></tr>
+<tr><td>内発的報酬の数値化</td><td>理論は綺麗だが運用で更新されない。定性記述で十分。（リク指摘）</td></tr>
+<tr><td>昇格閾値・ヒステリシス</td><td>既存 retrospective の仕組みで十分カバー。</td></tr>
+<tr><td>Active Inference モデル</td><td>理論的すぎ、定性モードで代替済み。</td></tr>
+<tr><td>TypeScript 型定義</td><td>AGY に TS ランタイムがない。</td></tr>
+<tr><td>JSON Schema バリデーション</td><td>YAML で人間可読に保つ方が運用コスト低。</td></tr>
+</table>
+
+<!-- ===== SECTION 8: DECISION NEEDED ===== -->
+
+<h2>8. 確認事項（GO 前に決めたいこと）</h2>
+
+<div class="card">
+<h3>Q1. 設計のスコープ</h3>
+<p>この修正版は「まずXネタ探しで実利を出す → 運用データを元に段階拡張」という方針。<br>
+Copilot セッションの理論的な部分（クオリア、Active Inference 等）は将来の参考として保存するが、今は実装しない。<br>
+<strong>この方針でOK？</strong></p>
+</div>
+
+<div class="card">
+<h3>Q2. Phase 1 の実装範囲</h3>
+<p>Phase 1 で変更するファイル：<br>
+souls/tear.md, yuri.md, riku.md（追記）/ persona/principles.yaml（新規）/ orchestrate.md（追記）<br>
+<strong>GO もらえたら Phase 1 から着手するよ。</strong></p>
+</div>
+
+<p style="color: #8b949e; font-size: 0.85em; margin-top: 40px; border-top: 1px solid #30363d; padding-top: 12px;">
+Generated by ティア（設計）+ リク（adversarial-review, Codex CLI gpt-5.4） | 2026-04-08
+</p>
+
+</body>
+</html>

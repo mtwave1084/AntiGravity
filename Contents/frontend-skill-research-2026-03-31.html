@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>frontend-skill — OpenAI Skills 調査レポート</title>
+<style>
+  :root {
+    --petal-white: #FDF8F5;
+    --petal-dim: #F5EDE6;
+    --cloud-sage: #8BA898;
+    --cloud-sage-light: #B5CEBF;
+    --cloud-sage-dark: #5D7F6E;
+    --peach-terracotta: #C87B5C;
+    --peach-light: #E8A98C;
+    --ink-charcoal: #2D2927;
+    --ink-muted: #6B5F58;
+    --ink-faint: #A09288;
+    --border: rgba(45,41,39,0.1);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--petal-white);
+    color: var(--ink-charcoal);
+    font-family: 'Georgia', 'Times New Roman', serif;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  /* HERO — full bleed */
+  .hero {
+    min-height: 100svh;
+    background: linear-gradient(160deg, #2D2927 0%, #3E5148 45%, #8BA898 100%);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 0 0 80px 0;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 50% at 80% 20%, rgba(200,123,92,0.18) 0%, transparent 70%),
+      radial-gradient(ellipse 40% 60% at 20% 70%, rgba(139,168,152,0.25) 0%, transparent 60%);
+  }
+
+  .hero-inner {
+    position: relative;
+    max-width: 680px;
+    padding: 0 60px;
+    animation: fadeUp 0.9s ease both;
+  }
+
+  .hero-tag {
+    font-family: 'Segoe UI', sans-serif;
+    font-size: 0.72em;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--cloud-sage-light);
+    margin-bottom: 24px;
+  }
+
+  .hero h1 {
+    font-size: clamp(2.8em, 6vw, 5em);
+    font-weight: 400;
+    color: #FDF8F5;
+    line-height: 1.1;
+    margin-bottom: 28px;
+    letter-spacing: -0.02em;
+  }
+
+  .hero h1 em {
+    font-style: italic;
+    color: var(--peach-light);
+  }
+
+  .hero-sub {
+    font-family: 'Segoe UI', sans-serif;
+    font-size: 1.05em;
+    color: rgba(253,248,245,0.7);
+    max-width: 480px;
+    line-height: 1.6;
+  }
+
+  .hero-meta {
+    position: absolute;
+    bottom: 80px;
+    right: 60px;
+    text-align: right;
+    font-family: 'Segoe UI', sans-serif;
+    font-size: 0.78em;
+    color: rgba(253,248,245,0.4);
+    animation: fadeIn 1.2s ease both 0.4s;
+  }
+
+  /* SUPPORT */
+  .section {
+    padding: 100px 60px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .section-label {
+    font-family: 'Segoe UI', sans-serif;
+    font-size: 0.7em;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--cloud-sage);
+    margin-bottom: 48px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+    max-width: 80px;
+  }
+
+  h2 {
+    font-size: clamp(1.8em, 3.5vw, 2.8em);
+    font-weight: 400;
+    color: var(--ink-charcoal);
+    line-height: 1.2;
+    margin-bottom: 20px;
+    letter-spacing: -0.02em;
+  }
+
+  .lead {
+    font-size: 1.1em;
+    color: var(--ink-muted);
+    max-width: 560px;
+    margin-bottom: 60px;
+  }
+
+  /* Working Model — 3列 */
+  .model-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 40px;
+    margin: 60px 0;
+  }
+
+  .model-item {
+    border-top: 2px solid var(--cloud-sage-light);
+    padding-top: 24px;
+  }
+
+  .model-num {
+    font-family: 'Segoe UI', sans-serif;
+    font-size: 0.68em;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--cloud-sage);
+    margin-bottom: 12px;
+  }
+
+  .model-item h3 {
+    font-size: 1em;
+    font-weight: 600;
+    font-family: 'Segoe UI', sans-serif;
+    color: var(--ink-charcoal);
+    margin-bottom: 10px;
+  }
+
+  .model-item p {
+    font-size: 0.88em;
+    color: var(--ink-muted);
+    line-height: 1.65;
+  }
+
+  /* DIVIDER */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 0 60px;
+  }
+
+  /* DETAIL — 技術構成 */
+  .detail-bg {
+    background: var(--petal-dim);
+    padding: 100px 0;
+  }
+
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    margin-top: 60px;
+  }
+
+  .col-block h3 {
+    font-family: 'Segoe UI', sans-serif;
+    font-size: 0.8em;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--peach-terracotta);
+    margin-bottom: 20px;
+  }
+
+  .col-block ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .col-block ul li {
+    font-family: 'Segoe UI', sans-serif;
+    font-size: 0.9em;
+    color: var(--ink-charcoal);
+    padding-left: 16px;
+    position: relative;
+    line-height: 1.5;
+  }
+
+  .col-block ul li::before {
+    content: '—';
+    position: absolute;
+    left: 0;
+    color: var(--cloud-sage);
+  }
+
+  /* RULES GRID */
+  .rules-section {
+    padding: 100px 60px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .rules-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+    background: var(--border);
+    margin-top: 48px;
+    border: 1px solid var(--border);
+  }
+
+  .rule-cell {
+    background: var(--petal-white);
+    padding: 24px 28px;
+  }
+
+  .rule-cell.warn {
+    background: #FEF5F0;
+  }
+
+  .rule-label {
+    font-family: 'Segoe UI', sans-serif;
+    font-size: 0.68em;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--peach-terracotta);
+    margin-bottom: 8px;
+  }
+
+  .rule-cell p {
+    font-family: 'Segoe UI', sans-serif;
+    font-size: 0.88em;
+    color: var(--ink-charcoal);
+    line-height: 1.55;
+  }
+
+  /* EVALUATION TABLE */
+  .eval-section {
+    background: var(--ink-charcoal);
+    padding: 100px 60px;
+  }
+
+  .eval-inner {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .eval-section .section-label {
+    color: var(--cloud-sage-light);
+  }
+
+  .eval-section h2 {
+    color: var(--petal-white);
+  }
+
+  .eval-section .lead {
+    color: rgba(253,248,245,0.6);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 48px;
+    font-family: 'Segoe UI', sans-serif;
+    font-size: 0.88em;
+  }
+
+  thead th {
+    text-align: left;
+    padding: 14px 20px;
+    font-size: 0.7em;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--cloud-sage);
+    border-bottom: 1px solid rgba(253,248,245,0.1);
+  }
+
+  tbody td {
+    padding: 16px 20px;
+    color: rgba(253,248,245,0.8);
+    border-bottom: 1px solid rgba(253,248,245,0.05);
+    vertical-align: top;
+    line-height: 1.55;
+  }
+
+  tbody tr:last-child td { border-bottom: none; }
+
+  .badge {
+    display: inline-block;
+    font-size: 0.72em;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-family: 'Segoe UI', sans-serif;
+    font-weight: 600;
+  }
+
+  .badge-sage { background: rgba(139,168,152,0.2); color: var(--cloud-sage-light); }
+  .badge-peach { background: rgba(200,123,92,0.2); color: var(--peach-light); }
+  .badge-warn { background: rgba(200,123,92,0.15); color: #E8A060; }
+
+  /* FINAL */
+  .final-section {
+    padding: 120px 60px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .callout-strip {
+    background: var(--cloud-sage-dark);
+    color: var(--petal-white);
+    padding: 40px 48px;
+    margin-top: 48px;
+    border-radius: 2px;
+  }
+
+  .callout-strip h3 {
+    font-size: 1.1em;
+    font-weight: 400;
+    margin-bottom: 16px;
+    font-family: 'Segoe UI', sans-serif;
+  }
+
+  .callout-strip ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .callout-strip li {
+    font-family: 'Segoe UI', sans-serif;
+    font-size: 0.88em;
+    color: rgba(253,248,245,0.85);
+    padding-left: 18px;
+    position: relative;
+  }
+
+  .callout-strip li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: var(--peach-light);
+  }
+
+  .install-block {
+    background: var(--petal-dim);
+    border-left: 3px solid var(--peach-terracotta);
+    padding: 24px 28px;
+    margin-top: 32px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.85em;
+    color: var(--ink-charcoal);
+    line-height: 1.8;
+  }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 40px 60px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'Segoe UI', sans-serif;
+    font-size: 0.75em;
+    color: var(--ink-faint);
+  }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  /* scroll reveal */
+  .reveal {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  @media (max-width: 680px) {
+    .hero-inner { padding: 0 24px; }
+    .section, .rules-section, .final-section { padding: 60px 24px; }
+    .detail-bg .section { padding: 60px 24px; }
+    .eval-section { padding: 60px 24px; }
+    .model-grid, .two-col, .rules-grid { grid-template-columns: 1fr; }
+    footer { flex-direction: column; gap: 8px; text-align: center; }
+    .hero-meta { right: 24px; }
+    .divider { margin: 0 24px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-inner">
+    <p class="hero-tag">OpenAI Skills — Codex .curated</p>
+    <h1>The <em>art direction</em><br>skill for agents</h1>
+    <p class="hero-sub">frontend-skill は、コンポーネント数ではなく構成・余白・階層・モーションで勝負するインターフェイスを生成するためのスキルだ。</p>
+  </div>
+  <div class="hero-meta">
+    2026-03-31<br>調査レポート
+  </div>
+</section>
+
+<!-- SUPPORT — Working Model -->
+<section class="section reveal">
+  <p class="section-label">設計哲学</p>
+  <h2>実装前に書く<br>3つのこと</h2>
+  <p class="lead">frontend-skill が求めるのは「コンポーネントを積む」前に、ページのムード・構造・動きを言語化することだ。</p>
+
+  <div class="model-grid">
+    <div class="model-item">
+      <p class="model-num">01</p>
+      <h3>Visual Thesis</h3>
+      <p>ムード・素材・エネルギーを1文で定義する。「明るく清潔」ではなく「石灰岩のような静けさと黒縁の緊張感」レベルの精度。</p>
+    </div>
+    <div class="model-item">
+      <p class="model-num">02</p>
+      <h3>Content Plan</h3>
+      <p>Hero → Support → Detail → Final CTA の4段構成。各セクションに1つのジョブ、1つの支配的なビジュアルアイデア、1つのアクション。</p>
+    </div>
+    <div class="model-item">
+      <p class="model-num">03</p>
+      <h3>Interaction Thesis</h3>
+      <p>モーションのアイデア2〜3個。hero入場シーケンス、スクロール連動エフェクト、ホバー/リビールの3点が基本セット。</p>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- DETAIL — 技術構成 -->
+<div class="detail-bg">
+  <section class="section reveal">
+    <p class="section-label">技術構成</p>
+    <h2>スキルが指向する<br>技術スタック</h2>
+    <p class="lead">frontend-skill が明示・暗示している推奨技術と、その背景にある設計の考え方。</p>
+
+    <div class="two-col">
+      <div class="col-block">
+        <h3>推奨スタック</h3>
+        <ul>
+          <li>React + Tailwind CSS（公式ドキュメントでの推奨）</li>
+          <li>Framer Motion（セクションリビール・スクロール連動・共有レイアウトトランジション）</li>
+          <li>Playwright（レンダリング確認・マルチビューポートテスト）</li>
+          <li>Vanilla HTML/CSS でも動作（スキル自体はフレームワーク非依存）</li>
+        </ul>
+      </div>
+      <div class="col-block">
+        <h3>スキル構造</h3>
+        <ul>
+          <li>必須: <code>SKILL.md</code>（インストラクション本体）</li>
+          <li>任意: scripts, references, assets バンドル</li>
+          <li>リポジトリ: openai/skills /.curated/frontend-skill</li>
+          <li>GitHub Stars: 15,821（2026-03-20 時点）</li>
+          <li>カテゴリ: .curated（安定・本番利用可）</li>
+        </ul>
+      </div>
+      <div class="col-block">
+        <h3>デザインシステムの前提</h3>
+        <ul>
+          <li>タイプフェイス最大2種（それ以上は理由が必要）</li>
+          <li>アクセントカラー1色がデフォルト（既存システムがある場合は複数可）</li>
+          <li>カード使用は原則禁止（カード自体がインタラクションである場合のみ）</li>
+          <li>CSS変数でデザインシステムを宣言してから実装</li>
+        </ul>
+      </div>
+      <div class="col-block">
+        <h3>Playwright 連携の価値</h3>
+        <ul>
+          <li>レンダリング後の画面を AI が視覚的に確認可能</li>
+          <li>マルチビューポートでのレスポンシブ検証を自律実行</li>
+          <li>状態遷移・ナビゲーションの動作検証</li>
+          <li>GPT-5.4 との組み合わせで自律修正ループが成立</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- RULES GRID -->
+<section class="rules-section reveal">
+  <p class="section-label">Hard Rules & 制約事項</p>
+  <h2>やってはいけないこと、<br>やるべきこと</h2>
+
+  <div class="rules-grid">
+    <div class="rule-cell warn">
+      <p class="rule-label">禁止</p>
+      <p>カードをデフォルトとして使う。hero にカードを置く。full-bleed 指定なのに center-column ヒーローにする。1セクションに複数の支配的アイデアを入れる。</p>
+    </div>
+    <div class="rule-cell">
+      <p class="rule-label">推奨</p>
+      <p>ブランド名を最も大きいテキストにする。コピーを削り続ける（30%削って良くなるなら削れ）。1セクション1ジョブ。whitespace・alignment・scale を使い切ってからエフェクトを追加する。</p>
+    </div>
+    <div class="rule-cell warn">
+      <p class="rule-label">画像の失敗パターン</p>
+      <p>抽象グラデーションで代替する。コラージュ1枚で複数シーンを詰め込む。テキストエリアにトーンの不安定な画像を使う。UI フレームや分割線が組み込まれた画像を生成する。</p>
+    </div>
+    <div class="rule-cell">
+      <p class="rule-label">画像の正解</p>
+      <p>テキストを置ける安定したトーンエリアがある写真を選ぶ。複数シーンには複数画像を使う。第1ビューポートには必ず実質的なビジュアルアンカーを置く。</p>
+    </div>
+    <div class="rule-cell warn">
+      <p class="rule-label">コピーの失敗</p>
+      <p>デザインコメントをUIに混入させる（「このセクションではXXXを強調します」等）。ヒーロー見出しがブランド名より目立つ。ランディングページ文体をダッシュボードに使う。</p>
+    </div>
+    <div class="rule-cell">
+      <p class="rule-label">App UI での注意</p>
+      <p>ダッシュボード・管理ツールでは utility copy を使う。ヒーローセクションは不要（明示的に要求された場合のみ）。KPI・チャート・フィルター・テーブルから始める。</p>
+    </div>
+  </div>
+</section>
+
+<!-- EVALUATION TABLE -->
+<section class="eval-section">
+  <div class="eval-inner">
+    <p class="section-label reveal">評価</p>
+    <h2 class="reveal">プレビュー表示・<br>レポート表現能力</h2>
+    <p class="lead reveal">ティアのHTMLレポートスタイルとの比較視点から評価する。</p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>観点</th>
+          <th>frontend-skill</th>
+          <th>評価</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>ブラウザプレビュー品質</td>
+          <td>フルブリード・タイポグラフィ主導・モーション付きで視覚的インパクト最大。award-level を目指す設計。</td>
+          <td><span class="badge badge-sage">◎ 高</span></td>
+        </tr>
+        <tr>
+          <td>情報密度・レポート適性</td>
+          <td>ランディングページ・アプリUI向けに最適化。テーブル・リスト・コードブロックはスキル仕様に含まれず、レポートとして使うには補完が必要。</td>
+          <td><span class="badge badge-warn">△ 要工夫</span></td>
+        </tr>
+        <tr>
+          <td>コンポーネント再利用性</td>
+          <td>CSS変数・タイプスケール・スペーシングを先に定義する設計思想は再利用性が高い。</td>
+          <td><span class="badge badge-sage">○ 高</span></td>
+        </tr>
+        <tr>
+          <td>AI エージェントとの相性</td>
+          <td>Playwright と組み合わせることで自律的なビジュアル検証ループが成立。GPT-5.4 特有の能力を最大活用できる。</td>
+          <td><span class="badge badge-sage">◎ 最適</span></td>
+        </tr>
+        <tr>
+          <td>モバイル対応</td>
+          <td>100svh, calc, clamp など現代的なCSS指定を前提とした設計。明示的なレスポンシブ要件あり（モーションもモバイルで smooth であること）。</td>
+          <td><span class="badge badge-sage">○ 良好</span></td>
+        </tr>
+        <tr>
+          <td>制約の厳しさ</td>
+          <td>Hard Rules が多く、カード・複数アクセント・ヒーローカードなど多数の明示禁止事項がある。デザイン選択の自由度は意図的に絞られている。</td>
+          <td><span class="badge badge-peach">注意</span></td>
+        </tr>
+        <tr>
+          <td>既存スキルとの互換性</td>
+          <td>Figma スキル・Playwright スキルとの連携が設計されている。Codex の他スキルと組み合わせやすい。</td>
+          <td><span class="badge badge-sage">○ 良好</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- FINAL -->
+<section class="final-section reveal">
+  <p class="section-label">導入方法と注意点</p>
+  <h2>使い始めるまでの<br>ステップ</h2>
+
+  <div class="callout-strip">
+    <h3>導入前に準備するもの</h3>
+    <ul>
+      <li>デザインシステム定義（カラーパレット・タイプフェイス・スペーシングスケール）</li>
+      <li>Visual Thesis（ムード・素材・エネルギーを1文で）</li>
+      <li>参照画像またはムードボード（Codex への視覚的ガードレール）</li>
+      <li>セクション構成案（Hero / Support / Detail / CTA の内容メモ）</li>
+    </ul>
+  </div>
+
+  <div class="install-block">
+# openai/skills から直接インストール<br>
+python -c "$(curl -fsSL https://raw.githubusercontent.com/openai/skills/main/install.py)"<br>
+<br>
+# または手動で .codex/skills/ に配置<br>
+cp -r skills/.curated/frontend-skill ~/.codex/skills/
+  </div>
+
+  <div style="margin-top: 48px; padding: 32px 0; border-top: 1px solid var(--border);">
+    <p style="font-family: 'Segoe UI', sans-serif; font-size: 0.9em; color: var(--ink-muted); max-width: 600px; line-height: 1.7;">
+      <strong style="color: var(--peach-terracotta);">AGY への導入について：</strong>
+      リクによる導入前確認（ライセンス・依存関係・rollback 手順）が先決。MIT ライセンスで問題なし。依存関係は Python インストールスクリプトのみ。ティアのタスクレポートスタイルとは設計思想が異なるため、「visual lead な成果物」と「情報密度が必要なレポート」で使い分けることを推奨。
+    </p>
+  </div>
+</section>
+
+<footer>
+  <span>generated by ティア / Claude Code Sonnet 4.6 — 2026-03-31</span>
+  <span>sources: github.com/openai/skills · developers.openai.com/codex/skills · aiagentsdirectory.com</span>
+</footer>
+
+<script>
+  const reveals = document.querySelectorAll('.reveal');
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        obs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.1 });
+  reveals.forEach(el => obs.observe(el));
+</script>
+
+</body>
+</html>

@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CLAUDE.md ベストプラクティス調査レポート — 2026-03-29</title>
+<style>
+  body { background: #0d1117; color: #e6edf3; font-family: 'Segoe UI', sans-serif; margin: 0; padding: 24px; max-width: 960px; }
+  h1 { color: #58a6ff; border-bottom: 1px solid #30363d; padding-bottom: 12px; }
+  h2 { color: #79c0ff; margin-top: 36px; }
+  h3 { color: #d2a8ff; margin-top: 20px; }
+  .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 18px; margin: 14px 0; }
+  .card p { margin: 6px 0; color: #c9d1d9; font-size: 0.92em; line-height: 1.7; }
+  .badge { display: inline-block; background: #1f6feb; color: #fff; font-size: 0.75em; padding: 2px 10px; border-radius: 12px; margin-left: 6px; vertical-align: middle; }
+  .badge.green { background: #238636; }
+  .badge.purple { background: #8250df; }
+  .badge.orange { background: #fb8f44; color: #0d1117; }
+  .badge.red { background: #da3633; }
+  .badge.gray { background: #484f58; }
+  .meta { color: #8b949e; font-size: 0.82em; margin-bottom: 16px; }
+  a { color: #58a6ff; }
+  code { background: #1c2128; padding: 2px 6px; border-radius: 4px; font-size: 0.88em; color: #e3b341; }
+  .highlight { background: #1c2128; border-left: 3px solid #58a6ff; padding: 12px 16px; border-radius: 0 6px 6px 0; margin: 12px 0; color: #c9d1d9; font-size: 0.92em; line-height: 1.7; }
+  .warn { background: #1c2128; border-left: 3px solid #fb8f44; padding: 12px 16px; border-radius: 0 6px 6px 0; margin: 12px 0; color: #c9d1d9; font-size: 0.92em; line-height: 1.7; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+  th { background: #1c2128; color: #79c0ff; padding: 10px 14px; text-align: left; font-size: 0.88em; }
+  td { padding: 9px 14px; border-top: 1px solid #30363d; color: #c9d1d9; font-size: 0.88em; vertical-align: top; }
+  .score { font-weight: bold; }
+  .score.high { color: #3fb950; }
+  .score.mid { color: #d29922; }
+  .score.low { color: #f85149; }
+</style>
+</head>
+<body>
+
+<h1>📋 CLAUDE.md ベストプラクティス調査レポート</h1>
+<div class="meta">調査日: 2026-03-29 ｜ 起点ポスト: @NieceOfAnton (X) → Boris Cherny (@bcherny) のワークフロー ｜ 調査: WebSearch</div>
+
+<h2>起点：何が話題になっているのか</h2>
+<div class="card">
+  <p><strong>Boris Cherny</strong>（Anthropic Staff Engineer / Claude Code の作者）が 2026年1月に自身の Claude Code ワークフローを X で公開し、その中に <strong>〜100行の CLAUDE.md</strong> が含まれていた。</p>
+  <p>これが「作者本人の CLAUDE.md が意外とシンプルだった」として開発者コミュニティで話題になり、NieceOfAnton を含む複数のアカウントがまとめ・解説・日本語記事を執筆した。</p>
+  <p>元ポスト: <a href="https://x.com/bcherny/status/2007179832300581177" target="_blank">@bcherny on X</a></p>
+</div>
+
+<h2>Boris Cherny が語る CLAUDE.md の思想</h2>
+
+<div class="card">
+  <h3>ゴールデンルール <span class="badge green">最重要</span></h3>
+  <div class="highlight">
+    「Claude が何か間違ったことをするたびに、CLAUDE.md に追記して同じミスを繰り返さないようにする」<br>
+    — Boris Cherny
+  </div>
+  <p>CLAUDE.md はチームで git に commit し、週複数回更新する。<strong>静的なドキュメントではなく、生きたルールブック</strong>として運用する。</p>
+</div>
+
+<div class="card">
+  <h3>100行でなぜ機能するのか</h3>
+  <p>Boris の CLAUDE.md は約 100行で、多くの人が書く 800行超の設定より成果が出ている。理由は：</p>
+  <p>• コンテキストウィンドウは有限。長すぎると重要な部分が埋もれる</p>
+  <p>• 広く適用できるルールだけを書く。特定タスクの詳細は別ファイル（<code>.claude/rules/</code>）に分離</p>
+  <p>• 「なぜそうするか」（WHY）を書くことで Claude が類似状況で応用できる</p>
+</div>
+
+<h2>CLAUDE.md の記法・構造のベストプラクティス</h2>
+
+<div class="card">
+  <h3>憲法（CLAUDE.md）と各論（サブファイル）の分離</h3>
+  <table>
+    <tr>
+      <th>レイヤー</th>
+      <th>書くべき内容</th>
+      <th>目安行数</th>
+    </tr>
+    <tr>
+      <td><strong>CLAUDE.md（憲法）</strong></td>
+      <td>常時適用される原則・プロジェクト概要・ディレクトリ構成・重要ルール</td>
+      <td>60〜300行</td>
+    </tr>
+    <tr>
+      <td><code>.claude/rules/*.md</code></td>
+      <td>特定領域のルール（コーディング規約・Discord対応・オーケストレーション等）</td>
+      <td>各50〜100行</td>
+    </tr>
+    <tr>
+      <td><code>.claude/skills/*.md</code></td>
+      <td>特定タスクの手順・スキル定義</td>
+      <td>各50〜150行</td>
+    </tr>
+  </table>
+  <p>CLAUDE.md からサブファイルを <code>@.claude/rules/content-writing.md</code> 形式でインポートできる（公式機能）。</p>
+</div>
+
+<div class="card">
+  <h3>具体的な記述スタイル</h3>
+  <table>
+    <tr>
+      <th>NG（抽象的）</th>
+      <th>OK（具体的）</th>
+    </tr>
+    <tr>
+      <td>コードを適切にフォーマットする</td>
+      <td>インデントは2スペース。セミコロン不要</td>
+    </tr>
+    <tr>
+      <td>テストを書くこと</td>
+      <td>新機能は必ずユニットテストを追加。テストファイルは <code>__tests__/</code> 以下</td>
+    </tr>
+    <tr>
+      <td>Discordへの報告を忘れずに</td>
+      <td>長いタスク完了後は必ず chat_id: 1485... に新規メッセージで結果を送る（push通知のため）</td>
+    </tr>
+  </table>
+</div>
+
+<div class="card">
+  <h3>Boris の4つのコア戦略</h3>
+  <p>• <strong>Plan Mode デフォルト</strong> — 3ステップ以上のタスクは必ずプラン確認から始める</p>
+  <p>• <strong>Subagent 戦略</strong> — メインのコンテキストウィンドウを汚さないためにサブエージェントを活用</p>
+  <p>• <strong>自己改善ループ</strong> — 修正が発生したら lessons.md / CLAUDE.md を更新する</p>
+  <p>• <strong>完了前の検証</strong> — 「動いた」だけでなく「証明した」状態にしてから完了とする</p>
+</div>
+
+<h2>日本語記事の評価</h2>
+
+<table>
+  <tr>
+    <th>記事</th>
+    <th>評価</th>
+    <th>コメント</th>
+  </tr>
+  <tr>
+    <td><a href="https://qiita.com/uno_ha07/items/5820d195510861b5be71" target="_blank">Boris Cherny氏の知見を元に作成された CLAUDE.mdを理解する（Qiita）</a></td>
+    <td class="score high">★★★★★</td>
+    <td>Boris 本人の発言を元に構成。原文→日本語訳→解説の3段構成で信頼度高い</td>
+  </tr>
+  <tr>
+    <td><a href="https://qiita.com/dai_chi/items/f4e8771cae5cf24c22b5" target="_blank">Boris Cherny直伝：Claude Code開発チームが使う11の最新テクニック（Qiita）</a></td>
+    <td class="score high">★★★★★</td>
+    <td>公式ポスト（@bcherny 2017742741636321619）をベースに日本語解説。内容の出典が明確</td>
+  </tr>
+  <tr>
+    <td><a href="https://qiita.com/dai_chi/items/8d9d3ac82cbd3c05c883" target="_blank">Claude Code入門 #2: CLAUDE.mdの書き方と育て方（Qiita）</a></td>
+    <td class="score high">★★★★☆</td>
+    <td>公式ドキュメントと実践例を組み合わせた実用的な記事。初心者向けだが内容は正確</td>
+  </tr>
+  <tr>
+    <td><a href="https://zenn.dev/aria3/articles/claude-code-interview-boris-cherny" target="_blank">Claude Codeの生みの親 Boris Cherny が語る AIコーディングの未来（Zenn）</a></td>
+    <td class="score high">★★★★★</td>
+    <td>インタビュー翻訳。一次ソースに近い。CLAUDE.md の設計思想を理解するのに最適</td>
+  </tr>
+  <tr>
+    <td><a href="https://note.com/aiwakaruman/n/n1cc2cbed8883" target="_blank">みんなどう書いてる？人気の「CLAUDE.md」を調べて実際に試してみた（note）</a></td>
+    <td class="score mid">★★★☆☆</td>
+    <td>複数の事例を横断して紹介しており参考になるが、独自の評価・検証は薄い。参考程度</td>
+  </tr>
+  <tr>
+    <td><a href="https://qiita.com/kirozero/items/66ebe44f9bd09d5e97b0" target="_blank">CLAUDE.mdベストプラクティスを調べてみた（Qiita）</a></td>
+    <td class="score mid">★★★☆☆</td>
+    <td>情報収集の姿勢は正しいが、一次ソースへの参照が少なく出典が曖昧な箇所あり</td>
+  </tr>
+  <tr>
+    <td>「Claude Code で効率UP！」系の汎用記事（複数）</td>
+    <td class="score low">★★☆☆☆</td>
+    <td>Boris 発言を引用しているように見えて、実は公式ドキュメントを意訳しただけのものが多い。内容は正しいが独自の知見はない</td>
+  </tr>
+</table>
+
+<h2>AGY プロジェクトへの可用性・有効度</h2>
+
+<div class="card">
+  <h3>現在の構成との比較 <span class="badge purple">自己評価</span></h3>
+  <table>
+    <tr>
+      <th>Boris の推奨アプローチ</th>
+      <th>AGY の現状</th>
+      <th>評価</th>
+    </tr>
+    <tr>
+      <td>CLAUDE.md は原則のみ（100行前後）</td>
+      <td>CLAUDE.md にかなり多くの具体ルールを直書きしている</td>
+      <td class="score mid">要改善</td>
+    </tr>
+    <tr>
+      <td>詳細は .claude/rules/ に分離</td>
+      <td>orchestrate.md, content-writing.md, self-improvement.md を分離済み</td>
+      <td class="score high">✓ 実施済み</td>
+    </tr>
+    <tr>
+      <td>Git でチームと共有・頻繁に更新</td>
+      <td>memory → スキル/ルール反映の自動化ループあり（heartbeat retrospective）</td>
+      <td class="score high">✓ 独自に実装済み</td>
+    </tr>
+    <tr>
+      <td>ミスが起きたら CLAUDE.md に追記</td>
+      <td>memory/feedback_reflection-practices.md に蓄積 → retrospective で反映</td>
+      <td class="score high">✓ 仕組みあり</td>
+    </tr>
+    <tr>
+      <td>WHY を書く（理由の明示）</td>
+      <td>一部のルールは Why を書いているが、CLAUDE.md 本体は薄い</td>
+      <td class="score mid">部分的に対応</td>
+    </tr>
+    <tr>
+      <td>Subagent でコンテキスト管理</td>
+      <td>Agent ツールで並列実行・Gemini/Codex に分散している</td>
+      <td class="score high">✓ 実施済み</td>
+    </tr>
+  </table>
+</div>
+
+<div class="card">
+  <h3>推奨アクション</h3>
+  <p>1. <strong>CLAUDE.md の整理</strong> — 現在 CLAUDE.md に書かれている詳細ルール（Discord対応手順の細部等）を .claude/rules/ に移動し、CLAUDE.md を「原則集」に絞る</p>
+  <p>2. <strong>WHY の補強</strong> — CLAUDE.md の各セクションに「なぜこうするか」を1行添える</p>
+  <p>3. <strong>既存の仕組みは有効</strong> — memory → retrospective → ルール反映ループは Boris の「ゴールデンルール」を体系化したもの。このまま継続</p>
+</div>
+
+<div class="warn">
+  <strong>⚠️ 注意：</strong> @NieceOfAnton のポストは X の 503 エラーで直接確認できず。ただし同様の内容（Boris Cherny ワークフロー）を参照していると推定。上記情報は Boris 本人の発言や公式ドキュメントを一次ソースとして調査したもので信頼度は高い。
+</div>
+
+<div class="meta" style="margin-top: 32px;">調査: WebSearch（Boris Cherny公式ポスト・Qiita・Zenn・note） ｜ まとめ: ティア (Claude Code)</div>
+
+</body>
+</html>

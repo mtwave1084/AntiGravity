@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>タスクレポート — Gemini 3.5 調査</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2128;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --blue: #58a6ff;
+    --blue-light: #79c0ff;
+    --purple: #d2a8ff;
+    --green: #3fb950;
+    --orange: #d29922;
+    --red: #f85149;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; font-size: 15px; line-height: 1.7; }
+  .container { max-width: 880px; margin: 0 auto; padding: 0 0 48px; }
+
+  .header {
+    background: linear-gradient(135deg, #0d1117, #0c2d6b, #0c1a30);
+    padding: 40px 36px 32px;
+    border-bottom: 1px solid var(--border);
+  }
+  .header-meta { font-size: 12px; color: var(--muted); margin-bottom: 10px; letter-spacing: 0.04em; text-transform: uppercase; }
+  .header h1 { font-size: 24px; font-weight: 700; color: var(--blue-light); margin-bottom: 8px; }
+  .tear-comment { font-size: 14px; color: var(--purple); font-style: italic; margin-top: 12px; }
+
+  .body { padding: 32px 36px; }
+
+  h2 {
+    font-size: 15px; font-weight: 600; color: var(--blue);
+    border-left: 3px solid var(--blue); padding-left: 12px;
+    margin: 28px 0 14px;
+  }
+
+  .summary-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 18px 20px; margin-bottom: 20px;
+  }
+  .summary-card p { font-size: 14px; color: var(--text); line-height: 1.8; }
+
+  .kv { display: grid; grid-template-columns: 160px 1fr; gap: 6px 16px; font-size: 14px; }
+  .kv .k { color: var(--muted); }
+  .kv .v { color: var(--text); }
+
+  .diff-table { width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 20px; }
+  .diff-table th { background: var(--surface2); color: var(--muted); text-align: left; padding: 10px 14px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
+  .diff-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .diff-table tr:last-child td { border-bottom: none; }
+  .diff-table .good { color: var(--green); }
+  .diff-table .warn { color: var(--orange); }
+  .num { font-variant-numeric: tabular-nums; }
+
+  .callout {
+    background: var(--surface); border: 1px solid var(--border);
+    border-left: 3px solid var(--blue);
+    border-radius: 0 8px 8px 0;
+    padding: 14px 18px; font-size: 14px; line-height: 1.8;
+    margin-bottom: 16px;
+  }
+  .callout.green { border-left-color: var(--green); }
+  .callout.orange { border-left-color: var(--orange); }
+
+  .file-ref {
+    background: #090d12; border: 1px solid var(--border);
+    border-radius: 6px; padding: 12px 16px;
+    font-family: 'Cascadia Code', 'Consolas', monospace; font-size: 13px;
+    color: var(--green); margin-bottom: 10px;
+  }
+
+  ul.findings { padding-left: 20px; font-size: 14px; line-height: 2; }
+  ul.findings li { color: var(--text); }
+  ul.findings li span.label { color: var(--muted); margin-right: 6px; }
+
+  footer { font-size: 12px; color: var(--muted); border-top: 1px solid var(--border); padding: 20px 36px; margin-top: 8px; }
+
+  @media (max-width: 600px) {
+    .header, .body { padding-left: 20px; padding-right: 20px; }
+    .kv { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <div class="header-meta">🔍 research — 2026-05-20</div>
+    <h1>Gemini 3.5 Flash／Pro モデル調査</h1>
+    <div class="kv" style="margin-top:14px; font-size:13px;">
+      <span class="k">依頼内容</span><span class="v">Gemini 3.5（Pro・Flash）の性能比較・コスト・新機能をリサーチしHTMLに添付</span>
+      <span class="k">実施</span><span class="v">ティア（Claude Code Sonnet 4.6）</span>
+      <span class="k">日時</span><span class="v">2026-05-20</span>
+    </div>
+    <p class="tear-comment">「調べてみたら、なんか発表ほやほやの情報がいっぱい出てきた。Google I/O の翌日だった。」</p>
+  </div>
+
+  <div class="body">
+
+    <h2>📋 タスク概要</h2>
+    <div class="summary-card">
+      <p>Google I/O 2026（2026-05-19）で発表された Gemini 3.5 Flash を中心に、前バージョン・他社モデルとの性能比較・API料金・新機能をウェブリサーチ。結果をダークテーマHTMLにまとめてDiscordに添付した。</p>
+    </div>
+
+    <h2>📊 主要な発見</h2>
+    <ul class="findings">
+      <li><span class="label">価格</span>Gemini 3.5 Flash は $1.50/$9.00（/1M tokens）。3.1 Pro より 40% 安く、Claude Sonnet 4.6 より入力半額</li>
+      <li><span class="label">性能</span>エージェント系ベンチマーク（Terminal-Bench 2.1・MCP Atlas）で GPT-5.5 を上回る</li>
+      <li><span class="label">速度</span>最適化版で 12倍高速。標準版でも他フロンティアモデルの 4倍</li>
+      <li><span class="label">効率</span>Gemini 3 Flash 比でトークン消費 −72%、マルチターン性能 +42%</li>
+      <li><span class="label">3.5 Pro</span>現在社内テスト段階。2026年6月以降公開予定。Flash の上位オーケストレーター想定</li>
+      <li><span class="label">CLI影響</span>ユリちゃんのモデルを 3.5 Flash に移行すると性能向上の余地あり（ただし価格 3倍）</li>
+    </ul>
+
+    <h2>📁 生成ファイル</h2>
+    <div class="file-ref">Contents/gemini-3-5-report-2026-05-20.html</div>
+
+    <h2>🔍 比較テーブル（抜粋）</h2>
+    <table class="diff-table">
+      <tr><th>モデル</th><th>Input /1M</th><th>Output /1M</th><th>エージェント性能</th></tr>
+      <tr>
+        <td><strong>Gemini 3.5 Flash</strong> ★</td>
+        <td class="num good">$1.50</td>
+        <td class="num good">$9.00</td>
+        <td class="good">Terminal-Bench 76.2% / MCP Atlas 83.6%</td>
+      </tr>
+      <tr>
+        <td>Gemini 3.1 Pro</td>
+        <td class="num warn">$2.50</td>
+        <td class="num warn">$15.00</td>
+        <td>—（Flash に逆転された）</td>
+      </tr>
+      <tr>
+        <td>Gemini 3 Flash</td>
+        <td class="num good">$0.50</td>
+        <td class="num good">$3.00</td>
+        <td>3.5 比 −42%</td>
+      </tr>
+      <tr>
+        <td>Claude Sonnet 4.6</td>
+        <td class="num warn">$3.00</td>
+        <td class="num warn">$15.00</td>
+        <td>SWE-bench 79.6%（コーディング高水準）</td>
+      </tr>
+    </table>
+
+    <h2>⚡ 次のアクション</h2>
+    <div class="callout green">
+      ユリちゃん（Gemini CLI）のモデルを <code>gemini-3.5-flash</code> に切り替えるか、ソリスに確認する。切り替えると性能・効率が上がるが API コストは約 3倍になる。
+    </div>
+    <div class="callout orange">
+      2026-06-18 に Gemini CLI → Antigravity CLI への移行が予定されている。移行時にモデル設定の引き継ぎ確認が必要。
+    </div>
+
+  </div>
+
+  <footer>generated by ティア / Claude Code Sonnet 4.6 — 2026-05-20</footer>
+</div>
+</body>
+</html>
