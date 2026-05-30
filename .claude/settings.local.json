@@ -2,6 +2,11 @@
   "permissions": {
     "allow": [
       "Bash(claude mcp:*)",
+      "mcp__discord__reply",
+      "mcp__discord__fetch_messages",
+      "mcp__discord__react",
+      "mcp__discord__edit_message",
+      "mcp__discord__download_attachment",
       "mcp__plugin_discord_discord__reply",
       "mcp__plugin_discord_discord__fetch_messages",
       "mcp__plugin_discord_discord__react",
@@ -16,6 +21,10 @@
       "Skill(ccc-handoff)",
       "Skill(ccc-jobs)"
     ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "node -e \"let d='';process.stdin.on('data',c=>d+=c);process.stdin.on('end',()=>{try{const j=JSON.parse(d);console.log((j.model||{}).display_name||'')}catch(e){}});\" 2>/dev/null || echo ''"
   },
   "hooks": {
     "SessionStart": [
@@ -33,7 +42,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "powershell -NonInteractive -File \"C:\\Users\\mt_wa\\projects\\agy\\scripts\\on-stop.ps1\""
+            "command": "powershell -NonInteractive -File \"C:\\Users\\mt_wa\\projects\\solitaire\\scripts\\on-stop.ps1\""
+          },
+          {
+            "type": "command",
+            "command": "powershell -NonInteractive -File \"C:\\Users\\mt_wa\\projects\\solitaire\\scripts\\save-conversation-to-obsidian.ps1\""
           }
         ]
       }

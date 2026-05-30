@@ -1,46 +1,21 @@
-# consult-gemini.ps1
-# Claude Code から Gemini CLI に相談するラッパースクリプト
-# 使い方: .\scripts\consult-gemini.ps1 "調査したいこと"
+﻿# consult-gemini.ps1
+# Compatibility shim that forwards to consult-antigravity.ps1
+# (HTTP API ban — bash + curl iijou).
+#
+# Background:
+#   Gemini CLI no subscription teikyou ha 2026-06-18 ni shuuryou suru tame,
+#   2026-05-26 ni HTTP API (OpenAI gokan endpoint) ni icchi keiro wo kirikae.
+#   Kyuu skill / rule kara no `consult-gemini.ps1` chokuyou ga kowarenai you,
+#   kono file ha usui wrapper to shite zanchi suru.
+#
+# Usage (unchanged):
+#   .\scripts\consult-gemini.ps1 -Prompt "shirabetai koto" [-Model gemini-3.1-pro-preview]
 
 param(
     [Parameter(Mandatory=$true)]
-    [string]$Prompt
+    [string]$Prompt,
+    [string]$Model = "gemini-3.5-flash"
 )
 
-$ErrorActionPreference = "Stop"
-
-# 出力先
-$ConsultDir = "C:\Users\mt_wa\projects\agy\.ai-consults"
-if (-not (Test-Path $ConsultDir)) { New-Item -ItemType Directory -Path $ConsultDir | Out-Null }
-
-$Timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
-$OutFile = "$ConsultDir\gemini-$Timestamp.md"
-
-# ヘッダー書き込み
-$Header = @"
-# Gemini CLI Consultation
-date: $(Get-Date -Format "yyyy-MM-ddTHH:mm:ss")
-prompt: $Prompt
-
----
-
-"@
-Set-Content -Path $OutFile -Value $Header -Encoding UTF8
-
-Write-Host "[orchestrate] Gemini CLI に相談するよ..."
-
-try {
-    # Gemini CLIを呼ぶ（--promptフラグは実際のバージョンで確認してね）
-    $FullPrompt = "GEMINI.mdの指示に従って次のタスクを実行してください: $Prompt"
-    $Result = gemini -p $FullPrompt 2>&1
-
-    Add-Content -Path $OutFile -Value $Result -Encoding UTF8
-    Write-Host "[orchestrate] 完了 → $OutFile"
-    Write-Output $OutFile
-
-} catch {
-    $ErrorMsg = "ERROR: $_"
-    Add-Content -Path $OutFile -Value $ErrorMsg -Encoding UTF8
-    Write-Warning "[orchestrate] Gemini CLIの呼び出しに失敗: $_"
-    Write-Output $OutFile
-}
+$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+& "$ScriptDir\consult-antigravity.ps1" -Prompt $Prompt -Model $Model

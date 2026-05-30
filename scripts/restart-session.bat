@@ -1,20 +1,22 @@
-@echo off
-:: ccc-heartbeat から呼び出されるセッション再起動スクリプト
-set WORKSPACE=C:\Users\mt_wa\projects\agy
-set PID_FILE=%WORKSPACE%\.claude\ccc-session.pid
+﻿@echo off
+setlocal EnableExtensions
 
-echo [tear] セッションを再起動するよ……
+set "WORKSPACE=C:\Users\mt_wa\projects\solitaire"
+set "PID_FILE=%WORKSPACE%\.claude\ccc-session.pid"
 
-:: 古いセッションを終了
+echo [tear] Restarting Claude session...
+
+REM Stop the tracked cmd.exe process tree if a session is recorded.
 if exist "%PID_FILE%" (
   set /p OLD_PID=<"%PID_FILE%"
-  taskkill /F /PID %OLD_PID% 2>nul
+  taskkill /F /T /PID %OLD_PID% 2>nul
   del "%PID_FILE%"
 )
 
 timeout /t 3 /nobreak >nul
 
-:: 新しいセッションをバックグラウンドで起動
-start "" /B cmd /c "cd /d %WORKSPACE% && call scripts\start.bat"
+REM Launch a fresh detached session in the background.
+start "" /B cmd /c "call \"%WORKSPACE%\scripts\start.bat\""
 
-echo [tear] 再起動完了！
+echo [tear] Relaunch requested
+

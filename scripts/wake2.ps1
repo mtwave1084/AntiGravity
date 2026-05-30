@@ -1,7 +1,7 @@
-Add-Type -AssemblyName System.Windows.Forms
+﻿Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 
-# Win32 API でスリープを防ぐ / モニターをオンにする
+# Win32 API 縺ｧ繧ｹ繝ｪ繝ｼ繝励ｒ髦ｲ縺・/ 繝｢繝九ち繝ｼ繧偵が繝ｳ縺ｫ縺吶ｋ
 Add-Type @"
 using System;
 using System.Runtime.InteropServices;
@@ -19,29 +19,30 @@ public class Power {
 }
 "@
 
-# モニターをオンにする (-1=on, 1=low power, 2=off)
+# 繝｢繝九ち繝ｼ繧偵が繝ｳ縺ｫ縺吶ｋ (-1=on, 1=low power, 2=off)
 [Power]::SendMessage([Power]::HWND_BROADCAST, [Power]::WM_SYSCOMMAND, [Power]::SC_MONITORPOWER, -1)
 Start-Sleep -Milliseconds 300
 
-# スリープ防止フラグをセット
+# 繧ｹ繝ｪ繝ｼ繝鈴亟豁｢繝輔Λ繧ｰ繧偵そ繝・ヨ
 [Power]::SetThreadExecutionState([Power]::ES_CONTINUOUS -bor [Power]::ES_DISPLAY_REQUIRED -bor [Power]::ES_SYSTEM_REQUIRED)
 
-# キー入力シミュレート (Shift キー)
+# 繧ｭ繝ｼ蜈･蜉帙す繝溘Η繝ｬ繝ｼ繝・(Shift 繧ｭ繝ｼ)
 [System.Windows.Forms.SendKeys]::SendWait('+')
 Start-Sleep -Milliseconds 500
 
-# マウスを動かす
+# 繝槭え繧ｹ繧貞虚縺九☆
 [System.Windows.Forms.Cursor]::Position = New-Object System.Drawing.Point(300, 300)
 Start-Sleep -Milliseconds 300
 [System.Windows.Forms.Cursor]::Position = New-Object System.Drawing.Point(400, 400)
 Start-Sleep -Milliseconds 500
 
-# スクリーンショット
+# 繧ｹ繧ｯ繝ｪ繝ｼ繝ｳ繧ｷ繝ｧ繝・ヨ
 $screen = [System.Windows.Forms.Screen]::PrimaryScreen
 $bitmap = New-Object System.Drawing.Bitmap($screen.Bounds.Width, $screen.Bounds.Height)
 $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
 $graphics.CopyFromScreen($screen.Bounds.Location, [System.Drawing.Point]::Empty, $screen.Bounds.Size)
-$bitmap.Save("C:\Users\mt_wa\projects\agy\screenshot3.png")
+$bitmap.Save("C:\Users\mt_wa\projects\solitaire\screenshot3.png")
 $graphics.Dispose()
 $bitmap.Dispose()
 Write-Host "Done"
+

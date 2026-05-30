@@ -1,6 +1,10 @@
 # ===== Agent tool directories =====
 .agent/
 .ai-consults/
+.playwright-mcp/
+
+# ===== Nested repos (managed independently) =====
+Banana Shaker/
 
 # ===== Dependencies =====
 node_modules/
